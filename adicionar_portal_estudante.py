@@ -1,0 +1,283 @@
+import os
+
+# =========================================================================
+# 1. CRIAR TEMPLATE DO PORTAL DE ESTUDOS (templates/estudos.html)
+# =========================================================================
+html_estudos = """<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IEAD Chicuque - Discipulado & Candidatos ao Batismo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-blue-50/50 to-indigo-50/40 text-slate-900 min-h-screen antialiased">
+
+    <!-- Topbar do Estudante -->
+    <header class="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-950 text-white shadow-xl sticky top-0 z-40 border-b border-indigo-500/20">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center">
+                    <img src="/static/logo.svg?v=2026" alt="IEAD" class="w-full h-full object-contain">
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-extrabold uppercase">Manual de Candidatos ao Batismo</h1>
+                    <p class="text-xs text-indigo-200">IEAD Chicuque • Portal de Estudos</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-amber-300 bg-white/10 px-3 py-1.5 rounded-xl">{{ session['usuario'] }} (Aluno)</span>
+                <a href="/logout" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+
+        {% if resultado_teste %}
+        <div class="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-3xl shadow-lg text-emerald-950 space-y-1">
+            <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-1.5">
+                <span>🎉</span> <span>Resultado da Avaliação:</span>
+            </h3>
+            <p class="text-xs sm:text-sm font-semibold">{{ resultado_teste }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Visão Geral do Currículo -->
+        <div class="bg-white/95 rounded-3xl p-6 border border-indigo-100 shadow-md space-y-4">
+            <h2 class="text-lg font-black text-slate-900 border-b pb-3 flex items-center gap-2">
+                <span class="text-blue-600">📖</span> <span>Currículo de Integração & Batismo</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl">
+                    <strong class="text-blue-900 block text-sm font-black mb-1">Classe I</strong>
+                    <span class="font-bold text-slate-700">Primeiros Passos</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Pecado, Perdão, Salvação, Trindade e a Bíblia.</p>
+                </div>
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                    <strong class="text-emerald-900 block text-sm font-black mb-1">Classe II</strong>
+                    <span class="font-bold text-slate-700">Vida Cristã</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Oração, Jejum, Tentação, Espírito Santo e Dízimos.</p>
+                </div>
+                <div class="p-3 bg-purple-50 border border-purple-200 rounded-2xl">
+                    <strong class="text-purple-900 block text-sm font-black mb-1">Classe III</strong>
+                    <span class="font-bold text-slate-700">Maturidade Cristã</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Santificação, Heresias, Anjos, Demónios e Fé.</p>
+                </div>
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl">
+                    <strong class="text-amber-900 block text-sm font-black mb-1">Classe IV</strong>
+                    <span class="font-bold text-slate-700">Candidatos ao Batismo</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Batismo nas Águas, Ceia, Membrasia e Cerimónias.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Módulos de Estudo com Lições e Testes Interativos -->
+        <div class="space-y-6">
+
+            <!-- CLASSE I: LIÇÃO EM DESTAQUE E TESTE -->
+            <div class="bg-white/95 rounded-3xl p-6 border border-indigo-100 shadow-md space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">Módulo 1</span>
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 mt-1">Classe I: Lição 1 — O Pecado e o Perdão</h3>
+                    </div>
+                </div>
+
+                <div class="text-xs sm:text-sm text-slate-700 space-y-3 leading-relaxed">
+                    <blockquote class="p-3.5 bg-slate-50 border-l-4 border-blue-700 rounded-r-xl italic font-serif text-slate-800">
+                        "Porque o salário do pecado é a morte, mas o dom gratuito de Deus é a vida eterna, por Cristo Jesus nosso Senhor." — Romanos 6:23
+                    </blockquote>
+                    <p><strong>1. O Significado do Pecado:</strong> Pecar significa <em>errar o alvo</em> da vontade de Deus e transgredir a Sua lei moral (Êxodo 20:3-17). A desobediência está no coração e a transgressão se manifesta exteriormente.</p>
+                    <p><strong>2. A Situação do Homem perante o Pecado:</strong> Imoralidade (desfiguração da imagem divina - Rm 3:9-12), Inimizade (separação de Deus - Is 59:2) e Morte espiritual definitiva (Rm 6:23).</p>
+                    <p><strong>3. O Perdão em Cristo:</strong> Deus nos perdoou em Cristo Jesus. A expiação significa que Cristo pagou com a Sua própria vida o preço da nossa culpa. Não há perdão sem derramamento de sangue (Hb 9:22).</p>
+                </div>
+
+                <!-- Teste da Lição 1 -->
+                <div class="p-4 sm:p-5 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 border border-indigo-200 rounded-2xl space-y-3">
+                    <span class="text-xs font-black text-indigo-900 uppercase tracking-wider block">✏️ Questionário Avaliativo da Lição 1</span>
+                    <form action="/estudos/responder" method="POST" class="space-y-3 text-xs sm:text-sm">
+                        <input type="hidden" name="licao" value="Classe I - Lição 1 (Pecado e Perdão)">
+                        <div>
+                            <p class="font-bold text-slate-800 mb-1.5">1. De acordo com o Manual, qual é o significado de pecar?</p>
+                            <label class="block p-2 bg-white rounded-lg border mb-1 cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p1" value="A" required> A) Cometer um erro perante as leis civis humanas apenas.
+                            </label>
+                            <label class="block p-2 bg-white rounded-lg border mb-1 cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p1" value="B"> B) Errar o alvo de fazer a vontade de Deus e transgredir a Sua Lei.
+                            </label>
+                            <label class="block p-2 bg-white rounded-lg border cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p1" value="C"> C) Ter sentimentos de tristeza sem que haja culpa.
+                            </label>
+                        </div>
+
+                        <div>
+                            <p class="font-bold text-slate-800 mb-1.5">2. Segundo Hebreus 9:22 apresentado na lição:</p>
+                            <label class="block p-2 bg-white rounded-lg border mb-1 cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p2" value="A" required> A) Não há remissão (perdão) de pecados sem derramamento de sangue.
+                            </label>
+                            <label class="block p-2 bg-white rounded-lg border cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p2" value="B"> B) As boas obras pagam todas as nossas transgressões passadas.
+                            </label>
+                        </div>
+
+                        <button type="submit" class="h-11 px-5 bg-blue-900 hover:bg-blue-950 text-white font-black rounded-xl shadow transition">
+                            Submeter Respostas para Correção
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- CLASSE IV: CANDIDATOS AO BATISMO (BAPTISMO NAS ÁGUAS E CEIA) -->
+            <div class="bg-white/95 rounded-3xl p-6 border border-indigo-100 shadow-md space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">Módulo 4</span>
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 mt-1">Classe IV: Lição 1 — Batismo nas Águas e Ceia do Senhor</h3>
+                    </div>
+                </div>
+
+                <div class="text-xs sm:text-sm text-slate-700 space-y-3 leading-relaxed">
+                    <blockquote class="p-3.5 bg-slate-50 border-l-4 border-amber-600 rounded-r-xl italic font-serif text-slate-800">
+                        "De sorte que foram batizados os que de bom grado receberam a sua palavra." — Atos 2:41
+                    </blockquote>
+                    <p><strong>1. Significado do Batismo:</strong> É símbolo da morte para o mundo e de uma nova vida para Deus (Rm 6:4-11). O crente penetra na água como símbolo de morte e sepultamento e sai dela demonstrando o novo nascimento.</p>
+                    <p><strong>2. Condição para o Batismo:</strong> Fé voluntária e entendimento bíblico. O crente deve estar legalizado nas leis civis do país no seu casamento e ter passado pelo processo de integração.</p>
+                    <p><strong>3. A Ceia do Senhor:</strong> Ordenança em memória de Cristo. O pão e o cálice são símbolos do corpo e do sangue de Jesus (a igreja não crê em transubstanciação). Tem lembrança do Passado (morte na cruz), Presente (autoexame) e Futuro (Sua volta).</p>
+                </div>
+
+                <!-- Teste da Lição de Batismo -->
+                <div class="p-4 sm:p-5 bg-gradient-to-br from-amber-50/50 to-orange-50/50 border border-amber-200 rounded-2xl space-y-3">
+                    <span class="text-xs font-black text-amber-900 uppercase tracking-wider block">✏️ Questionário Avaliativo: Batismo & Ceia</span>
+                    <form action="/estudos/responder" method="POST" class="space-y-3 text-xs sm:text-sm">
+                        <input type="hidden" name="licao" value="Classe IV - Lição 1 (Batismo e Ceia)">
+                        <div>
+                            <p class="font-bold text-slate-800 mb-1.5">1. O ato do batismo por imersão nas águas simboliza:</p>
+                            <label class="block p-2 bg-white rounded-lg border mb-1 cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p1" value="A" required> A) Um ritual social sem efeito espiritual.
+                            </label>
+                            <label class="block p-2 bg-white rounded-lg border mb-1 cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p1" value="B"> B) Morte e sepultamento para o pecado e ressurreição para uma nova vida em Cristo.
+                            </label>
+                        </div>
+
+                        <div>
+                            <p class="font-bold text-slate-800 mb-1.5">2. Em relação aos elementos da Ceia (pão e cálice), a IEAD crê que:</p>
+                            <label class="block p-2 bg-white rounded-lg border mb-1 cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p2" value="A" required> A) São símbolos comemorativos e espirituais do corpo e sangue de Cristo.
+                            </label>
+                            <label class="block p-2 bg-white rounded-lg border cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="p2" value="B"> B) O pão vira literalmente carne humana física no estômago (transubstanciação).
+                            </label>
+                        </div>
+
+                        <button type="submit" class="h-11 px-5 bg-amber-800 hover:bg-amber-900 text-white font-black rounded-xl shadow transition">
+                            Submeter Respostas da Classe IV
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
+"""
+
+os.makedirs("templates", exist_ok=True)
+with open(os.path.join("templates", "estudos.html"), "w", encoding="utf-8") as f:
+    f.write(html_estudos)
+print("✓ 1/2: templates/estudos.html criado com sucesso com as lições do manual!")
+
+# =========================================================================
+# 2. ADICIONAR TABELA DE NOTAS E ROTAS NO APP.PY
+# =========================================================================
+with open("app.py", "r", encoding="utf-8") as f:
+    app_py_conteudo = f.read()
+
+# 1. Inserir a tabela de notas na inicialização do BD
+codigo_tabela_estudos = """    # F. Tabela de Estudos e Avaliações de Candidatos
+    c.execute('''CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT NOT NULL,
+        licao TEXT NOT NULL,
+        nota INTEGER NOT NULL,
+        total INTEGER NOT NULL,
+        data_resposta TEXT NOT NULL
+    )''')
+"""
+
+if "avaliacoes_estudantes" not in app_py_conteudo:
+    app_py_conteudo = app_py_conteudo.replace("c.execute('''CREATE TABLE IF NOT EXISTS campanhas_metas", codigo_tabela_estudos + "\n    c.execute('''CREATE TABLE IF NOT EXISTS campanhas_metas")
+
+# 2. Atualizar o redirecionamento de login para enviar Estudantes diretamente ao portal
+codigo_redirecionamento_login = """        if user:
+            session['usuario'] = user['usuario']
+            session['cargo'] = user['cargo']
+            if user['cargo'] == 'Estudante':
+                return redirect(url_for('portal_estudos'))
+            return redirect(url_for('dashboard'))"""
+
+app_py_conteudo = app_py_conteudo.replace("""        if user:
+            session['usuario'] = user['usuario']
+            session['cargo'] = user['cargo']
+            return redirect(url_for('dashboard'))""", codigo_redirecionamento_login)
+
+# 3. Adicionar as rotas do portal de estudos
+rotas_estudos = """
+# =========================================================================
+# ROTAS DO PORTAL DE ESTUDOS PARA CANDIDATOS AO BATISMO
+# =========================================================================
+@app.route('/estudos')
+def portal_estudos():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    resultado_teste = session.pop('resultado_teste', None)
+    return render_template('estudos.html', resultado_teste=resultado_teste)
+
+@app.route('/estudos/responder', methods=['POST'])
+def responder_estudos():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    licao = request.form.get('licao')
+    p1 = request.form.get('p1')
+    p2 = request.form.get('p2')
+
+    acertos = 0
+    # Gabarito do Manual
+    if 'Pecado e Perdão' in licao:
+        if p1 == 'B': acertos += 1
+        if p2 == 'A': acertos += 1
+    elif 'Batismo e Ceia' in licao:
+        if p1 == 'B': acertos += 1
+        if p2 == 'A': acertos += 1
+
+    nota_final = int((acertos / 2) * 100)
+    data_agora = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+    conn = get_db()
+    conn.execute("INSERT INTO avaliacoes_estudantes (usuario, licao, nota, total, data_resposta) VALUES (?, ?, ?, ?, ?)",
+                 (session['usuario'], licao, nota_final, 100, data_agora))
+    conn.commit()
+    conn.close()
+
+    session['resultado_teste'] = f"Parabéns! Obteve {acertos} de 2 acertos ({nota_final}%) na avaliação de '{licao}'."
+    return redirect(url_for('portal_estudos'))
+"""
+
+if "/estudos" not in app_py_conteudo:
+    app_py_conteudo = app_py_conteudo.replace("if __name__ == '__main__':", rotas_estudos + "\nif __name__ == '__main__':")
+
+with open("app.py", "w", encoding="utf-8") as f:
+    f.write(app_py_conteudo)
+
+print("✓ 2/2: app.py atualizado com a rota /estudos e sistema de notas automáticas!")

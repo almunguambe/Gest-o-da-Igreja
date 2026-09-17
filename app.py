@@ -195,6 +195,16 @@ def init_db():
     )''')
 
     # E. Metas e Campanhas de Construção
+        # F. Tabela de Estudos e Avaliações de Candidatos
+    c.execute('''CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT NOT NULL,
+        licao TEXT NOT NULL,
+        nota INTEGER NOT NULL,
+        total INTEGER NOT NULL,
+        data_resposta TEXT NOT NULL
+    )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS campanhas_metas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome_campanha TEXT NOT NULL,
@@ -261,6 +271,8 @@ def login():
         if user:
             session['usuario'] = user['usuario']
             session['cargo'] = user['cargo']
+            if user['cargo'] == 'Estudante':
+                return redirect(url_for('portal_estudos'))
             return redirect(url_for('dashboard'))
         return render_template('login.html', erro="Credenciais incorretas.")
     return render_template('login.html', erro=None)
@@ -1066,6 +1078,47 @@ def exportar_membros():
     wb.save(buf)
     buf.seek(0)
     return send_file(buf, as_attachment=True, download_name=f"Membros_Completos_IEAD_{datetime.now().strftime('%Y%m%d')}.xlsx")
+
+
+# =========================================================================
+# ROTAS DO PORTAL DE ESTUDOS PARA CANDIDATOS AO BATISMO
+# =========================================================================
+@app.route('/estudos')
+def portal_estudos():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    resultado_teste = session.pop('resultado_teste', None)
+    return render_template('estudos.html', resultado_teste=resultado_teste)
+
+@app.route('/estudos/responder', methods=['POST'])
+def responder_estudos():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    licao = request.form.get('licao')
+    p1 = request.form.get('p1')
+    p2 = request.form.get('p2')
+
+    acertos = 0
+    # Gabarito do Manual
+    if 'Pecado e Perdão' in licao:
+        if p1 == 'B': acertos += 1
+        if p2 == 'A': acertos += 1
+    elif 'Batismo e Ceia' in licao:
+        if p1 == 'B': acertos += 1
+        if p2 == 'A': acertos += 1
+
+    nota_final = int((acertos / 2) * 100)
+    data_agora = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+    conn = get_db()
+    conn.execute("INSERT INTO avaliacoes_estudantes (usuario, licao, nota, total, data_resposta) VALUES (?, ?, ?, ?, ?)",
+                 (session['usuario'], licao, nota_final, 100, data_agora))
+    conn.commit()
+    conn.close()
+
+    session['resultado_teste'] = f"Parabéns! Obteve {acertos} de 2 acertos ({nota_final}%) na avaliação de '{licao}'."
+    return redirect(url_for('portal_estudos'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
