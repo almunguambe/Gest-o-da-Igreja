@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+import os
+
+os.makedirs("templates", exist_ok=True)
+
+html_colorido = """<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -927,3 +931,9 @@
     </script>
 </body>
 </html>
+"""
+
+with open(os.path.join("templates", "dashboard.html"), "w", encoding="utf-8") as f:
+    f.write(html_colorido)
+
+print("✓ Novo design vibrante e colorido gerado em templates/dashboard.html!")
