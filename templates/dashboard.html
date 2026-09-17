@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEAD Chicuque - Gestão Integrada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+
+    <!-- Topbar -->
+    <header class="bg-gradient-to-r from-blue-950 via-blue-900 to-indigo-900 text-white shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <img src="/static/logo.png" alt="IEAD" class="w-10 h-10 object-contain bg-white rounded-full p-1 shadow" onerror="this.style.display='none'">
+                <div>
+                    <h1 class="text-xs sm:text-sm md:text-base font-bold uppercase tracking-tight">Igreja Evangélica Assembleia de Deus</h1>
+                    <p class="text-[11px] text-blue-200">Congregação de Chicuque • Gestão Integrada</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="text-xs bg-blue-800/80 px-3 py-1.5 rounded-lg border border-blue-700 text-blue-100">
+                    {{ session['usuario'] }} ({{ session['cargo'] }})
+                </span>
+                <a href="/logout" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition">Sair</a>
+            </div>
+        </div>
+
+        <nav class="max-w-7xl mx-auto px-4 flex overflow-x-auto space-x-2 border-t border-blue-800/60 pt-2 pb-1 text-xs">
+            <button onclick="trocarAba('dashboard')" id="btn-dashboard" class="tab-btn px-4 py-2 font-bold rounded-t-lg bg-white text-blue-900 shadow">📊 Painel Geral</button>
+            <button onclick="trocarAba('financeiro')" id="btn-financeiro" class="tab-btn px-4 py-2 font-bold rounded-t-lg text-blue-200 hover:bg-blue-800/50">💰 Tesouraria</button>
+            <button onclick="trocarAba('transferencias')" id="btn-transferencias" class="tab-btn px-4 py-2 font-bold rounded-t-lg text-cyan-300 hover:bg-blue-800/50">🔄 Transferir</button>
+            <button onclick="trocarAba('membros')" id="btn-membros" class="tab-btn px-4 py-2 font-bold rounded-t-lg text-blue-200 hover:bg-blue-800/50">👤 Membresia ({{ total_membros }})</button>
+            <button onclick="trocarAba('casamentos')" id="btn-casamentos" class="tab-btn px-4 py-2 font-bold rounded-t-lg text-blue-200 hover:bg-blue-800/50">💍 Casamentos</button>
+            <button onclick="trocarAba('mortes')" id="btn-mortes" class="tab-btn px-4 py-2 font-bold rounded-t-lg text-blue-200 hover:bg-blue-800/50">🕊️ Óbitos</button>
+            <button onclick="trocarAba('configuracoes')" id="btn-configuracoes" class="tab-btn px-4 py-2 font-bold rounded-t-lg text-amber-300 hover:bg-blue-800/50">⚙️ Configurações</button>
+            <button onclick="trocarAba('usuarios')" id="btn-usuarios" class="tab-btn px-4 py-2 font-bold rounded-t-lg text-emerald-300 hover:bg-blue-800/50">👥 Utilizadores</button>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 space-y-6">
+
+        <!-- ABA 1: DASHBOARD -->
+        <section id="aba-dashboard" class="tab-content active space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-[11px] font-bold uppercase text-amber-700">💵 Saldo Caixa Físico</p>
+                    <p class="text-2xl font-bold text-amber-800 mt-1">{{ "{:,.2f}".format(saldo_caixa) }} MT</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-[11px] font-bold uppercase text-indigo-700">🏛️ Saldo Conta Bancária</p>
+                    <p class="text-2xl font-bold text-indigo-800 mt-1">{{ "{:,.2f}".format(saldo_banco) }} MT</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 bg-gradient-to-br from-white to-blue-50">
+                    <p class="text-[11px] font-bold uppercase text-blue-900">🏦 Saldo Total Geral</p>
+                    <p class="text-2xl font-black text-blue-800 mt-1">{{ "{:,.2f}".format(saldo_total) }} MT</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-[11px] font-bold uppercase text-slate-500">👥 Total Membros</p>
+                    <p class="text-2xl font-bold text-slate-800 mt-1">{{ total_membros }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase text-slate-600 mb-3">📈 Entradas vs Saídas por Mês</h3>
+                    <div class="h-64"><canvas id="graficoEvolucaoMensal"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase text-slate-600 mb-3">💳 Caixa vs Banco</h3>
+                    <div class="h-64"><canvas id="graficoLocais"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase text-slate-600 mb-3">🏛️ Movimento por Departamento</h3>
+                    <div class="h-64"><canvas id="graficoFinancasDepto"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase text-slate-600 mb-3">👥 Membros por Ministério</h3>
+                    <div class="h-64"><canvas id="graficoDeptos"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 2: TRANSFERÊNCIAS -->
+        <section id="aba-transferencias" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                    <h3 class="text-sm font-bold uppercase text-slate-800 mb-3 pb-2 border-b">🔄 Efetuar Transferência</h3>
+                    <form action="/financeiro/transferir" method="POST" class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Data *</label>
+                            <input type="date" name="data_movimento" required class="w-full p-2 border rounded-lg outline-none">
+                        </div>
+                        <div class="p-3 bg-rose-50 rounded-lg border border-rose-100 space-y-2">
+                            <span class="font-bold text-rose-800 text-[10px] uppercase">Origem</span>
+                            <select name="origem_local" class="w-full p-2 border rounded-lg bg-white">
+                                <option value="Caixa">💵 Caixa Físico</option>
+                                <option value="Banco">🏛️ Conta Bancária</option>
+                            </select>
+                            <select name="origem_depto" class="w-full p-2 border rounded-lg bg-white">
+                                <option value="Geral">Geral (Igreja)</option>
+                                {% for d in lista_deptos %}<option value="{{ d['nome'] }}">{{ d['nome'] }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-100 space-y-2">
+                            <span class="font-bold text-emerald-800 text-[10px] uppercase">Destino</span>
+                            <select name="destino_local" class="w-full p-2 border rounded-lg bg-white">
+                                <option value="Banco">🏛️ Conta Bancária</option>
+                                <option value="Caixa">💵 Caixa Físico</option>
+                            </select>
+                            <select name="destino_depto" class="w-full p-2 border rounded-lg bg-white">
+                                <option value="Geral">Geral (Igreja)</option>
+                                {% for d in lista_deptos %}<option value="{{ d['nome'] }}">{{ d['nome'] }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Valor (MT) *</label>
+                            <input type="number" step="0.01" name="valor" required placeholder="0.00" class="w-full p-2 border rounded-lg outline-none font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Motivo *</label>
+                            <input type="text" name="motivo" required placeholder="Ex: Depósito, alocação..." class="w-full p-2 border rounded-lg outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2.5 rounded-lg transition">Confirmar Transferência</button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase text-slate-700 mb-3 pb-2 border-b">Histórico de Transferências</h3>
+                    <div class="overflow-x-auto max-h-[500px]">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b">
+                                <tr>
+                                    <th class="p-2.5">Data</th>
+                                    <th class="p-2.5">De</th>
+                                    <th class="p-2.5">Para</th>
+                                    <th class="p-2.5">Motivo</th>
+                                    <th class="p-2.5 text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for t in ultimas_transferencias %}
+                                <tr>
+                                    <td class="p-2.5">{{ t['data_movimento'] }}</td>
+                                    <td class="p-2.5 font-bold text-rose-700">{{ t['origem_local'] }} ({{ t['origem_depto'] }})</td>
+                                    <td class="p-2.5 font-bold text-emerald-700">{{ t['destino_local'] }} ({{ t['destino_depto'] }})</td>
+                                    <td class="p-2.5">{{ t['motivo'] }}</td>
+                                    <td class="p-2.5 text-right font-bold text-cyan-800">{{ "{:,.2f}".format(t['valor']) }} MT</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 3: TESOURARIA -->
+        <section id="aba-financeiro" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                    <h3 class="text-sm font-bold uppercase text-emerald-700 mb-3 pb-2 border-b">Lançamento de Caixa</h3>
+                    <form action="/financeiro/novo" method="POST" class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Data *</label>
+                            <input type="date" name="data_movimento" required class="w-full p-2 border rounded-lg outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Tipo</label>
+                                <select name="tipo" id="selectTipoTransacao" onchange="atualizarCategoriasPorTipo()" class="w-full p-2 border rounded-lg bg-white">
+                                    <option value="Entrada">Entrada (+)</option>
+                                    <option value="Saída">Saída (-)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Conta *</label>
+                                <select name="local_movimento" required class="w-full p-2 border rounded-lg bg-white font-semibold">
+                                    <option value="Caixa">💵 Caixa</option>
+                                    <option value="Banco">🏛️ Banco</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Departamento</label>
+                                <select name="departamento" class="w-full p-2 border rounded-lg bg-white">
+                                    <option value="Geral">Geral</option>
+                                    {% for d in lista_deptos %}<option value="{{ d['nome'] }}">{{ d['nome'] }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Área / Categoria</label>
+                                <select name="categoria" id="selectCategoriaTransacao" class="w-full p-2 border rounded-lg bg-white"></select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Valor (MT) *</label>
+                            <input type="number" step="0.01" name="valor" required placeholder="0.00" class="w-full p-2 border rounded-lg outline-none font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Descrição *</label>
+                            <input type="text" name="descricao" required placeholder="Detalhes..." class="w-full p-2 border rounded-lg outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg transition">Gravar Movimento</button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase text-slate-700 mb-3 pb-2 border-b">Movimentos Registados</h3>
+                    <div class="overflow-x-auto max-h-[500px]">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b sticky top-0">
+                                <tr>
+                                    <th class="p-2.5">Data</th>
+                                    <th class="p-2.5">Tipo</th>
+                                    <th class="p-2.5">Conta</th>
+                                    <th class="p-2.5">Fundo</th>
+                                    <th class="p-2.5">Área</th>
+                                    <th class="p-2.5">Descrição</th>
+                                    <th class="p-2.5 text-right">Valor</th>
+                                    <th class="p-2.5 text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for f in todas_financas %}
+                                <tr>
+                                    <td class="p-2.5">{{ f['data_movimento'] }}</td>
+                                    <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold {{ 'bg-emerald-100 text-emerald-700' if f['tipo'] == 'Entrada' else 'bg-rose-100 text-rose-700' }}">{{ f['tipo'] }}</span></td>
+                                    <td class="p-2.5 font-bold {{ 'text-amber-700' if f['local_movimento'] == 'Caixa' else 'text-indigo-700' }}">{{ f['local_movimento'] }}</td>
+                                    <td class="p-2.5">{{ f['departamento'] or 'Geral' }}</td>
+                                    <td class="p-2.5">{{ f['categoria'] }}</td>
+                                    <td class="p-2.5 text-slate-600">{{ f['descricao'] }}</td>
+                                    <td class="p-2.5 text-right font-bold {{ 'text-emerald-600' if f['tipo'] == 'Entrada' else 'text-rose-600' }}">{{ "{:,.2f}".format(f['valor']) }} MT</td>
+                                    <td class="p-2.5 text-center"><a href="/apagar/financeiro/{{ f['id'] }}" onclick="return confirm('Eliminar?');" class="text-rose-600 font-bold hover:underline">X</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 4: MEMBROS -->
+        <section id="aba-membros" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                    <h3 class="text-sm font-bold uppercase text-blue-900 mb-3 pb-2 border-b">Registar Membro</h3>
+                    <form action="/membros/novo" method="POST" class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Nome Completo *</label>
+                            <input type="text" name="nome" required class="w-full p-2 border rounded-lg outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Contacto</label>
+                            <input type="text" name="telefone" placeholder="+258..." class="w-full p-2 border rounded-lg outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Zona / Bairro</label>
+                            <select name="bairro" class="w-full p-2 border rounded-lg bg-white">
+                                <option value="">-- Selecione --</option>
+                                {% for z in lista_zonas %}<option value="{{ z['nome'] }}">{{ z['nome'] }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Ministério</label>
+                            <select name="departamento" class="w-full p-2 border rounded-lg bg-white">
+                                <option value="Geral">Geral</option>
+                                {% for d in lista_deptos %}<option value="{{ d['nome'] }}">{{ d['nome'] }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-bold py-2.5 rounded-lg transition">Gravar Membro</button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase text-slate-700 mb-3 pb-2 border-b">Membros Registados</h3>
+                    <div class="overflow-x-auto max-h-[500px]">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b">
+                                <tr>
+                                    <th class="p-2.5">Nome</th>
+                                    <th class="p-2.5">Contacto</th>
+                                    <th class="p-2.5">Ministério</th>
+                                    <th class="p-2.5">Zona</th>
+                                    <th class="p-2.5 text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for m in todos_membros %}
+                                <tr>
+                                    <td class="p-2.5 font-bold">{{ m['nome'] }}</td>
+                                    <td class="p-2.5 text-slate-600">{{ m['telefone'] or '-' }}</td>
+                                    <td class="p-2.5">{{ m['departamento'] or 'Geral' }}</td>
+                                    <td class="p-2.5 text-slate-500">{{ m['bairro'] or '-' }}</td>
+                                    <td class="p-2.5 text-center"><a href="/apagar/membro/{{ m['id'] }}" onclick="return confirm('Eliminar?');" class="text-rose-600 font-bold hover:underline">X</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 5: CASAMENTOS -->
+        <section id="aba-casamentos" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                    <h3 class="text-sm font-bold uppercase text-indigo-900 mb-3 pb-2 border-b">Registo Matrimonial</h3>
+                    <form action="/casamentos/novo" method="POST" class="space-y-3 text-xs">
+                        <input type="text" name="noivo" required placeholder="Noivo *" class="w-full p-2 border rounded-lg outline-none">
+                        <input type="text" name="noiva" required placeholder="Noiva *" class="w-full p-2 border rounded-lg outline-none">
+                        <input type="date" name="data_casamento" required class="w-full p-2 border rounded-lg outline-none">
+                        <input type="text" name="pastor_oficiante" placeholder="Pastor Oficiante" class="w-full p-2 border rounded-lg outline-none">
+                        <button type="submit" class="w-full bg-indigo-800 hover:bg-indigo-900 text-white font-bold py-2.5 rounded-lg transition">Gravar Casamento</button>
+                    </form>
+                </div>
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase text-slate-700 mb-3 pb-2 border-b">Livro de Casamentos</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b">
+                                <tr><th class="p-2.5">Data</th><th class="p-2.5">Noivos</th><th class="p-2.5">Oficiante</th><th class="p-2.5 text-center">Ação</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for c in todos_casamentos %}
+                                <tr>
+                                    <td class="p-2.5">{{ c['data_casamento'] }}</td>
+                                    <td class="p-2.5 font-bold">{{ c['noivo'] }} & {{ c['noiva'] }}</td>
+                                    <td class="p-2.5">{{ c['pastor_oficiante'] or '-' }}</td>
+                                    <td class="p-2.5 text-center"><a href="/apagar/casamento/{{ c['id'] }}" onclick="return confirm('Eliminar?');" class="text-rose-600 font-bold hover:underline">X</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 6: ÓBITOS -->
+        <section id="aba-mortes" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                    <h3 class="text-sm font-bold uppercase text-slate-800 mb-3 pb-2 border-b">Registo de Óbito</h3>
+                    <form action="/mortes/novo" method="POST" class="space-y-3 text-xs">
+                        <input type="text" name="nome_falecido" required placeholder="Nome do Falecido *" class="w-full p-2 border rounded-lg outline-none">
+                        <input type="date" name="data_falecimento" required class="w-full p-2 border rounded-lg outline-none">
+                        <input type="text" name="observacoes" placeholder="Notas..." class="w-full p-2 border rounded-lg outline-none">
+                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg transition">Gravar Óbito</button>
+                    </form>
+                </div>
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase text-slate-700 mb-3 pb-2 border-b">Livro de Óbitos</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b">
+                                <tr><th class="p-2.5">Data</th><th class="p-2.5">Nome</th><th class="p-2.5">Notas</th><th class="p-2.5 text-center">Ação</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for m in todas_mortes %}
+                                <tr>
+                                    <td class="p-2.5">{{ m['data_falecimento'] }}</td>
+                                    <td class="p-2.5 font-bold">{{ m['nome_falecido'] }}</td>
+                                    <td class="p-2.5 text-slate-500">{{ m['observacoes'] or '-' }}</td>
+                                    <td class="p-2.5 text-center"><a href="/apagar/morte/{{ m['id'] }}" onclick="return confirm('Eliminar?');" class="text-rose-600 font-bold hover:underline">X</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 7: CONFIGURAÇÕES -->
+        <section id="aba-configuracoes" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase text-blue-900 mb-3 pb-2 border-b">1. Ministérios / Fundos</h3>
+                    <form action="/config/departamento/novo" method="POST" class="flex gap-2 mb-3">
+                        <input type="text" name="nome" placeholder="Novo..." required class="text-xs p-2 border rounded-lg w-full outline-none">
+                        <button type="submit" class="bg-blue-800 text-white px-3 font-bold rounded-lg">+</button>
+                    </form>
+                    <ul class="divide-y divide-slate-100 text-xs max-h-52 overflow-y-auto">
+                        {% for d in lista_deptos %}
+                        <li class="py-2 flex justify-between items-center">
+                            <span>{{ d['nome'] }}</span>
+                            <a href="/config/departamento/apagar/{{ d['id'] }}" onclick="return confirm('Apagar?');" class="text-rose-600 font-bold">X</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase text-emerald-800 mb-3 pb-2 border-b">2. Categorias Financeiras</h3>
+                    <form action="/config/categoria/novo" method="POST" class="space-y-2 mb-3 text-xs">
+                        <div class="flex gap-2">
+                            <select name="tipo" class="p-2 border rounded-lg bg-white outline-none w-1/3"><option value="Entrada">Entrada</option><option value="Saída">Saída</option></select>
+                            <input type="text" name="nome" placeholder="Nome..." required class="p-2 border rounded-lg w-2/3 outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 text-white py-2 font-bold rounded-lg">+ Guardar</button>
+                    </form>
+                    <ul class="divide-y divide-slate-100 text-xs max-h-52 overflow-y-auto">
+                        {% for c in lista_categorias %}
+                        <li class="py-2 flex justify-between items-center">
+                            <span><strong>{{ c['tipo'] }}</strong> - {{ c['nome'] }}</span>
+                            <a href="/config/categoria/apagar/{{ c['id'] }}" onclick="return confirm('Apagar?');" class="text-rose-600 font-bold">X</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase text-amber-800 mb-3 pb-2 border-b">3. Zonas / Bairros</h3>
+                    <form action="/config/zona/novo" method="POST" class="flex gap-2 mb-3">
+                        <input type="text" name="nome" placeholder="Novo..." required class="text-xs p-2 border rounded-lg w-full outline-none">
+                        <button type="submit" class="bg-amber-600 text-white px-3 font-bold rounded-lg">+</button>
+                    </form>
+                    <ul class="divide-y divide-slate-100 text-xs max-h-52 overflow-y-auto">
+                        {% for z in lista_zonas %}
+                        <li class="py-2 flex justify-between items-center">
+                            <span>{{ z['nome'] }}</span>
+                            <a href="/config/zona/apagar/{{ z['id'] }}" onclick="return confirm('Apagar?');" class="text-rose-600 font-bold">X</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 8: UTILIZADORES -->
+        <section id="aba-usuarios" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                    <h3 class="text-sm font-bold uppercase text-emerald-800 mb-3 pb-2 border-b">👤 Criar Utilizador</h3>
+                    <form action="/usuarios/novo" method="POST" class="space-y-3 text-xs">
+                        <input type="text" name="usuario" required placeholder="Utilizador *" class="w-full p-2 border rounded-lg outline-none">
+                        <input type="password" name="senha" required placeholder="Palavra-passe *" class="w-full p-2 border rounded-lg outline-none">
+                        <select name="cargo" required class="w-full p-2 border rounded-lg bg-white outline-none">
+                            <option value="Pastor">Pastor</option>
+                            <option value="Tesoureiro">Tesoureiro</option>
+                            <option value="Secretário">Secretário</option>
+                            <option value="Líder">Líder de Ministério</option>
+                        </select>
+                        <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg transition">Criar Utilizador</button>
+                    </form>
+                </div>
+                <div class="md:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase text-slate-700 mb-3 pb-2 border-b">Utilizadores Registados</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b">
+                                <tr><th class="p-2.5">Login</th><th class="p-2.5">Cargo</th><th class="p-2.5 text-center">Ação</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for u in lista_usuarios %}
+                                <tr>
+                                    <td class="p-2.5 font-bold">{{ u['usuario'] }}</td>
+                                    <td class="p-2.5">{{ u['cargo'] }}</td>
+                                    <td class="p-2.5 text-center">
+                                        {% if u['usuario'] != 'admin' %}
+                                        <a href="/usuarios/apagar/{{ u['id'] }}" onclick="return confirm('Eliminar?');" class="text-rose-600 font-bold">X</a>
+                                        {% else %}<span class="text-slate-400">Principal</span>{% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const todasCategorias = {{ categorias_json | safe }};
+
+        function atualizarCategoriasPorTipo() {
+            const tipo = document.getElementById('selectTipoTransacao').value;
+            const selectCat = document.getElementById('selectCategoriaTransacao');
+            selectCat.innerHTML = '';
+            const filtradas = todasCategorias.filter(c => c.tipo === tipo);
+            filtradas.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.nome;
+                opt.textContent = c.nome;
+                selectCat.appendChild(opt);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', atualizarCategoriasPorTipo);
+
+        function trocarAba(abaId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-4 py-2 font-bold rounded-t-lg text-blue-200 hover:bg-blue-800/50';
+            });
+            document.getElementById('aba-' + abaId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + abaId);
+            if (activeBtn) activeBtn.className = 'tab-btn px-4 py-2 font-bold rounded-t-lg bg-white text-blue-900 shadow';
+        }
+
+        // Gráficos
+        new Chart(document.getElementById('graficoEvolucaoMensal').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                datasets: [
+                    { label: 'Entradas', data: {{ evolucao_entradas | safe }}, borderColor: '#059669', fill: false },
+                    { label: 'Saídas', data: {{ evolucao_saidas | safe }}, borderColor: '#e11d48', fill: false }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('graficoLocais').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Caixa Físico', 'Banco'],
+                datasets: [{ data: [{{ saldo_caixa }}, {{ saldo_banco }}], backgroundColor: ['#d97706', '#4338ca'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('graficoFinancasDepto').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ depto_fin_labels | safe }},
+                datasets: [
+                    { label: 'Entradas', data: {{ depto_fin_entradas | safe }}, backgroundColor: '#10b981' },
+                    { label: 'Saídas', data: {{ depto_fin_saidas | safe }}, backgroundColor: '#f43f5e' }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('graficoDeptos').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ depto_labels | safe }},
+                datasets: [{ label: 'Membros', data: {{ depto_valores | safe }}, backgroundColor: '#1d4ed8' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    </script>
+</body>
+</html>
