@@ -19,7 +19,6 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     
-    # Utilizadores
     c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario TEXT UNIQUE NOT NULL,
@@ -30,7 +29,6 @@ def init_db():
         c.execute("INSERT INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)",
                   ('admin', 'chicuque123', 'Pastor Presidente'))
 
-    # Membros completo
     c.execute('''CREATE TABLE IF NOT EXISTS membros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -53,7 +51,6 @@ def init_db():
         data_registo TEXT
     )''')
 
-    # Migração das colunas
     c.execute("PRAGMA table_info(membros)")
     cols = [col[1] for col in c.fetchall()]
     novas = [
@@ -66,7 +63,6 @@ def init_db():
         if n not in cols:
             c.execute(f"ALTER TABLE membros ADD COLUMN {n} {t}")
 
-    # Financeiro
     c.execute('''CREATE TABLE IF NOT EXISTS financeiro (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tipo TEXT CHECK(tipo IN ('Entrada', 'Saída')),
@@ -84,7 +80,6 @@ def init_db():
         FOREIGN KEY (membro_id) REFERENCES membros (id)
     )''')
 
-    # Transferências
     c.execute('''CREATE TABLE IF NOT EXISTS transferencias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         data_movimento TEXT NOT NULL,
@@ -97,7 +92,6 @@ def init_db():
         data_registo TEXT NOT NULL
     )''')
 
-    # Casamentos e Mortes
     c.execute('''CREATE TABLE IF NOT EXISTS casamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         noivo TEXT NOT NULL,
@@ -115,7 +109,6 @@ def init_db():
         data_registo TEXT
     )''')
 
-    # Configurações
     c.execute('''CREATE TABLE IF NOT EXISTS departamentos_lista (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT UNIQUE NOT NULL
@@ -159,6 +152,19 @@ def get_db():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
+
+# Funções Auxiliares de Permissão
+def is_admin():
+    cargo = session.get('cargo', '')
+    return session.get('usuario') == 'admin' or 'Pastor' in cargo
+
+def can_cadastro():
+    cargo = session.get('cargo', '')
+    return is_admin() or 'Secretário' in cargo or 'Líder' in cargo
+
+def can_tesouraria():
+    cargo = session.get('cargo', '')
+    return is_admin() or 'Tesoureiro' in cargo
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -229,6 +235,9 @@ def dashboard():
     conn.close()
 
     return render_template('dashboard.html',
+                           pode_cadastro=can_cadastro(),
+                           pode_tesouraria=can_tesouraria(),
+                           e_admin=is_admin(),
                            total_membros=total_membros,
                            total_casamentos=total_casamentos,
                            total_mortes=total_mortes,
@@ -251,10 +260,10 @@ def dashboard():
                            depto_labels=json.dumps(depto_labels),
                            depto_valores=json.dumps(depto_valores))
 
+# ROTAS COM CONTROLO DE PERMISSÃO
 @app.route('/membros/novo', methods=['POST'])
 def novo_membro():
-    if 'usuario' not in session: return redirect(url_for('login'))
-    
+    if not can_cadastro(): return redirect(url_for('dashboard'))
     foto_path = ""
     if 'foto' in request.files:
         foto = request.files['foto']
@@ -301,9 +310,48 @@ def novo_membro():
     conn.close()
     return redirect(url_for('dashboard'))
 
+@app.route('/casamentos/novo', methods=['POST'])
+def novo_casamento():
+    if not can_cadastro(): return redirect(url_for('dashboard'))
+    conn = get_db()
+    conn.execute('''INSERT INTO casamentos (noivo, noiva, data_casamento, pastor_oficiante, data_registo)
+                    VALUES (?, ?, ?, ?, ?)''',
+                 (request.form['noivo'], request.form['noiva'], request.form['data_casamento'],
+                  request.form.get('pastor_oficiante', ''), datetime.now().strftime("%d/%m/%Y")))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+@app.route('/mortes/novo', methods=['POST'])
+def novo_morte():
+    if not can_cadastro(): return redirect(url_for('dashboard'))
+    conn = get_db()
+    conn.execute('''INSERT INTO mortes (nome_falecido, data_falecimento, observacoes, data_registo)
+                    VALUES (?, ?, ?, ?)''',
+                 (request.form['nome_falecido'], request.form['data_falecimento'],
+                  request.form.get('observacoes', ''), datetime.now().strftime("%d/%m/%Y")))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+@app.route('/financeiro/novo', methods=['POST'])
+def novo_financeiro():
+    if not can_tesouraria(): return redirect(url_for('dashboard'))
+    data_raw = request.form.get('data_movimento') or datetime.now().strftime("%Y-%m-%d")
+    dt_obj = datetime.strptime(data_raw, "%Y-%m-%d")
+    conn = get_db()
+    conn.execute('''INSERT INTO financeiro (tipo, local_movimento, departamento, categoria, valor, data_movimento, dia, mes, ano, data_registo, membro_id, descricao)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                 (request.form['tipo'], request.form.get('local_movimento', 'Caixa'), request.form.get('departamento', 'Geral'),
+                  request.form['categoria'], float(request.form['valor']), dt_obj.strftime("%d/%m/%Y"), dt_obj.day, dt_obj.month, dt_obj.year,
+                  datetime.now().strftime("%d/%m/%Y %H:%M"), request.form.get('membro_id') or None, request.form['descricao']))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
 @app.route('/financeiro/transferir', methods=['POST'])
 def transferir_fundos():
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not can_tesouraria(): return redirect(url_for('dashboard'))
     data_raw = request.form.get('data_movimento') or datetime.now().strftime("%Y-%m-%d")
     dt_obj = datetime.strptime(data_raw, "%Y-%m-%d")
     origem_local, origem_depto = request.form['origem_local'], request.form['origem_depto']
@@ -326,24 +374,10 @@ def transferir_fundos():
     conn.close()
     return redirect(url_for('dashboard'))
 
-@app.route('/financeiro/novo', methods=['POST'])
-def novo_financeiro():
-    if 'usuario' not in session: return redirect(url_for('login'))
-    data_raw = request.form.get('data_movimento') or datetime.now().strftime("%Y-%m-%d")
-    dt_obj = datetime.strptime(data_raw, "%Y-%m-%d")
-    conn = get_db()
-    conn.execute('''INSERT INTO financeiro (tipo, local_movimento, departamento, categoria, valor, data_movimento, dia, mes, ano, data_registo, membro_id, descricao)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                 (request.form['tipo'], request.form.get('local_movimento', 'Caixa'), request.form.get('departamento', 'Geral'),
-                  request.form['categoria'], float(request.form['valor']), dt_obj.strftime("%d/%m/%Y"), dt_obj.day, dt_obj.month, dt_obj.year,
-                  datetime.now().strftime("%d/%m/%Y %H:%M"), request.form.get('membro_id') or None, request.form['descricao']))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('dashboard'))
-
+# ROTAS EXCLUSIVAS DO ADMINISTRADOR
 @app.route('/usuarios/novo', methods=['POST'])
 def novo_usuario():
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     user, senha, cargo = request.form['usuario'].strip(), request.form['senha'].strip(), request.form['cargo'].strip()
     if user and senha:
         conn = get_db()
@@ -356,40 +390,16 @@ def novo_usuario():
 
 @app.route('/usuarios/apagar/<int:id>')
 def apagar_usuario(id):
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     conn = get_db()
     conn.execute("DELETE FROM usuarios WHERE id = ? AND id != 1", (id,))
     conn.commit()
     conn.close()
     return redirect(url_for('dashboard'))
 
-@app.route('/casamentos/novo', methods=['POST'])
-def novo_casamento():
-    if 'usuario' not in session: return redirect(url_for('login'))
-    conn = get_db()
-    conn.execute('''INSERT INTO casamentos (noivo, noiva, data_casamento, pastor_oficiante, data_registo)
-                    VALUES (?, ?, ?, ?, ?)''',
-                 (request.form['noivo'], request.form['noiva'], request.form['data_casamento'],
-                  request.form.get('pastor_oficiante', ''), datetime.now().strftime("%d/%m/%Y")))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('dashboard'))
-
-@app.route('/mortes/novo', methods=['POST'])
-def novo_morte():
-    if 'usuario' not in session: return redirect(url_for('login'))
-    conn = get_db()
-    conn.execute('''INSERT INTO mortes (nome_falecido, data_falecimento, observacoes, data_registo)
-                    VALUES (?, ?, ?, ?)''',
-                 (request.form['nome_falecido'], request.form['data_falecimento'],
-                  request.form.get('observacoes', ''), datetime.now().strftime("%d/%m/%Y")))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('dashboard'))
-
 @app.route('/apagar/<tabela>/<int:id>')
 def apagar_registo(tabela, id):
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     mapa = {'membro': ('membros', 'id'), 'financeiro': ('financeiro', 'id'), 'casamento': ('casamentos', 'id'), 'morte': ('mortes', 'id')}
     if tabela in mapa:
         tab, col = mapa[tabela]
@@ -401,7 +411,7 @@ def apagar_registo(tabela, id):
 
 @app.route('/config/departamento/novo', methods=['POST'])
 def novo_depto():
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
     if nome:
         conn = get_db()
@@ -414,7 +424,7 @@ def novo_depto():
 
 @app.route('/config/departamento/apagar/<int:id>')
 def apagar_depto(id):
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     conn = get_db()
     conn.execute("DELETE FROM departamentos_lista WHERE id = ?", (id,))
     conn.commit()
@@ -423,7 +433,7 @@ def apagar_depto(id):
 
 @app.route('/config/categoria/novo', methods=['POST'])
 def nova_categoria():
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     tipo, nome = request.form.get('tipo'), request.form.get('nome', '').strip()
     if tipo and nome:
         conn = get_db()
@@ -434,7 +444,7 @@ def nova_categoria():
 
 @app.route('/config/categoria/apagar/<int:id>')
 def apagar_categoria(id):
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     conn = get_db()
     conn.execute("DELETE FROM categorias_financeiras WHERE id = ?", (id,))
     conn.commit()
@@ -443,7 +453,7 @@ def apagar_categoria(id):
 
 @app.route('/config/zona/novo', methods=['POST'])
 def nova_zona():
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
     if nome:
         conn = get_db()
@@ -456,7 +466,7 @@ def nova_zona():
 
 @app.route('/config/zona/apagar/<int:id>')
 def apagar_zona(id):
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not is_admin(): return redirect(url_for('dashboard'))
     conn = get_db()
     conn.execute("DELETE FROM zonas_lista WHERE id = ?", (id,))
     conn.commit()
@@ -465,7 +475,7 @@ def apagar_zona(id):
 
 @app.route('/exportar/financeiro')
 def exportar_financeiro():
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not can_tesouraria(): return redirect(url_for('dashboard'))
     conn = get_db()
     rows = conn.execute("SELECT data_movimento, tipo, local_movimento, departamento, categoria, descricao, valor FROM financeiro ORDER BY id DESC").fetchall()
     conn.close()
@@ -493,7 +503,7 @@ def exportar_financeiro():
 
 @app.route('/exportar/membros')
 def exportar_membros():
-    if 'usuario' not in session: return redirect(url_for('login'))
+    if not can_cadastro(): return redirect(url_for('dashboard'))
     conn = get_db()
     rows = conn.execute('''
         SELECT nome, telefone, genero, data_nascimento, faixa_etaria, naturalidade, bairro, 
