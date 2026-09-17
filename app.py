@@ -153,7 +153,6 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Funções Auxiliares de Permissão
 def is_admin():
     cargo = session.get('cargo', '')
     return session.get('usuario') == 'admin' or 'Pastor' in cargo
@@ -206,6 +205,7 @@ def dashboard():
 
     saldo_total = (entrada_caixa + entrada_banco) - (saida_caixa + saida_banco)
 
+    # 1. Evolução Mensal Geral
     ano_atual = datetime.now().year
     evolucao_entradas, evolucao_saidas = [], []
     for m in range(1, 13):
@@ -213,6 +213,45 @@ def dashboard():
         s_mes = conn.execute("SELECT SUM(valor) FROM financeiro WHERE tipo = 'Saída' AND mes = ? AND ano = ?", (m, ano_atual)).fetchone()[0] or 0.0
         evolucao_entradas.append(e_mes)
         evolucao_saidas.append(s_mes)
+
+    # 2. Situação Financeira por Departamento (Entradas vs Saídas)
+    deptos_lista = [d['nome'] for d in conn.execute("SELECT nome FROM departamentos_lista ORDER BY nome ASC").fetchall()]
+    deptos_financeiro = ['Geral'] + [d for d in deptos_lista if d != 'Geral']
+    depto_fin_labels, depto_fin_entradas, depto_fin_saidas = [], [], []
+    for d in deptos_financeiro:
+        ent = conn.execute("SELECT SUM(valor) FROM financeiro WHERE tipo = 'Entrada' AND departamento = ?", (d,)).fetchone()[0] or 0.0
+        sai = conn.execute("SELECT SUM(valor) FROM financeiro WHERE tipo = 'Saída' AND departamento = ?", (d,)).fetchone()[0] or 0.0
+        if ent > 0 or sai > 0 or d in ['Geral', 'Activista', 'Juventude', 'Mulher (Senhoras)', 'Boa Esperança (Crianças)']:
+            depto_fin_labels.append(d)
+            depto_fin_entradas.append(ent)
+            depto_fin_saidas.append(sai)
+
+    # 3. Fontes de Fundos (Entradas por Categoria)
+    fontes_rows = conn.execute('''
+        SELECT categoria, SUM(valor) as total 
+        FROM financeiro 
+        WHERE tipo = 'Entrada' 
+        GROUP BY categoria 
+        ORDER BY total DESC
+    ''').fetchall()
+    fontes_labels = [r['categoria'] for r in fontes_rows] if fontes_rows else ['Sem Entradas']
+    fontes_valores = [r['total'] for r in fontes_rows] if fontes_rows else [0]
+
+    # 4. Destino de Saídas (Despesas por Categoria)
+    saidas_rows = conn.execute('''
+        SELECT categoria, SUM(valor) as total 
+        FROM financeiro 
+        WHERE tipo = 'Saída' 
+        GROUP BY categoria 
+        ORDER BY total DESC
+    ''').fetchall()
+    saidas_labels = [r['categoria'] for r in saidas_rows] if saidas_rows else ['Sem Saídas']
+    saidas_valores = [r['total'] for r in saidas_rows] if saidas_rows else [0]
+
+    # Membros por departamento
+    dept_rows = conn.execute("SELECT COALESCE(NULLIF(TRIM(departamento), ''), 'Geral') as dep, COUNT(*) as qtd FROM membros GROUP BY dep").fetchall()
+    depto_labels = [r['dep'] for r in dept_rows] if dept_rows else ['Geral']
+    depto_valores = [r['qtd'] for r in dept_rows] if dept_rows else [0]
 
     todos_membros = conn.execute("SELECT * FROM membros ORDER BY id DESC").fetchall()
     todas_financas = conn.execute("SELECT * FROM financeiro ORDER BY id DESC").fetchall()
@@ -227,10 +266,6 @@ def dashboard():
 
     categorias_json = json.dumps([{'tipo': c['tipo'], 'nome': c['nome']} for c in lista_categorias])
     membros_json = json.dumps([dict(m) for m in todos_membros])
-
-    dept_rows = conn.execute("SELECT COALESCE(NULLIF(TRIM(departamento), ''), 'Geral') as dep, COUNT(*) as qtd FROM membros GROUP BY dep").fetchall()
-    depto_labels = [r['dep'] for r in dept_rows] if dept_rows else ['Geral']
-    depto_valores = [r['qtd'] for r in dept_rows] if dept_rows else [0]
 
     conn.close()
 
@@ -257,10 +292,16 @@ def dashboard():
                            membros_json=membros_json,
                            evolucao_entradas=json.dumps(evolucao_entradas),
                            evolucao_saidas=json.dumps(evolucao_saidas),
+                           depto_fin_labels=json.dumps(depto_fin_labels),
+                           depto_fin_entradas=json.dumps(depto_fin_entradas),
+                           depto_fin_saidas=json.dumps(depto_fin_saidas),
+                           fontes_labels=json.dumps(fontes_labels),
+                           fontes_valores=json.dumps(fontes_valores),
+                           saidas_labels=json.dumps(saidas_labels),
+                           saidas_valores=json.dumps(saidas_valores),
                            depto_labels=json.dumps(depto_labels),
                            depto_valores=json.dumps(depto_valores))
 
-# ROTAS COM CONTROLO DE PERMISSÃO
 @app.route('/membros/novo', methods=['POST'])
 def novo_membro():
     if not can_cadastro(): return redirect(url_for('dashboard'))
@@ -374,7 +415,6 @@ def transferir_fundos():
     conn.close()
     return redirect(url_for('dashboard'))
 
-# ROTAS EXCLUSIVAS DO ADMINISTRADOR
 @app.route('/usuarios/novo', methods=['POST'])
 def novo_usuario():
     if not is_admin(): return redirect(url_for('dashboard'))
