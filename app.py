@@ -4,18 +4,22 @@ from datetime import datetime
 import json
 import io
 import os
+from werkzeug.utils import secure_filename
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
 app = Flask(__name__)
 app.secret_key = "iead_chicuque_chave_super_segura_2026"
 DB_NAME = "gestao_chicuque.db"
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     
-    # Utilizadores
+    # 1. Utilizadores
     c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario TEXT UNIQUE NOT NULL,
@@ -26,19 +30,43 @@ def init_db():
         c.execute("INSERT INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)",
                   ('admin', 'chicuque123', 'Pastor Presidente'))
 
-    # Membros
+    # 2. Tabela Membros Completa
     c.execute('''CREATE TABLE IF NOT EXISTS membros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
         telefone TEXT,
+        genero TEXT,
+        data_nascimento TEXT,
+        faixa_etaria TEXT,
+        naturalidade TEXT,
         bairro TEXT,
-        departamento TEXT,
+        filiacao TEXT,
+        tipo_documento TEXT,
+        numero_documento TEXT,
+        ano_conversao INTEGER,
         data_batismo TEXT,
+        posicao_atual TEXT,
+        progressoes TEXT,
+        departamento TEXT,
+        foto_path TEXT,
         observacoes TEXT,
         data_registo TEXT
     )''')
 
-    # Financeiro
+    # Migração segura de colunas para tabelas que já existiam
+    c.execute("PRAGMA table_info(membros)")
+    cols_existentes = [col[1] for col in c.fetchall()]
+    novas_colunas = [
+        ('genero', 'TEXT'), ('data_nascimento', 'TEXT'), ('faixa_etaria', 'TEXT'),
+        ('naturalidade', 'TEXT'), ('filiacao', 'TEXT'), ('tipo_documento', 'TEXT'),
+        ('numero_documento', 'TEXT'), ('ano_conversao', 'INTEGER'), ('posicao_atual', 'TEXT'),
+        ('progressoes', 'TEXT'), ('foto_path', 'TEXT')
+    ]
+    for nome_col, tipo_col in novas_colunas:
+        if nome_col not in cols_existentes:
+            c.execute(f"ALTER TABLE membros ADD COLUMN {nome_col} {tipo_col}")
+
+    # 3. Financeiro
     c.execute('''CREATE TABLE IF NOT EXISTS financeiro (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tipo TEXT CHECK(tipo IN ('Entrada', 'Saída')),
@@ -56,7 +84,7 @@ def init_db():
         FOREIGN KEY (membro_id) REFERENCES membros (id)
     )''')
 
-    # Transferências
+    # 4. Transferências
     c.execute('''CREATE TABLE IF NOT EXISTS transferencias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         data_movimento TEXT NOT NULL,
@@ -69,7 +97,7 @@ def init_db():
         data_registo TEXT NOT NULL
     )''')
 
-    # Casamentos e Mortes
+    # 5. Casamentos e Mortes
     c.execute('''CREATE TABLE IF NOT EXISTS casamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         noivo TEXT NOT NULL,
@@ -87,7 +115,7 @@ def init_db():
         data_registo TEXT
     )''')
 
-    # Listas configuráveis
+    # 6. Listas Configuráveis com Departamentos Oficiais
     c.execute('''CREATE TABLE IF NOT EXISTS departamentos_lista (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT UNIQUE NOT NULL
@@ -102,9 +130,13 @@ def init_db():
         nome TEXT UNIQUE NOT NULL
     )''')
 
-    if c.execute("SELECT COUNT(*) FROM departamentos_lista").fetchone()[0] == 0:
-        c.executemany("INSERT INTO departamentos_lista (nome) VALUES (?)", 
-                      [('Louvor',), ('Jovens',), ('Senhoras',), ('Homens / Obreiros',), ('Escola Bíblica',), ('Ação Social',), ('Construção',)])
+    deptos_padrao = [
+        ('Activista',), ('Juventude',), ('Mulher (Senhoras)',), 
+        ('Boa Esperança (Crianças)',), ('Homens / Obreiros',), 
+        ('Louvor / Música',), ('Ação Social',), ('Construção',)
+    ]
+    for d in deptos_padrao:
+        c.execute("INSERT OR IGNORE INTO departamentos_lista (nome) VALUES (?)", d)
 
     if c.execute("SELECT COUNT(*) FROM categorias_financeiras").fetchone()[0] == 0:
         padroes = [
@@ -168,20 +200,6 @@ def dashboard():
 
     saldo_total = (entrada_caixa + entrada_banco) - (saida_caixa + saida_banco)
 
-    deptos_cadastrados = [d['nome'] for d in conn.execute("SELECT nome FROM departamentos_lista ORDER BY nome ASC").fetchall()]
-    todos_deptos = ['Geral'] + [d for d in deptos_cadastrados if d != 'Geral']
-
-    saldos_departamentos = []
-    depto_fin_labels, depto_fin_entradas, depto_fin_saidas = [], [], []
-
-    for dep in todos_deptos:
-        ent = conn.execute("SELECT SUM(valor) FROM financeiro WHERE tipo = 'Entrada' AND departamento = ?", (dep,)).fetchone()[0] or 0.0
-        sai = conn.execute("SELECT SUM(valor) FROM financeiro WHERE tipo = 'Saída' AND departamento = ?", (dep,)).fetchone()[0] or 0.0
-        saldos_departamentos.append({'departamento': dep, 'entradas': ent, 'saidas': sai, 'saldo': ent - sai})
-        depto_fin_labels.append(dep)
-        depto_fin_entradas.append(ent)
-        depto_fin_saidas.append(sai)
-
     ano_atual = datetime.now().year
     evolucao_entradas, evolucao_saidas = [], []
     for m in range(1, 13):
@@ -202,6 +220,7 @@ def dashboard():
     lista_zonas = conn.execute("SELECT * FROM zonas_lista ORDER BY nome ASC").fetchall()
 
     categorias_json = json.dumps([{'tipo': c['tipo'], 'nome': c['nome']} for c in lista_categorias])
+    membros_json = json.dumps([dict(m) for m in todos_membros])
 
     dept_rows = conn.execute("SELECT COALESCE(NULLIF(TRIM(departamento), ''), 'Geral') as dep, COUNT(*) as qtd FROM membros GROUP BY dep").fetchall()
     depto_labels = [r['dep'] for r in dept_rows] if dept_rows else ['Geral']
@@ -216,7 +235,6 @@ def dashboard():
                            saldo_caixa=saldo_caixa,
                            saldo_banco=saldo_banco,
                            saldo_total=saldo_total,
-                           saldos_departamentos=saldos_departamentos,
                            todos_membros=todos_membros,
                            todas_financas=todas_financas,
                            todos_casamentos=todos_casamentos,
@@ -227,14 +245,65 @@ def dashboard():
                            lista_usuarios=lista_usuarios,
                            ultimas_transferencias=ultimas_transferencias,
                            categorias_json=categorias_json,
+                           membros_json=membros_json,
                            evolucao_entradas=json.dumps(evolucao_entradas),
                            evolucao_saidas=json.dumps(evolucao_saidas),
-                           depto_fin_labels=json.dumps(depto_fin_labels),
-                           depto_fin_entradas=json.dumps(depto_fin_entradas),
-                           depto_fin_saidas=json.dumps(depto_fin_saidas),
                            depto_labels=json.dumps(depto_labels),
                            depto_valores=json.dumps(depto_valores))
 
+# REGISTO COMPLETO DE MEMBROS COM FOTO E DOCUMENTOS
+@app.route('/membros/novo', methods=['POST'])
+def novo_membro():
+    if 'usuario' not in session: return redirect(url_for('login'))
+    
+    # Processamento da Foto (Mobile / Ficheiro)
+    foto_path = ""
+    if 'foto' in request.files:
+        foto = request.files['foto']
+        if foto and foto.filename:
+            ext = foto.filename.rsplit('.', 1)[-1].lower()
+            if ext in ['png', 'jpg', 'jpeg', 'webp']:
+                nome_foto = f"membro_{int(datetime.now().timestamp())}.{ext}"
+                caminho_salvar = os.path.join(app.config['UPLOAD_FOLDER'], nome_foto)
+                foto.save(caminho_salvar)
+                foto_path = f"/static/uploads/{nome_foto}"
+
+    ano_conv = request.form.get('ano_conversao')
+    ano_conv_val = int(ano_conv) if ano_conv and ano_conv.isdigit() else None
+
+    conn = get_db()
+    conn.execute('''
+        INSERT INTO membros (
+            nome, telefone, genero, data_nascimento, faixa_etaria,
+            naturalidade, bairro, filiacao, tipo_documento, numero_documento,
+            ano_conversao, data_batismo, posicao_atual, progressoes,
+            departamento, foto_path, observacoes, data_registo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        request.form['nome'].strip(),
+        request.form.get('telefone', '').strip(),
+        request.form.get('genero', 'Masculino'),
+        request.form.get('data_nascimento', ''),
+        request.form.get('faixa_etaria', 'Adulto'),
+        request.form.get('naturalidade', '').strip(),
+        request.form.get('bairro', ''),
+        request.form.get('filiacao', '').strip(),
+        request.form.get('tipo_documento', 'BI'),
+        request.form.get('numero_documento', '').strip(),
+        ano_conv_val,
+        request.form.get('data_batismo', ''),
+        request.form.get('posicao_atual', 'Membro em Comunhão'),
+        request.form.get('progressoes', '').strip(),
+        request.form.get('departamento', 'Geral'),
+        foto_path,
+        request.form.get('observacoes', '').strip(),
+        datetime.now().strftime("%d/%m/%Y")
+    ))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+# ROTAS RESTANTES
 @app.route('/financeiro/transferir', methods=['POST'])
 def transferir_fundos():
     if 'usuario' not in session: return redirect(url_for('login'))
@@ -293,19 +362,6 @@ def apagar_usuario(id):
     if 'usuario' not in session: return redirect(url_for('login'))
     conn = get_db()
     conn.execute("DELETE FROM usuarios WHERE id = ? AND id != 1", (id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('dashboard'))
-
-@app.route('/membros/novo', methods=['POST'])
-def novo_membro():
-    if 'usuario' not in session: return redirect(url_for('login'))
-    conn = get_db()
-    conn.execute('''INSERT INTO membros (nome, telefone, bairro, departamento, data_batismo, observacoes, data_registo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                 (request.form['nome'], request.form.get('telefone', ''), request.form.get('bairro', ''),
-                  request.form.get('departamento', 'Geral'), request.form.get('data_batismo', ''), request.form.get('observacoes', ''),
-                  datetime.now().strftime("%d/%m/%Y")))
     conn.commit()
     conn.close()
     return redirect(url_for('dashboard'))
@@ -442,31 +498,46 @@ def exportar_financeiro():
 def exportar_membros():
     if 'usuario' not in session: return redirect(url_for('login'))
     conn = get_db()
-    rows = conn.execute("SELECT nome, telefone, bairro, departamento, data_batismo, observacoes FROM membros ORDER BY nome ASC").fetchall()
+    rows = conn.execute('''
+        SELECT nome, telefone, genero, data_nascimento, faixa_etaria, naturalidade, bairro, 
+               filiacao, tipo_documento, numero_documento, ano_conversao, data_batismo, 
+               posicao_atual, progressoes, departamento, observacoes
+        FROM membros ORDER BY nome ASC
+    ''').fetchall()
     conn.close()
+
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Membros IEAD Chicuque"
-    ws.append(["Nome Completo", "Contacto", "Zona / Bairro", "Ministério", "Data Batismo", "Observações"])
+    ws.title = "Membresia IEAD Chicuque"
+
+    headers = [
+        "Nome Completo", "Contacto", "Género", "Data Nasc.", "Segmento", "Naturalidade", "Bairro",
+        "Filiação", "Tipo Doc", "Nº Documento", "Ano Conv.", "Data Batismo",
+        "Posição Atual", "Progressões", "Departamento", "Observações"
+    ]
+    ws.append(headers)
+
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
-    for col in range(1, 7):
+    for col in range(1, len(headers) + 1):
         c = ws.cell(row=1, column=col)
         c.font = header_font
         c.fill = header_fill
         c.alignment = Alignment(horizontal="center")
+
     for r in rows:
-        ws.append([r['nome'], r['telefone'], r['bairro'], r['departamento'], r['data_batismo'], r['observacoes']])
+        ws.append([r[k] for k in r.keys()])
+
     for col in ws.columns:
         max_len = max(len(str(cell.value or '')) for cell in col)
         col_letter = openpyxl.utils.get_column_letter(col[0].column)
-        ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
+        ws.column_dimensions[col_letter].width = max(max_len + 3, 13)
+
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    return send_file(buf, as_attachment=True, download_name=f"Membros_IEAD_{datetime.now().strftime('%Y%m%d')}.xlsx")
+    return send_file(buf, as_attachment=True, download_name=f"Membros_Completos_IEAD_{datetime.now().strftime('%Y%m%d')}.xlsx")
 
-# Inicialização com porta dinâmica do Render
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
