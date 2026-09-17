@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+import os
+
+os.makedirs("templates", exist_ok=True)
+
+html_code = """<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -901,3 +905,9 @@
     </script>
 </body>
 </html>
+"""
+
+with open(os.path.join("templates", "dashboard.html"), "w", encoding="utf-8") as f:
+    f.write(html_code)
+
+print("✓ Novo design mobile com tipografia visível e pré-visualização ao vivo gerado!")
