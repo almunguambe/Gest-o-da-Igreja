@@ -348,6 +348,7 @@ def dashboard():
     saidas_valores = [r['total'] for r in saidas_rows] if saidas_rows else [0]
 
     # Listagens
+    lista_avaliacoes = conn.execute('SELECT * FROM avaliacoes_estudantes ORDER BY id DESC').fetchall()
     todos_membros = conn.execute("SELECT * FROM membros ORDER BY id DESC").fetchall()
     todas_financas = conn.execute("SELECT * FROM financeiro ORDER BY id DESC").fetchall()
     todos_casamentos = conn.execute("SELECT * FROM casamentos ORDER BY id DESC").fetchall()
@@ -386,6 +387,7 @@ def dashboard():
                            aniversariantes_dia=aniversariantes_dia,
                            aniversariantes_mes=aniversariantes_mes,
                            campanhas=campanhas,
+                           lista_avaliacoes=lista_avaliacoes,
                            todos_membros=todos_membros,
                            todas_financas=todas_financas,
                            todos_casamentos=todos_casamentos,
