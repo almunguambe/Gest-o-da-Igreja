@@ -19,7 +19,7 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     
-    # 1. Utilizadores
+    # Utilizadores
     c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario TEXT UNIQUE NOT NULL,
@@ -30,7 +30,7 @@ def init_db():
         c.execute("INSERT INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)",
                   ('admin', 'chicuque123', 'Pastor Presidente'))
 
-    # 2. Tabela Membros Completa
+    # Membros completo
     c.execute('''CREATE TABLE IF NOT EXISTS membros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -53,20 +53,20 @@ def init_db():
         data_registo TEXT
     )''')
 
-    # Migração segura de colunas para tabelas que já existiam
+    # Migração das colunas
     c.execute("PRAGMA table_info(membros)")
-    cols_existentes = [col[1] for col in c.fetchall()]
-    novas_colunas = [
+    cols = [col[1] for col in c.fetchall()]
+    novas = [
         ('genero', 'TEXT'), ('data_nascimento', 'TEXT'), ('faixa_etaria', 'TEXT'),
         ('naturalidade', 'TEXT'), ('filiacao', 'TEXT'), ('tipo_documento', 'TEXT'),
         ('numero_documento', 'TEXT'), ('ano_conversao', 'INTEGER'), ('posicao_atual', 'TEXT'),
         ('progressoes', 'TEXT'), ('foto_path', 'TEXT')
     ]
-    for nome_col, tipo_col in novas_colunas:
-        if nome_col not in cols_existentes:
-            c.execute(f"ALTER TABLE membros ADD COLUMN {nome_col} {tipo_col}")
+    for n, t in novas:
+        if n not in cols:
+            c.execute(f"ALTER TABLE membros ADD COLUMN {n} {t}")
 
-    # 3. Financeiro
+    # Financeiro
     c.execute('''CREATE TABLE IF NOT EXISTS financeiro (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tipo TEXT CHECK(tipo IN ('Entrada', 'Saída')),
@@ -84,7 +84,7 @@ def init_db():
         FOREIGN KEY (membro_id) REFERENCES membros (id)
     )''')
 
-    # 4. Transferências
+    # Transferências
     c.execute('''CREATE TABLE IF NOT EXISTS transferencias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         data_movimento TEXT NOT NULL,
@@ -97,7 +97,7 @@ def init_db():
         data_registo TEXT NOT NULL
     )''')
 
-    # 5. Casamentos e Mortes
+    # Casamentos e Mortes
     c.execute('''CREATE TABLE IF NOT EXISTS casamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         noivo TEXT NOT NULL,
@@ -115,7 +115,7 @@ def init_db():
         data_registo TEXT
     )''')
 
-    # 6. Listas Configuráveis com Departamentos Oficiais
+    # Configurações
     c.execute('''CREATE TABLE IF NOT EXISTS departamentos_lista (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT UNIQUE NOT NULL
@@ -130,12 +130,12 @@ def init_db():
         nome TEXT UNIQUE NOT NULL
     )''')
 
-    deptos_padrao = [
+    deptos = [
         ('Activista',), ('Juventude',), ('Mulher (Senhoras)',), 
         ('Boa Esperança (Crianças)',), ('Homens / Obreiros',), 
         ('Louvor / Música',), ('Ação Social',), ('Construção',)
     ]
-    for d in deptos_padrao:
+    for d in deptos:
         c.execute("INSERT OR IGNORE INTO departamentos_lista (nome) VALUES (?)", d)
 
     if c.execute("SELECT COUNT(*) FROM categorias_financeiras").fetchone()[0] == 0:
@@ -251,12 +251,10 @@ def dashboard():
                            depto_labels=json.dumps(depto_labels),
                            depto_valores=json.dumps(depto_valores))
 
-# REGISTO COMPLETO DE MEMBROS COM FOTO E DOCUMENTOS
 @app.route('/membros/novo', methods=['POST'])
 def novo_membro():
     if 'usuario' not in session: return redirect(url_for('login'))
     
-    # Processamento da Foto (Mobile / Ficheiro)
     foto_path = ""
     if 'foto' in request.files:
         foto = request.files['foto']
@@ -264,8 +262,8 @@ def novo_membro():
             ext = foto.filename.rsplit('.', 1)[-1].lower()
             if ext in ['png', 'jpg', 'jpeg', 'webp']:
                 nome_foto = f"membro_{int(datetime.now().timestamp())}.{ext}"
-                caminho_salvar = os.path.join(app.config['UPLOAD_FOLDER'], nome_foto)
-                foto.save(caminho_salvar)
+                salvar_em = os.path.join(app.config['UPLOAD_FOLDER'], nome_foto)
+                foto.save(salvar_em)
                 foto_path = f"/static/uploads/{nome_foto}"
 
     ano_conv = request.form.get('ano_conversao')
@@ -303,7 +301,6 @@ def novo_membro():
     conn.close()
     return redirect(url_for('dashboard'))
 
-# ROTAS RESTANTES
 @app.route('/financeiro/transferir', methods=['POST'])
 def transferir_fundos():
     if 'usuario' not in session: return redirect(url_for('login'))
