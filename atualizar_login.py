@@ -1,4 +1,9 @@
-<!DOCTYPE html>
+import os
+
+os.makedirs("templates", exist_ok=True)
+os.makedirs("static", exist_ok=True)
+
+novo_login_html = """<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -120,3 +125,9 @@
 
 </body>
 </html>
+"""
+
+with open(os.path.join("templates", "login.html"), "w", encoding="utf-8") as f:
+    f.write(novo_login_html)
+
+print("✓ Novo ecrã de login elegante gerado em templates/login.html!")
