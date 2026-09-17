@@ -82,6 +82,12 @@
                 <button onclick="trocarAba('usuarios')" id="btn-usuarios" class="tab-btn px-4 py-2.5 rounded-2xl transition flex items-center gap-2 text-emerald-300 hover:bg-white/10">
                     <span>👥</span> <span>Utilizadores</span>
                 </button>
+                <a href="/financeiro/balancete_pdf" class="tab-btn px-4 py-2.5 rounded-2xl transition flex items-center gap-2 text-emerald-300 hover:bg-white/10 font-bold">
+                    <span>📑</span> <span>Balancete Oficial (PDF)</span>
+                </a>
+                <a href="/sistema/backup" class="tab-btn px-4 py-2.5 rounded-2xl transition flex items-center gap-2 text-amber-300 hover:bg-white/10 font-bold">
+                    <span>💾</span> <span>Backup (.ZIP)</span>
+                </a>
                 {% endif %}
             </nav>
         </div>
@@ -785,6 +791,12 @@
             `;
             document.getElementById('modalMembro').classList.remove('hidden');
             document.getElementById('modalMembro').classList.add('flex');
+            document.getElementById('btnCartaoPDF').href = '/membro/cartao_pdf/' + m.id;
+            document.getElementById('btnCertBatismo').href = '/membro/certificado_pdf/' + m.id + '/batismo';
+            document.getElementById('btnCertApres').href = '/membro/certificado_pdf/' + m.id + '/apresentacao';
+            document.getElementById('btnCertRecom').href = '/membro/certificado_pdf/' + m.id + '/recomendacao';
+            const telLimpo = (m.telefone || '').replace(/\D/g, '');
+            document.getElementById('btnWhatsMembro').href = telLimpo ? 'https://wa.me/258' + telLimpo.slice(-9) : '#';
         }
 
         function fecharModalMembro() {

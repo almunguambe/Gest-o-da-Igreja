@@ -1,4 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+import os
+
+# =========================================================================
+# 1. ATUALIZAÇÃO DO APP.PY COM TODAS AS NOVAS ROTAS E GERADORES PDF
+# =========================================================================
+app_code = """from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import sqlite3
 from datetime import datetime
 import json
@@ -921,3 +926,74 @@ def exportar_membros():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+"""
+
+with open("app.py", "w", encoding="utf-8") as f:
+    f.write(app_code)
+print("✓ 1/2: app.py atualizado com Cartões, Certificados, Recibos e Backups em PDF!")
+
+# =========================================================================
+# 2. ATUALIZAÇÃO DO TEMPLATE COM OS BOTÕES DE CERTIFICADOS, WHATSAPP E BACKUP
+# =========================================================================
+dash_path = os.path.join("templates", "dashboard.html")
+if os.path.exists(dash_path):
+    with open(dash_path, "r", encoding="utf-8") as f:
+        html = f.read()
+
+    # Adicionar Botão de Balancete e Backup no Menu Superior
+    antigo_menu = "<span>Utilizadores</span>"
+    novo_menu = """<span>Utilizadores</span>
+                </button>
+                <a href="/financeiro/balancete_pdf" class="tab-btn px-4 py-2.5 rounded-2xl transition flex items-center gap-2 text-emerald-300 hover:bg-white/10 font-bold">
+                    <span>📑</span> <span>Balancete Oficial (PDF)</span>
+                </a>
+                <a href="/sistema/backup" class="tab-btn px-4 py-2.5 rounded-2xl transition flex items-center gap-2 text-amber-300 hover:bg-white/10 font-bold">
+                    <span>💾</span> <span>Backup (.ZIP)</span>
+                </a>"""
+    if "Balancete Oficial (PDF)" not in html:
+        html = html.replace(antigo_menu + "\n                </button>", novo_menu)
+
+    # Injetar Modal com Botões de Ação para Cartão e Certificados em PDF
+    substituir_modal = """                <button onclick="window.print()" class="w-full h-12 bg-gradient-to-r from-slate-900 to-indigo-950 text-white font-black text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                    <span>🖨️ Imprimir Cartão de Membro</span>
+                </button>"""
+
+    novos_botoes_modal = """                <!-- Ações Pastorais e Oficiais em PDF -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                    <a id="btnCartaoPDF" href="#" class="h-11 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition">
+                        <span>🪪</span> <span>Baixar Cartão (PDF)</span>
+                    </a>
+                    <a id="btnWhatsMembro" href="#" target="_blank" class="h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition">
+                        <span>💬</span> <span>Falar no WhatsApp</span>
+                    </a>
+                </div>
+
+                <!-- Certificados Oficiais -->
+                <div class="p-3 bg-slate-50 border rounded-2xl space-y-2">
+                    <span class="text-[11px] font-black text-slate-700 uppercase tracking-wider block">📜 Emitir Certificados Pastorais</span>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <a id="btnCertBatismo" href="#" class="py-2 bg-white border border-slate-300 text-blue-900 text-center font-bold text-[10px] rounded-lg hover:bg-blue-50">Batismo</a>
+                        <a id="btnCertApres" href="#" class="py-2 bg-white border border-slate-300 text-emerald-900 text-center font-bold text-[10px] rounded-lg hover:bg-emerald-50">Apresentação</a>
+                        <a id="btnCertRecom" href="#" class="py-2 bg-white border border-slate-300 text-purple-900 text-center font-bold text-[10px] rounded-lg hover:bg-purple-50">Recomendação</a>
+                    </div>
+                </div>"""
+
+    if "btnCartaoPDF" not in html:
+        html = html.replace(substituir_modal, novos_botoes_modal)
+
+    # Injetar atribuição dos links no JS da Ficha de Membro
+    antigo_js = "document.getElementById('modalMembro').classList.add('flex');"
+    novo_js = """document.getElementById('modalMembro').classList.add('flex');
+            document.getElementById('btnCartaoPDF').href = '/membro/cartao_pdf/' + m.id;
+            document.getElementById('btnCertBatismo').href = '/membro/certificado_pdf/' + m.id + '/batismo';
+            document.getElementById('btnCertApres').href = '/membro/certificado_pdf/' + m.id + '/apresentacao';
+            document.getElementById('btnCertRecom').href = '/membro/certificado_pdf/' + m.id + '/recomendacao';
+            const telLimpo = (m.telefone || '').replace(/\D/g, '');
+            document.getElementById('btnWhatsMembro').href = telLimpo ? 'https://wa.me/258' + telLimpo.slice(-9) : '#';"""
+    
+    if "btnCartaoPDF.href" not in html:
+        html = html.replace(antigo_js, novo_js)
+
+    with open(dash_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    print("✓ 2/2: templates/dashboard.html atualizado com WhatsApp, Cartões e Certificados!")
