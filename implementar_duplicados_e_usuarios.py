@@ -1,4 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+import os
+
+# -------------------------------------------------------------
+# 1. ATUALIZAÇÃO DO APP.PY COM VERIFICAÇÃO DE DUPLICIDADE
+# -------------------------------------------------------------
+app_code = """from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import sqlite3
 from datetime import datetime
 import json
@@ -611,3 +616,41 @@ def exportar_membros():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+"""
+
+with open("app.py", "w", encoding="utf-8") as f:
+    f.write(app_code)
+print("✓ 1/2: app.py atualizado com proteção contra duplicados e gestão de utilizadores!")
+
+# -------------------------------------------------------------
+# 2. ATUALIZAÇÃO DO TEMPLATE COM OS BANNERS DE ALERTA E SUCESSO
+# -------------------------------------------------------------
+dash_path = os.path.join("templates", "dashboard.html")
+if os.path.exists(dash_path):
+    with open(dash_path, "r", encoding="utf-8") as f:
+        conteudo = f.read()
+
+    # Injeta os alertas logo após a tag <main>
+    bloco_alertas = """    <main class="max-w-7xl mx-auto p-3.5 sm:p-5 lg:p-6 space-y-6">
+
+        <!-- Banner de Alerta de Duplicidade -->
+        {% if alerta_duplicado %}
+        <div class="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex items-center gap-3 text-amber-900 font-bold text-sm shadow-md animate-bounce">
+            <span class="text-2xl">⚠️</span>
+            <span>{{ alerta_duplicado }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Banner de Sucesso -->
+        {% if sucesso_cadastro %}
+        <div class="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-center gap-3 text-emerald-900 font-bold text-sm shadow-md">
+            <span class="text-2xl">✅</span>
+            <span>{{ sucesso_cadastro }}</span>
+        </div>
+        {% endif %}"""
+
+    if "<!-- Banner de Alerta de Duplicidade -->" not in conteudo:
+        conteudo = conteudo.replace('<main class="max-w-7xl mx-auto p-3.5 sm:p-5 lg:p-6 space-y-6">', bloco_alertas)
+        with open(dash_path, "w", encoding="utf-8") as f:
+            f.write(conteudo)
+        print("✓ 2/2: templates/dashboard.html atualizado com alertas visuais!")
