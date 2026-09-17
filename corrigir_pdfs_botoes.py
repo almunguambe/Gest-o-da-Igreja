@@ -1,4 +1,9 @@
-<!DOCTYPE html>
+import os
+
+dash_path = os.path.join("templates", "dashboard.html")
+
+# Template com os botões de Cartão PDF, WhatsApp e Certificados diretamente embutidos no modal e na tabela
+novo_dashboard = """<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -750,7 +755,7 @@
                 ? `<img src="${m.foto_path}" class="w-28 h-28 object-cover rounded-3xl mx-auto border-4 border-white shadow-xl ring-4 ring-blue-600/30">`
                 : `<div class="w-28 h-28 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-700 text-white flex items-center justify-center text-3xl font-black mx-auto border-4 border-white shadow-xl ring-4 ring-blue-600/30">${m.nome.substring(0,2).toUpperCase()}</div>`;
 
-            const telLimpo = (m.telefone || '').replace(/\D/g, '');
+            const telLimpo = (m.telefone || '').replace(/\\D/g, '');
             const linkWhats = telLimpo ? 'https://wa.me/258' + telLimpo.slice(-9) : '#';
 
             document.getElementById('conteudoModalMembro').innerHTML = `
@@ -918,3 +923,9 @@
     </script>
 </body>
 </html>
+"""
+
+with open(dash_path, "w", encoding="utf-8") as f:
+    f.write(novo_dashboard)
+
+print("✓ templates/dashboard.html totalmente integrado com botões de Cartão PDF, WhatsApp e Certificados!")
