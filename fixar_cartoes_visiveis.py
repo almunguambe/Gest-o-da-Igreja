@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+import os
+
+dash_path = os.path.join("templates", "dashboard.html")
+
+novo_dashboard = """<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -867,3 +871,9 @@
     </script>
 </body>
 </html>
+"""
+
+with open(dash_path, "w", encoding="utf-8") as f:
+    f.write(novo_dashboard)
+
+print("✓ templates/dashboard.html atualizado com cartões individuais 100% visíveis!")
