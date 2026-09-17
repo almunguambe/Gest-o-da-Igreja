@@ -1,0 +1,51 @@
+import os
+
+# Dados do emblema oficial da Assembleia de Deus (Alfa, Ómega, Cruz e Mapa de Moçambique)
+logo_svg_oficial = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Traçado do texto circular superior -->
+    <path id="textArc" d="M 60 250 A 190 190 0 1 1 440 250" fill="none"/>
+  </defs>
+  
+  <!-- Texto Circular em Arco -->
+  <text font-family="'Arial Black', Arial, sans-serif" font-size="25" font-weight="900" fill="#111827" letter-spacing="3.5">
+    <textPath href="#textArc" startOffset="50%" text-anchor="middle">
+      IGREJA EVANGÉLICA ASSEMBLEIA DE DEUS
+    </textPath>
+  </text>
+
+  <g transform="translate(250, 275)">
+    <!-- Mapa estilizado de Moçambique em Laranja-Coral -->
+    <path d="M -10 -150 C 40 -150 110 -155 110 -105 C 110 -65 25 -35 30 20 C 35 70 -5 95 -35 125 C -55 145 -45 165 -25 170 C -30 178 -35 180 -40 170 C -55 140 -20 100 -5 65 C 10 25 -25 -10 -25 -50 C -25 -100 -50 -130 -10 -150 Z" 
+          fill="#ff5733" opacity="0.95" />
+
+    <!-- Letra Alfa (A) em Azul Royal Vibrante -->
+    <path d="M -115 110 L -45 -105 L 10 -105 L 80 110 L 25 110 L 10 65 L -45 65 L -60 110 Z M -35 25 L 0 25 L -17 -40 Z" 
+          fill="#0052cc" />
+
+    <!-- Cruz Azul no Centro -->
+    <path d="M -40 -85 L 80 -85 L 80 -70 L 28 -70 L 28 175 L 12 175 L 12 -70 L -40 -70 Z" 
+          fill="#0052cc" />
+
+    <!-- Letra Ómega (Ω) em Azul Royal Vibrante -->
+    <path d="M 12 75 C 40 75 55 90 70 110 L 125 110 L 125 90 L 95 90 C 115 65 125 40 125 5 C 125 -45 95 -90 40 -90 L 40 -70 C 80 -70 100 -35 100 5 C 100 45 75 75 40 75 Z" 
+          fill="#0052cc" />
+  </g>
+</svg>
+"""
+
+os.makedirs("static", exist_ok=True)
+with open(os.path.join("static", "logo.svg"), "w", encoding="utf-8") as f:
+    f.write(logo_svg_oficial)
+
+# Atualiza login.html e dashboard.html para usar logo.svg com prioridade
+for arq in [os.path.join("templates", "login.html"), os.path.join("templates", "dashboard.html")]:
+    if os.path.exists(arq):
+        with open(arq, "r", encoding="utf-8") as f:
+            c = f.read()
+        c = c.replace('/static/logo.png?v=2026', '/static/logo.svg?v=iead2026')
+        c = c.replace('/static/logo.png', '/static/logo.svg?v=iead2026')
+        with open(arq, "w", encoding="utf-8") as f:
+            f.write(c)
+
+print("✓ Emblema oficial vetorizado e configurado com sucesso!")
