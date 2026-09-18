@@ -45,7 +45,7 @@
                     <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400/80 px-3 block mb-1.5">Geral & Frequência</span>
                     <div class="space-y-1">
                         {% if pode_cadastro %}
-                        <button onclick="trocarAba('membros')" id="nav-membros" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-black transition bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md">
+                        <button onclick="trocarAba('membros')" id="nav-membros" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if pode_cadastro %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}">
                             <span class="text-base">👤</span> <span>Membros ({{ total_membros }})</span>
                         </button>
                         <button onclick="trocarAba('cultos')" id="nav-cultos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
@@ -72,7 +72,7 @@
                 <div>
                     <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400/80 px-3 block mb-1.5">Finanças & Tesouraria</span>
                     <div class="space-y-1">
-                        <button onclick="trocarAba('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if not pode_cadastro and pode_tesouraria %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}">
                             <span class="text-base">📊</span> <span>Painel Geral & Metas</span>
                         </button>
                         <button onclick="trocarAba('financeiro')" id="nav-financeiro" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
@@ -95,7 +95,7 @@
                         <a href="/estudos" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-amber-300 hover:bg-amber-950/40 transition">
                             <span class="text-base">📖</span> <span>Manual de Candidatos</span>
                         </a>
-                        {% if e_admin or can_cadastro() %}
+                        {% if e_admin or pode_cadastro %}
                         <button onclick="trocarAba('notas_alunos')" id="nav-notas_alunos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
                             <span class="text-base">🎓</span> <span>Notas dos Alunos</span>
                         </button>
