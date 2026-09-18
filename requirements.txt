@@ -3,3 +3,4 @@ gunicorn
 openpyxl
 werkzeug
 reportlab
+psycopg2-binary
