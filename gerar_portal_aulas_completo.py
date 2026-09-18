@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import os
+
+html_conteudo = """<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -361,3 +363,9 @@
     </script>
 </body>
 </html>
+"""
+
+with open(os.path.join("templates", "estudos.html"), "w", encoding="utf-8") as f:
+    f.write(html_conteudo)
+
+print("✓ templates/estudos.html atualizado com todo o currículo do manual e popup de apoio!")
