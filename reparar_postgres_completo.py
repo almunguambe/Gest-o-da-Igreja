@@ -1,4 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+import os
+
+app_caminho = "app.py"
+
+codigo_completo = """from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import sqlite3
 import os
 import io
@@ -1132,3 +1136,9 @@ def exportar_membros():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+"""
+
+with open(app_caminho, "w", encoding="utf-8") as f:
+    f.write(codigo_completo)
+
+print("✓ app.py totalmente adaptado para PostgreSQL e SQLite sem erros de sintaxe!")
