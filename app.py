@@ -400,6 +400,7 @@ def dashboard():
     lista_usuarios = conn.execute("SELECT id, usuario, cargo FROM usuarios ORDER BY id ASC").fetchall()
     ultimas_transferencias = conn.execute("SELECT * FROM transferencias ORDER BY id DESC LIMIT 20").fetchall()
     lista_avaliacoes = conn.execute("SELECT * FROM avaliacoes_estudantes ORDER BY id DESC").fetchall()
+    todas_duvidas = conn.execute("SELECT * FROM duvidas_estudantes ORDER BY id DESC").fetchall()
 
     lista_deptos = conn.execute("SELECT * FROM departamentos_lista ORDER BY nome ASC").fetchall()
     lista_categorias = conn.execute("SELECT * FROM categorias_financeiras ORDER BY tipo, nome ASC").fetchall()
@@ -437,6 +438,7 @@ def dashboard():
                            todas_escalas=todas_escalas,
                            lista_usuarios=lista_usuarios,
                            lista_avaliacoes=lista_avaliacoes,
+                           todas_duvidas=todas_duvidas,
                            lista_deptos=lista_deptos,
                            lista_categorias=lista_categorias,
                            lista_zonas=lista_zonas,
@@ -1158,6 +1160,23 @@ def exportar_membros():
     wb.save(buf)
     buf.seek(0)
     return send_file(buf, as_attachment=True, download_name=f"Membros_Completos_IEAD_{datetime.now().strftime('%Y%m%d')}.xlsx")
+
+
+@app.route('/estudos/duvidas/responder/<int:id>', methods=['POST'])
+def responder_duvida_pastor(id):
+    if not (is_admin() or can_cadastro()):
+        return redirect(url_for('dashboard'))
+    
+    resposta = request.form.get('resposta', '').strip()
+    if resposta:
+        conn = get_db()
+        param_char = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+        conn.execute(f"UPDATE duvidas_estudantes SET resposta = {param_char} WHERE id = {param_char}", (resposta, id))
+        conn.commit()
+        conn.close()
+        session['sucesso_cadastro'] = "Resposta pastoral enviada com sucesso para a sala de aula do aluno!"
+    
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
