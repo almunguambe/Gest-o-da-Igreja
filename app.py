@@ -232,7 +232,7 @@ def init_db():
         status TEXT DEFAULT 'Ativa'
     )''')
 
-        c.execute(f'''CREATE TABLE IF NOT EXISTS duvidas_estudantes (
+    c.execute('''CREATE TABLE IF NOT EXISTS duvidas_estudantes (
         id {pk_type},
         usuario TEXT NOT NULL,
         licao TEXT NOT NULL,
