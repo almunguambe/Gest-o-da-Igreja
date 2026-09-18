@@ -458,7 +458,7 @@ def portal_estudos():
     if 'usuario' not in session:
         return redirect(url_for('login'))
     resultado_teste = session.pop('resultado_teste', None)
-    return render_template('estudos.html', resultado_teste=resultado_teste)
+    return render_template('estudos.html', resultado_teste=resultado_teste, tel_pastor="258866677810")
 
 
 @app.route('/estudos/duvida', methods=['POST'])
