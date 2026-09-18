@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+import os
+
+dash_path = os.path.join("templates", "dashboard.html")
+
+novo_html = """<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -982,3 +986,9 @@
     </script>
 </body>
 </html>
+"""
+
+with open(dash_path, "w", encoding="utf-8") as f:
+    f.write(novo_html)
+
+print("✓ templates/dashboard.html atualizado com uma Sidebar moderna e elegante!")
