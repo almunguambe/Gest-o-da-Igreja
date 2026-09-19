@@ -755,7 +755,7 @@ def certificado_membro_pdf(id, tipo):
     else:
         corpo = f"Pela presente recomendamos o(a) nosso(a) irmão(ã) em Cristo <b>{m['nome'].upper()}</b>, que congregou connosco em plena comunhão fraterna como <b>{m['posicao_atual']}</b>, prestando serviços no departamento <b>{m['departamento']}</b>. Rogamos que seja acolhido(a) no amor fraterno pelo vosso ministério."
 
-    elementos.append(Paragraph(f"<font color='#1e293b' size=13 leading=22>{corpo}</font>", ParagraphStyle('B', alignment=4, spaceAfter=25)))
+    elementos.append(Paragraph(f"<para leading=22><font color='#1e293b' size=13>{corpo}</font>", ParagraphStyle('B', alignment=4, spaceAfter=25)))
     elementos.append(Paragraph(f"<i><font color='#64748b' size=10>{versiculo}</font></i>", ParagraphStyle('V', alignment=1, spaceAfter=35)))
     elementos.append(Spacer(1, 1*cm))
     elementos.append(Paragraph(f"<font color='#334155' size=10><b>Chicuque, aos {datetime.now().strftime('%d de %B de %Y')}.</b></font>", ParagraphStyle('D', alignment=1, spaceAfter=30)))
