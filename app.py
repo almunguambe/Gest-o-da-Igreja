@@ -299,6 +299,42 @@ def can_tesouraria():
     cargo = session.get('cargo', '')
     return is_admin() or 'Tesoureiro' in cargo
 
+
+def extrair_dados_membro(membro):
+    """Extrai dados de forma segura quer venham de dicionário, sqlite3.Row ou tupla."""
+    if isinstance(membro, dict):
+        nome = membro.get('nome') or "Membro Sem Nome"
+        cargo = membro.get('cargo') or "Membro"
+        congregacao = membro.get('congregacao') or "Chicuque Sede"
+        data_bat = membro.get('data_batismo')
+        m_id = membro.get('id') or 1
+    else:
+        try:
+            nome = membro['nome']
+            cargo = membro['cargo']
+            congregacao = membro['congregacao']
+            data_bat = membro['data_batismo'] if 'data_batismo' in membro.keys() else None
+            m_id = membro['id']
+        except Exception:
+            nome = membro[1] if len(membro) > 1 else "Membro Sem Nome"
+            cargo = membro[2] if len(membro) > 2 else "Membro"
+            congregacao = "Chicuque Sede"
+            data_bat = membro[5] if len(membro) > 5 else None
+            m_id = membro[0] if len(membro) > 0 else 1
+
+    try:
+        m_id = int(m_id)
+    except:
+        m_id = 1
+
+    return {
+        "id": m_id,
+        "nome": str(nome).strip(),
+        "cargo": str(cargo).strip(),
+        "congregacao": str(congregacao).strip(),
+        "data_batismo": str(data_bat).strip() if data_bat else None
+    }
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -1282,8 +1318,6 @@ def obter_caminho_logo():
     return None
 
 @app.route('/membro/<int:id>/certificado_batismo')
-
-@app.route('/membro/<int:id>/certificado_batismo')
 @app.route('/membro/certificado_pdf/<int:id>/batismo')
 def emitir_certificado_batismo(id):
     try:
@@ -1294,9 +1328,20 @@ def emitir_certificado_batismo(id):
         conn.close()
 
         if not membro:
-            return "Membro não encontrado", 404
+            return "Membro não encontrado.", 404
 
         dados = extrair_dados_membro(membro)
+
+        # Condição obrigatória: deve ter data de batismo cadastrada
+        if not dados['data_batismo'] or dados['data_batismo'].lower() in ['none', 'null', '', '____/____/________']:
+            return """
+            <div style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
+                <h3 style="color: #c0392b;">Certificado Indisponível</h3>
+                <p>Este membro ainda não possui a <b>Data de Batismo</b> preenchida no seu cadastro.</p>
+                <p>Por favor, edite a ficha do membro e informe a data em que foi batizado antes de emitir o certificado.</p>
+                <a href="/" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background-color: #0d3b66; color: white; text-decoration: none; border-radius: 5px;">Voltar ao Painel</a>
+            </div>
+            """, 400
 
         buffer = BytesIO()
         doc = SimpleDocTemplate(
@@ -1310,7 +1355,6 @@ def emitir_certificado_batismo(id):
         elementos = []
         estilos = getSampleStyleSheet()
 
-        # Logo
         logo_path = obter_caminho_logo()
         if logo_path and os.path.exists(logo_path):
             try:
@@ -1331,14 +1375,14 @@ def emitir_certificado_batismo(id):
         elementos.append(Paragraph("CERTIFICADO DE BATISMO NAS ÁGUAS", estilo_tit))
         elementos.append(Spacer(1, 20))
 
-        nome_limpo = str(dados['nome']).upper().replace("<", "").replace(">", "")
-        data_limpa = str(dados['data_batismo']).replace("<", "").replace(">", "")
+        nome_limpo = dados['nome'].upper().replace("<", "").replace(">", "")
+        data_limpa = dados['data_batismo'].replace("<", "").replace(">", "")
 
         elementos.append(Paragraph("Certificamos que o(a) irmão(ã) abaixo mencionado(a), mediante pública profissão de fé no Senhor Jesus Cristo, desceu às águas batismais em conformidade com o mandamento do Evangelho de Mateus 28:19.", estilo_corpo))
         elementos.append(Spacer(1, 15))
         elementos.append(Paragraph(f"<b>{nome_limpo}</b>", estilo_nome))
         elementos.append(Spacer(1, 15))
-        elementos.append(Paragraph(f"Batizado(a) em nome do Pai, do Filho e do Espírito Santo.<br/>Data solene do Batismo: <b>{data_limpa}</b>", estilo_corpo))
+        elementos.append(Paragraph(f"Batizado(a) solenemente em nome do Pai, do Filho e do Espírito Santo.<br/>Data do Batismo: <b>{data_limpa}</b>", estilo_corpo))
         elementos.append(Spacer(1, 40))
 
         tabela_ass = Table([
