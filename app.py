@@ -1323,7 +1323,7 @@ def emitir_certificado_batismo(id):
     try:
         conn = get_db_connection()
         c = conn.cursor()
-        query = "SELECT id, nome, cargo, congregacao, data_batismo FROM membros WHERE id = %s" if DATABASE_URL and psycopg2 else "SELECT id, nome, cargo, congregacao, data_batismo FROM membros WHERE id = ?"
+        query = "SELECT * FROM membros WHERE id = %s" if DATABASE_URL and psycopg2 else "SELECT * FROM membros WHERE id = ?"
         c.execute(query, (id,))
         membro = c.fetchone()
         conn.close()
