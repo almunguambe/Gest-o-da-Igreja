@@ -51,10 +51,17 @@ class DBWrapper:
         cur = self.conn.cursor()
         q = query
         if self.is_pg:
-            # Converte marcadores ? para %s para PostgreSQL
+            # Protege símbolos de % normais (como LIKE '%...' ou strftime) escapando-os como %%
+            q = q.replace("%", "%%")
+            # Converte marcadores ? para %s real do psycopg2
             q = q.replace("?", "%s")
+            # Caso a query já tivesse %%s por engano, restaura
+            q = q.replace("%%%%s", "%s")
         try:
-            if params:
+            if params is not None:
+                # Garante formato tupla ou lista aceito pelo psycopg2
+                if not isinstance(params, (list, tuple)):
+                    params = (params,)
                 cur.execute(q, params)
             else:
                 cur.execute(q)
