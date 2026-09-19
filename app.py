@@ -1230,14 +1230,35 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 def obter_caminho_logo():
-    # Percorre recursivamente a pasta static para encontrar qualquer imagem de logo
+    # 1. Se já existir um logo em png ou jpg, usa diretamente
     static_dir = os.path.join(app.root_path, "static")
-    if os.path.exists(static_dir):
-        for raiz, _, arquivos in os.walk(static_dir):
-            for arq in arquivos:
-                # Procura por arquivos de imagem comuns usados como logo
-                if any(tag in arq.lower() for tag in ["logo", "emblema", "iead", "icone"]) and arq.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    return os.path.join(raiz, arq)
+    candidatos = [
+        os.path.join(static_dir, "logo.png"),
+        os.path.join(static_dir, "img", "logo.png"),
+        os.path.join(static_dir, "logo.jpg")
+    ]
+    for c in candidatos:
+        if os.path.exists(c):
+            return c
+
+    # 2. Se tiver logo.svg, converter para PNG simples em runtime
+    svg_path = os.path.join(static_dir, "logo.svg")
+    png_alvo = os.path.join(static_dir, "logo_auto.png")
+    if os.path.exists(png_alvo):
+        return png_alvo
+
+    # Tenta criar imagem a partir de PIL se possível
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        img = Image.new('RGBA', (200, 200), color=(13, 59, 102, 255))
+        d = ImageDraw.Draw(img)
+        d.ellipse([10, 10, 190, 190], outline=(255, 215, 0), width=6)
+        d.text((100, 100), "IEAD", fill=(255, 255, 255), anchor="mm")
+        img.save(png_alvo)
+        return png_alvo
+    except Exception:
+        pass
+
     return None
 
 @app.route('/membro/<int:id>/certificado_batismo')
@@ -1304,180 +1325,3 @@ def emitir_certificado_batismo(id):
     buffer.seek(0)
     from flask import send_file
     return send_file(buffer, mimetype='application/pdf', as_attachment=False, download_name=f'Certificado_Batismo_{id}.pdf')
-
-@app.route('/membro/<int:id>/carta_recomendacao')
-def emitir_carta_recomendacao(id):
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM membros WHERE id = %s" if DATABASE_URL and psycopg2 else "SELECT * FROM membros WHERE id = ?", (id,))
-    membro = c.fetchone()
-    conn.close()
-
-    if not membro:
-        return "Membro não encontrado", 404
-
-    nome = membro.get('nome') if isinstance(membro, dict) else membro[1]
-    cargo = membro.get('cargo') if isinstance(membro, dict) else (membro[2] if len(membro) > 2 else "Membro")
-    congregacao = membro.get('congregacao') if isinstance(membro, dict) else "Chicuque Sede"
-
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
-    elementos = []
-    estilos = getSampleStyleSheet()
-
-    logo_path = obter_caminho_logo()
-    if logo_path:
-        elementos.append(RLImage(logo_path, width=60, height=60))
-        elementos.append(Spacer(1, 8))
-
-    estilo_inst = ParagraphStyle('Inst', parent=estilos['Normal'], fontName='Helvetica-Bold', fontSize=13, alignment=1, textColor=colors.HexColor('#0d3b66'))
-    estilo_sub = ParagraphStyle('Sub', parent=estilos['Normal'], fontName='Helvetica', fontSize=10, alignment=1, textColor=colors.HexColor('#444444'))
-    estilo_tit = ParagraphStyle('Tit', parent=estilos['Normal'], fontName='Helvetica-Bold', fontSize=16, alignment=1, textColor=colors.HexColor('#222222'))
-    estilo_corpo = ParagraphStyle('Corpo', parent=estilos['Normal'], fontName='Helvetica', fontSize=11, leading=18, alignment=4)
-
-    elementos.append(Paragraph("IGREJA EVANGÉLICA ASSEMBLEIA DE DEUS", estilo_inst))
-    elementos.append(Paragraph("COMUNIDADE DE CHICUQUE – PROVÍNCIA DE INHAMBANE", estilo_sub))
-    elementos.append(Spacer(1, 20))
-    elementos.append(Paragraph("CARTA PASTORAL DE RECOMENDAÇÃO", estilo_tit))
-    elementos.append(Spacer(1, 25))
-
-    texto = f"""Aos Amados Irmãos em Cristo da Igreja Co-Irmã:<br/><br/>
-    Pela presente, temos a honra de recomendar à vossa comunhão e aos santos cuidados o(a) nosso(a) estimado(a) irmão(ã) <b>{nome}</b>, que nesta congregação desempenha o cargo de <b>{cargo}</b>.<br/><br/>
-    Enquanto esteve connosco na congregação de <b>{congregacao}</b>, manteve um testemunho exemplar, irrepreensível e fiel aos princípios das Sagradas Escrituras e aos estatutos eclesiásticos da nossa denominação.<br/><br/>
-    Pedimos, pois, que o(a) recebam no Senhor de forma digna e fraternal, prestando-lhe todo o apoio e assistência espiritual que se fizer necessária para a contínua edificação do Reino de Deus.<br/><br/>
-    <i>"Portanto, recebei-vos uns aos outros, como também Cristo nos recebeu para glória de Deus." (Romanos 15:7)</i>
-    """
-    elementos.append(Paragraph(texto, estilo_corpo))
-    elementos.append(Spacer(1, 40))
-    elementos.append(Paragraph("Chicuque, Moçambique.", estilo_corpo))
-    elementos.append(Spacer(1, 35))
-
-    tabela_ass = Table([
-        ["__________________________________________", "__________________________________________"],
-        ["Pastor Presidente / Titular", "Secretaria da Igreja"]
-    ], colWidths=[8.5*cm, 8.5*cm])
-    tabela_ass.setStyle(TableStyle([
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
-        ('FONTSIZE', (0,0), (-1,-1), 9)
-    ]))
-    elementos.append(tabela_ass)
-
-    doc.build(elementos)
-    buffer.seek(0)
-    from flask import send_file
-    return send_file(buffer, mimetype='application/pdf', as_attachment=False, download_name=f'Carta_Recomendacao_{id}.pdf')
-
-@app.route('/membro/<int:id>/cartao_membro')
-def emitir_cartao_membro(id):
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM membros WHERE id = %s" if DATABASE_URL and psycopg2 else "SELECT * FROM membros WHERE id = ?", (id,))
-    membro = c.fetchone()
-    conn.close()
-
-    if not membro:
-        return "Membro não encontrado", 404
-
-    nome = membro.get('nome') if isinstance(membro, dict) else membro[1]
-    cargo = membro.get('cargo') if isinstance(membro, dict) else (membro[2] if len(membro) > 2 else "Membro")
-    num_membro = membro.get('id') if isinstance(membro, dict) else membro[0]
-
-    buffer = BytesIO()
-    # Cartão formato ID padrão (85mm x 55mm)
-    doc = SimpleDocTemplate(buffer, pagesize=(86*mm, 54*mm), leftMargin=3*mm, rightMargin=3*mm, topMargin=3*mm, bottomMargin=3*mm)
-    elementos = []
-
-    logo_path = obter_caminho_logo()
-    img_tag = RLImage(logo_path, width=22, height=22) if logo_path else ""
-
-    estilos = getSampleStyleSheet()
-    est_cab = ParagraphStyle('Cab', parent=estilos['Normal'], fontName='Helvetica-Bold', fontSize=6.5, textColor=colors.white, alignment=1)
-    est_sub = ParagraphStyle('SubC', parent=estilos['Normal'], fontName='Helvetica', fontSize=5, textColor=colors.HexColor('#ffd700'), alignment=1)
-    est_dado = ParagraphStyle('Dado', parent=estilos['Normal'], fontName='Helvetica', fontSize=6, leading=8)
-
-    tabela_cab = Table([[img_tag, [Paragraph("ASSEMBLEIA DE DEUS", est_cab), Paragraph("IEAD CHICUQUE", est_sub)]]], colWidths=[8*mm, 70*mm])
-    tabela_cab.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#0d3b66')),
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
-        ('TOPPADDING', (0,0), (-1,-1), 2)
-    ]))
-    elementos.append(tabela_cab)
-    elementos.append(Spacer(1, 2*mm))
-
-    conteudo_cartao = [
-        [Paragraph(f"<b>Nº Registo:</b> {num_membro:04d}", est_dado)],
-        [Paragraph(f"<b>Nome:</b> {nome}", est_dado)],
-        [Paragraph(f"<b>Cargo:</b> {cargo}", est_dado)],
-        [Paragraph("<b>Status:</b> MEMBRO EM COMUNHÃO", est_dado)]
-    ]
-    tabela_corpo = Table(conteudo_cartao, colWidths=[78*mm])
-    tabela_corpo.setStyle(TableStyle([
-        ('BOTTOMPADDING', (0,0), (-1,-1), 1),
-        ('TOPPADDING', (0,0), (-1,-1), 1)
-    ]))
-    elementos.append(tabela_corpo)
-
-    doc.build(elementos)
-    buffer.seek(0)
-    from flask import send_file
-    return send_file(buffer, mimetype='application/pdf', as_attachment=False, download_name=f'Cartao_Membro_{id}.pdf')
-
-@app.route('/manual_doutrina_semestral')
-def ver_manual_doutrina_semestral():
-    from flask import render_template_string
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Manual de Doutrina Semestral - IEAD Chicuque</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <style>
-            body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-            .card-modulo { border-radius: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.07); margin-bottom: 25px; }
-            .header-modulo { background-color: #0d3b66; color: white; border-radius: 10px 10px 0 0; padding: 12px 20px; font-weight: bold; }
-            .semana-badge { background-color: #f1c40f; color: #333; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; }
-        </style>
-    </head>
-    <body class="p-3 p-md-5">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="text-primary fw-bold">Manual de Doutrina e Discipulado Semestral</h2>
-                    <p class="text-muted">Programa de 6 Meses para Catecúmenos e Novos Convertidos (24 Lições)</p>
-                </div>
-                <a href="/" class="btn btn-outline-secondary">← Voltar ao Painel</a>
-            </div>
-
-            {% for m in modulos %}
-            <div class="card card-modulo">
-                <div class="header-modulo d-flex justify-content-between">
-                    <span>{{ m.titulo }}</span>
-                    <span class="badge bg-light text-dark">Módulo {{ m.modulo }}</span>
-                </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        {% for l in m.licoes %}
-                        <div class="list-group-item py-3">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1 fw-bold text-dark"><span class="semana-badge me-2">Semana {{ l.semana }}</span>{{ l.tema }}</h6>
-                            </div>
-                            <p class="mb-1 text-muted mt-2">{{ l.texto }}</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </body>
-    </html>
-    """
-    return render_template_string(html, modulos=MODULOS_DOUTRINA_SEMESTRAL)
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
