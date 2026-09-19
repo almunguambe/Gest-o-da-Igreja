@@ -183,10 +183,15 @@ def init_db():
         data_envio TEXT NOT NULL
     )''')
 
-    c.execute("SELECT COUNT(*) FROM usuarios")
-    if c.fetchone()[0] == 0:
-        c.execute("INSERT INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)",
-                  ('admin', 'chicuque123', 'Pastor Presidente'))
+    # Contas fixas e permanentes da congregação
+    contas_permanentes = [
+        ('admin', 'chicuque123', 'Pastor Presidente'),
+        ('secretaria', '12345', 'Secretário'),
+        ('tesouraria', 'senha12345', 'Tesoureiro'),
+        ('doutrina', 'senha12345', 'Aluno')
+    ]
+    for usr, pwd, crg in contas_permanentes:
+        c.execute("INSERT OR IGNORE INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)", (usr, pwd, crg))
 
     deptos = ['Activista', 'Juventude', 'Mulher (Senhoras)', 'Boa Esperança (Crianças)', 'Homens / Obreiros', 'Louvor / Música', 'Ação Social', 'Construção']
     for d in deptos:
