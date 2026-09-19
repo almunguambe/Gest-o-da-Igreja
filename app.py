@@ -1,6 +1,5 @@
 import os
 try:
-    import psycopg2
     from psycopg2.extras import RealDictCursor
 except ImportError:
     psycopg2 = None
@@ -27,7 +26,9 @@ from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
 app.secret_key = "iead_chicuque_chave_super_segura_2026"
-DB_NAME = "gestao_chicuque.db"
+import os
+DATA_DIR = "/var/data" if os.path.exists("/var/data") else "."
+DB_NAME = os.path.join(DATA_DIR, "gestao_chicuque.db")
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
