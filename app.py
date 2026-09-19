@@ -24,11 +24,20 @@ UPLOAD_FOLDER = os.path.join("static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-def get_db():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
+TURSO_URL = os.environ.get("TURSO_DATABASE_URL", "libsql://iead-chicuque-db-almunguambe.aws-us-east-1.turso.io")
+TURSO_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MjgxNTAsImlkIjoiMDFhMGJhMTEtNTMwMS03NjVkLTliYmMtZjFiNDY1NmZmNGVjIiwia2lkIjoiUWx4ajBQTlRubjExcXVoRWpldmVmZG11Vko3T3ZsbDVwemlNUEdic2xudyIsInJpZCI6IjBmZDA1YTY4LTY0YjctNGE2Zi1hZGQxLWU2NjgzNmE5ODNmZCJ9.3ccLSnWMbwUEiWjzItQ-cHvLjyRTmHLYINWktZVyirs22ckyD6Ml2pEf6H-wGZDIN18CXYi73jy0xEVNOLNmAg")
 
+def get_db():
+    try:
+        import libsql_experimental as libsql
+        conn = libsql.connect(database=TURSO_URL, auth_token=TURSO_TOKEN)
+        conn.row_factory = sqlite3.Row
+        return conn
+    except Exception as err:
+        print(f"Aviso conexao Turso, usando sqlite local: {err}")
+        conn = sqlite3.connect(DB_NAME)
+        conn.row_factory = sqlite3.Row
+        return conn
 def init_db():
     conn = get_db()
     c = conn.cursor()

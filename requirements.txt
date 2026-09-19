@@ -4,4 +4,4 @@ openpyxl
 werkzeug
 reportlab
 pillow
-psycopg2-binary
+libsql-experimental
