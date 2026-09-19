@@ -32,6 +32,26 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
+
+import os
+import sqlite3
+try:
+    import psycopg2
+    import psycopg2.extras
+except ImportError:
+    psycopg2 = None
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_db_connection():
+    if DATABASE_URL and psycopg2:
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.cursor_factory = psycopg2.extras.RealDictCursor
+        return conn
+    conn = sqlite3.connect("gestao_chicuque.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
 app.secret_key = "iead_chicuque_chave_super_segura_2026"
 import os
 DATA_DIR = "/var/data" if os.path.exists("/var/data") else "."
