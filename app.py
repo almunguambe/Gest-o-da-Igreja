@@ -1,5 +1,12 @@
 import os
 try:
+    import psycopg2
+    import psycopg2.extras
+except ImportError:
+    psycopg2 = None
+
+import os
+try:
     from psycopg2.extras import RealDictCursor
 except ImportError:
     psycopg2 = None
