@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
-import sqlite3
 import os
-import io
-import json
-import zipfile
+import sqlite3
 from datetime import datetime
+import json
+import io
+import zipfile
 from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -17,13 +17,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 
-# Driver PostgreSQL com fallback
-try:
-    import psycopg2
-    import psycopg2.extras
-except ImportError:
-    psycopg2 = None
-
 app = Flask(__name__)
 app.secret_key = "iead_chicuque_chave_super_segura_2026"
 DB_NAME = "gestao_chicuque.db"
@@ -31,21 +24,22 @@ UPLOAD_FOLDER = os.path.join("static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+# DETECÇÃO AUTOMÁTICA DO BANCO (POSTGRESQL OU SQLITE)
+RAW_DB_URL = os.environ.get("DATABASE_URL")
+IS_POSTGRES = False
 
-class PGWrapper:
-    def __init__(self, conn):
+if RAW_DB_URL:
+    if RAW_DB_URL.startswith("postgres://"):
+        RAW_DB_URL = RAW_DB_URL.replace("postgres://", "postgresql://", 1)
+    IS_POSTGRES = True
+
+class DBWrapper:
+    def __init__(self, conn, is_pg=False):
         self.conn = conn
+        self.is_pg = is_pg
 
     def cursor(self):
         return self.conn.cursor()
-
-    def execute(self, sql, params=()):
-        # Converte a sintaxe ? do SQLite para %s do PostgreSQL
-        sql_pg = sql.replace('?', '%s')
-        cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute(sql_pg, params)
-        return cur
 
     def commit(self):
         self.conn.commit()
@@ -53,131 +47,147 @@ class PGWrapper:
     def close(self):
         self.conn.close()
 
+    def execute(self, query, params=None):
+        cur = self.conn.cursor()
+        q = query
+        if self.is_pg:
+            # Converte marcadores ? para %s para PostgreSQL
+            q = q.replace("?", "%s")
+        try:
+            if params:
+                cur.execute(q, params)
+            else:
+                cur.execute(q)
+        except Exception as e:
+            print(f"Erro SQL ({q}): {e}")
+            raise e
+        return cur
+
 def get_db():
-    if DATABASE_URL and psycopg2:
-        url = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-        conn = psycopg2.connect(url)
-        return PGWrapper(conn)
+    if IS_POSTGRES:
+        import psycopg2
+        import psycopg2.extras
+        conn = psycopg2.connect(RAW_DB_URL, cursor_factory=psycopg2.extras.DictCursor)
+        return DBWrapper(conn, is_pg=True)
     else:
         conn = sqlite3.connect(DB_NAME)
         conn.row_factory = sqlite3.Row
-        return conn
+        return DBWrapper(conn, is_pg=False)
 
 def init_db():
-    conn = get_db()
-    c = conn.cursor()
-    is_pg = bool(DATABASE_URL and psycopg2)
-
-    pk_type = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-    ignore_clause = "ON CONFLICT DO NOTHING" if is_pg else ""
-
-    # 1. Utilizadores
-    c.execute(f'''CREATE TABLE IF NOT EXISTS usuarios (
-        id {pk_type},
-        usuario TEXT UNIQUE NOT NULL,
-        senha TEXT NOT NULL,
-        cargo TEXT NOT NULL
-    )''')
+    db = get_db()
+    pk_tipo = "SERIAL PRIMARY KEY" if IS_POSTGRES else "INTEGER PRIMARY KEY AUTOINCREMENT"
     
-    # Criar admin se nao existir
-    c.execute("SELECT COUNT(*) FROM usuarios")
-    qtd = c.fetchone()[0]
-    if qtd == 0:
-        param_char = "%s" if is_pg else "?"
-        c.execute(f"INSERT INTO usuarios (usuario, senha, cargo) VALUES ({param_char}, {param_char}, {param_char})",
-                  ('admin', 'chicuque123', 'Pastor Presidente'))
+    # 1. Usuários
+    db.execute(f"""CREATE TABLE IF NOT EXISTS usuarios (
+        id {pk_tipo},
+        usuario VARCHAR(100) UNIQUE NOT NULL,
+        senha VARCHAR(100) NOT NULL,
+        cargo VARCHAR(100) NOT NULL
+    )""")
+    db.commit()
+
+    res = db.execute("SELECT COUNT(*) FROM usuarios").fetchone()
+    if res[0] == 0:
+        db.execute("INSERT INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)",
+                   ('admin', 'chicuque123', 'Pastor Presidente'))
+        db.commit()
 
     # 2. Membros
-    c.execute(f'''CREATE TABLE IF NOT EXISTS membros (
-        id {pk_type},
-        nome TEXT NOT NULL,
-        telefone TEXT,
-        genero TEXT,
-        data_nascimento TEXT,
-        faixa_etaria TEXT,
-        naturalidade TEXT,
-        bairro TEXT,
-        filiacao TEXT,
-        tipo_documento TEXT,
-        numero_documento TEXT,
+    db.execute(f"""CREATE TABLE IF NOT EXISTS membros (
+        id {pk_tipo},
+        nome VARCHAR(255) NOT NULL,
+        telefone VARCHAR(50),
+        genero VARCHAR(20),
+        data_nascimento VARCHAR(20),
+        faixa_etaria VARCHAR(50),
+        naturalidade VARCHAR(100),
+        bairro VARCHAR(100),
+        filiacao VARCHAR(255),
+        tipo_documento VARCHAR(50),
+        numero_documento VARCHAR(50),
         ano_conversao INTEGER,
-        data_batismo TEXT,
-        posicao_atual TEXT,
+        data_batismo VARCHAR(20),
+        posicao_atual VARCHAR(100),
         progressoes TEXT,
-        departamento TEXT,
+        departamento VARCHAR(100),
         foto_path TEXT,
         observacoes TEXT,
-        data_registo TEXT
-    )''')
+        data_registo VARCHAR(20)
+    )""")
+    db.commit()
 
     # 3. Financeiro
-    c.execute(f'''CREATE TABLE IF NOT EXISTS financeiro (
-        id {pk_type},
-        tipo TEXT NOT NULL,
-        local_movimento TEXT DEFAULT 'Caixa',
-        departamento TEXT DEFAULT 'Geral',
-        categoria TEXT NOT NULL,
-        valor REAL NOT NULL,
-        data_movimento TEXT NOT NULL,
+    db.execute(f"""CREATE TABLE IF NOT EXISTS financeiro (
+        id {pk_tipo},
+        tipo VARCHAR(20),
+        local_movimento VARCHAR(50) DEFAULT 'Caixa',
+        departamento VARCHAR(100) DEFAULT 'Geral',
+        categoria VARCHAR(100) NOT NULL,
+        valor NUMERIC(12, 2) NOT NULL,
+        data_movimento VARCHAR(20) NOT NULL,
         dia INTEGER,
         mes INTEGER,
         ano INTEGER,
-        data_registo TEXT NOT NULL,
+        data_registo VARCHAR(50) NOT NULL,
         membro_id INTEGER,
         descricao TEXT
-    )''')
+    )""")
+    db.commit()
 
     # 4. Transferências
-    c.execute(f'''CREATE TABLE IF NOT EXISTS transferencias (
-        id {pk_type},
-        data_movimento TEXT NOT NULL,
-        origem_local TEXT NOT NULL,
-        origem_depto TEXT NOT NULL,
-        destino_local TEXT NOT NULL,
-        destino_depto TEXT NOT NULL,
-        valor REAL NOT NULL,
+    db.execute(f"""CREATE TABLE IF NOT EXISTS transferencias (
+        id {pk_tipo},
+        data_movimento VARCHAR(20) NOT NULL,
+        origem_local VARCHAR(50) NOT NULL,
+        origem_depto VARCHAR(100) NOT NULL,
+        destino_local VARCHAR(50) NOT NULL,
+        destino_depto VARCHAR(100) NOT NULL,
+        valor NUMERIC(12, 2) NOT NULL,
         motivo TEXT NOT NULL,
-        data_registo TEXT NOT NULL
-    )''')
+        data_registo VARCHAR(50) NOT NULL
+    )""")
+    db.commit()
 
-    # 5. Casamentos e Óbitos
-    c.execute(f'''CREATE TABLE IF NOT EXISTS casamentos (
-        id {pk_type},
-        noivo TEXT NOT NULL,
-        noiva TEXT NOT NULL,
-        data_casamento TEXT NOT NULL,
-        pastor_oficiante TEXT,
-        data_registo TEXT
-    )''')
-
-    c.execute(f'''CREATE TABLE IF NOT EXISTS mortes (
-        id {pk_type},
-        nome_falecido TEXT NOT NULL,
-        data_falecimento TEXT NOT NULL,
+    # 5. Casamentos e Mortes
+    db.execute(f"""CREATE TABLE IF NOT EXISTS casamentos (
+        id {pk_tipo},
+        noivo VARCHAR(255) NOT NULL,
+        noiva VARCHAR(255) NOT NULL,
+        data_casamento VARCHAR(20) NOT NULL,
+        pastor_oficiante VARCHAR(255),
+        data_registo VARCHAR(20)
+    )""")
+    db.execute(f"""CREATE TABLE IF NOT EXISTS mortes (
+        id {pk_tipo},
+        nome_falecido VARCHAR(255) NOT NULL,
+        data_falecimento VARCHAR(20) NOT NULL,
         observacoes TEXT,
-        data_registo TEXT
-    )''')
+        data_registo VARCHAR(20)
+    )""")
+    db.commit()
 
-    # 6. Listas Auxiliares
-    c.execute(f'''CREATE TABLE IF NOT EXISTS departamentos_lista (
-        id {pk_type},
-        nome TEXT UNIQUE NOT NULL
-    )''')
-    c.execute(f'''CREATE TABLE IF NOT EXISTS categorias_financeiras (
-        id {pk_type},
-        tipo TEXT NOT NULL,
-        nome TEXT NOT NULL
-    )''')
-    c.execute(f'''CREATE TABLE IF NOT EXISTS zonas_lista (
-        id {pk_type},
-        nome TEXT UNIQUE NOT NULL
-    )''')
+    # 6. Listas Eclesiásticas
+    db.execute(f"""CREATE TABLE IF NOT EXISTS departamentos_lista (
+        id {pk_tipo},
+        nome VARCHAR(100) UNIQUE NOT NULL
+    )""")
+    db.execute(f"""CREATE TABLE IF NOT EXISTS categorias_financeiras (
+        id {pk_tipo},
+        tipo VARCHAR(20) NOT NULL,
+        nome VARCHAR(100) NOT NULL
+    )""")
+    db.execute(f"""CREATE TABLE IF NOT EXISTS zonas_lista (
+        id {pk_tipo},
+        nome VARCHAR(100) UNIQUE NOT NULL
+    )""")
+    db.commit()
 
-    # 7. Módulos Expandidos
-    c.execute(f'''CREATE TABLE IF NOT EXISTS cultos_frequencia (
-        id {pk_type},
-        data_culto TEXT NOT NULL,
-        tipo_culto TEXT NOT NULL,
+    # 7. Módulos Especiais
+    db.execute(f"""CREATE TABLE IF NOT EXISTS cultos_frequencia (
+        id {pk_tipo},
+        data_culto VARCHAR(20) NOT NULL,
+        tipo_culto VARCHAR(100) NOT NULL,
         homens INTEGER DEFAULT 0,
         mulheres INTEGER DEFAULT 0,
         jovens INTEGER DEFAULT 0,
@@ -185,113 +195,117 @@ def init_db():
         visitantes INTEGER DEFAULT 0,
         novos_convertidos INTEGER DEFAULT 0,
         total_presentes INTEGER DEFAULT 0,
-        pregador TEXT,
-        tema_mensagem TEXT,
-        data_registo TEXT
-    )''')
+        pregador VARCHAR(255),
+        tema_mensagem VARCHAR(255),
+        data_registo VARCHAR(20)
+    )""")
 
-    c.execute(f'''CREATE TABLE IF NOT EXISTS novos_convertidos (
-        id {pk_type},
-        nome TEXT NOT NULL,
-        telefone TEXT,
-        bairro TEXT,
-        data_decisao TEXT NOT NULL,
-        culto_origem TEXT,
-        quem_convidou TEXT,
-        status_discipulado TEXT DEFAULT 'Decisão Inicial',
+    db.execute(f"""CREATE TABLE IF NOT EXISTS novos_convertidos (
+        id {pk_tipo},
+        nome VARCHAR(255) NOT NULL,
+        telefone VARCHAR(50),
+        bairro VARCHAR(100),
+        data_decisao VARCHAR(20) NOT NULL,
+        culto_origem VARCHAR(100),
+        quem_convidou VARCHAR(255),
+        status_discipulado VARCHAR(100) DEFAULT 'Decisão Inicial',
         observacoes TEXT
-    )''')
+    )""")
 
-    c.execute(f'''CREATE TABLE IF NOT EXISTS patrimonio (
-        id {pk_type},
-        item TEXT NOT NULL,
-        departamento TEXT DEFAULT 'Geral',
+    db.execute(f"""CREATE TABLE IF NOT EXISTS patrimonio (
+        id {pk_tipo},
+        item VARCHAR(255) NOT NULL,
+        departamento VARCHAR(100) DEFAULT 'Geral',
         quantidade INTEGER DEFAULT 1,
-        estado_conservacao TEXT DEFAULT 'Bom',
-        localizacao TEXT,
+        estado_conservacao VARCHAR(50) DEFAULT 'Bom',
+        localizacao VARCHAR(100),
         observacoes TEXT
-    )''')
+    )""")
 
-    c.execute(f'''CREATE TABLE IF NOT EXISTS escalas (
-        id {pk_type},
-        data_escala TEXT NOT NULL,
-        tipo_culto TEXT NOT NULL,
-        dirigente TEXT,
-        pregador TEXT,
-        leitura_palavra TEXT,
-        louvor_grupo TEXT,
-        diaconos_servico TEXT,
+    db.execute(f"""CREATE TABLE IF NOT EXISTS escalas (
+        id {pk_tipo},
+        data_escala VARCHAR(20) NOT NULL,
+        tipo_culto VARCHAR(100) NOT NULL,
+        dirigente VARCHAR(255),
+        pregador VARCHAR(255),
+        leitura_palavra VARCHAR(255),
+        louvor_grupo VARCHAR(255),
+        diaconos_servico VARCHAR(255),
         observacoes TEXT
-    )''')
+    )""")
 
-    c.execute(f'''CREATE TABLE IF NOT EXISTS campanhas_metas (
-        id {pk_type},
-        nome_campanha TEXT NOT NULL,
-        departamento TEXT DEFAULT 'Construção',
-        valor_meta REAL NOT NULL,
-        status TEXT DEFAULT 'Ativa'
-    )''')
+    db.execute(f"""CREATE TABLE IF NOT EXISTS campanhas_metas (
+        id {pk_tipo},
+        nome_campanha VARCHAR(255) NOT NULL,
+        departamento VARCHAR(100) DEFAULT 'Construção',
+        valor_meta NUMERIC(12, 2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'Ativa'
+    )""")
 
-    c.execute('''CREATE TABLE IF NOT EXISTS duvidas_estudantes (
-        id {pk_type},
-        usuario TEXT NOT NULL,
-        licao TEXT NOT NULL,
-        duvida TEXT NOT NULL,
-        resposta TEXT,
-        data_envio TEXT NOT NULL
-    )''')
-    c.execute(f'''CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
-        id {pk_type},
-        usuario TEXT NOT NULL,
-        licao TEXT NOT NULL,
+    db.execute(f"""CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
+        id {pk_tipo},
+        usuario VARCHAR(100) NOT NULL,
+        licao VARCHAR(255) NOT NULL,
         nota INTEGER NOT NULL,
         total INTEGER NOT NULL,
-        data_resposta TEXT NOT NULL
-    )''')
+        data_resposta VARCHAR(50) NOT NULL
+    )""")
 
-    # Carga Inicial de Departamentos
-    deptos = ['Activista', 'Juventude', 'Mulher (Senhoras)', 'Boa Esperança (Crianças)', 
-              'Homens / Obreiros', 'Louvor / Música', 'Ação Social', 'Construção']
+    db.execute(f"""CREATE TABLE IF NOT EXISTS duvidas_estudantes (
+        id {pk_tipo},
+        usuario VARCHAR(100) NOT NULL,
+        licao VARCHAR(255) NOT NULL,
+        duvida TEXT NOT NULL,
+        resposta TEXT,
+        data_envio VARCHAR(50) NOT NULL
+    )""")
+    db.commit()
+
+    # Inserção de dados padrão de forma segura
+    deptos = ['Activista', 'Juventude', 'Mulher (Senhoras)', 'Boa Esperança (Crianças)', 'Homens / Obreiros', 'Louvor / Música', 'Ação Social', 'Construção']
     for d in deptos:
-        if is_pg:
-            c.execute("INSERT INTO departamentos_lista (nome) VALUES (%s) ON CONFLICT (nome) DO NOTHING", (d,))
-        else:
-            c.execute("INSERT OR IGNORE INTO departamentos_lista (nome) VALUES (?)", (d,))
+        try:
+            db.execute("INSERT INTO departamentos_lista (nome) VALUES (?)", (d,))
+            db.commit()
+        except:
+            pass
 
-    # Carga Inicial de Categorias
-    c.execute("SELECT COUNT(*) FROM categorias_financeiras")
-    if c.fetchone()[0] == 0:
+    if db.execute("SELECT COUNT(*) FROM categorias_financeiras").fetchone()[0] == 0:
         padroes = [
             ('Entrada', 'Dízimo'), ('Entrada', 'Oferta'), ('Entrada', 'Doação / Voto'), ('Entrada', 'Campanha de Construção'),
             ('Saída', 'Manutenção do Templo'), ('Saída', 'Ação Social / Ajudas'), ('Saída', 'Combustível / Transporte'),
             ('Saída', 'Água e Eletricidade'), ('Saída', 'Material de Culto')
         ]
-        param_char = "%s" if is_pg else "?"
-        for tipo_cat, nome_cat in padroes:
-            c.execute(f"INSERT INTO categorias_financeiras (tipo, nome) VALUES ({param_char}, {param_char})", (tipo_cat, nome_cat))
+        for t, n in padroes:
+            try:
+                db.execute("INSERT INTO categorias_financeiras (tipo, nome) VALUES (?, ?)", (t, n))
+                db.commit()
+            except:
+                pass
 
-    # Carga Inicial de Zonas
     zonas = ['Chicuque Sede', 'Maxixe Cidade', 'Nhacoongo', 'Conguiana', 'Bairro 1']
     for z in zonas:
-        if is_pg:
-            c.execute("INSERT INTO zonas_lista (nome) VALUES (%s) ON CONFLICT (nome) DO NOTHING", (z,))
-        else:
-            c.execute("INSERT OR IGNORE INTO zonas_lista (nome) VALUES (?)", (z,))
+        try:
+            db.execute("INSERT INTO zonas_lista (nome) VALUES (?)", (z,))
+            db.commit()
+        except:
+            pass
 
-    # Campanha Inicial
-    c.execute("SELECT COUNT(*) FROM campanhas_metas")
-    if c.fetchone()[0] == 0:
-        param_char = "%s" if is_pg else "?"
-        c.execute(f"INSERT INTO campanhas_metas (nome_campanha, departamento, valor_meta, status) VALUES ({param_char}, {param_char}, {param_char}, {param_char})",
-                  ('Campanha de Obras e Ampliação do Templo', 'Construção', 100000.0, 'Ativa'))
+    if db.execute("SELECT COUNT(*) FROM campanhas_metas").fetchone()[0] == 0:
+        try:
+            db.execute("INSERT INTO campanhas_metas (nome_campanha, departamento, valor_meta, status) VALUES (?, ?, ?, ?)",
+                       ('Campanha de Obras e Ampliação do Templo', 'Construção', 100000.0, 'Ativa'))
+            db.commit()
+        except:
+            pass
 
-    conn.commit()
-    conn.close()
+    db.close()
 
 try:
     init_db()
+    print("✓ Banco de dados inicializado com sucesso!")
 except Exception as e:
-    print("Erro na inicializacao da base de dados:", e)
+    print(f"Aviso na inicialização do banco: {e}")
 
 def is_admin():
     cargo = session.get('cargo', '')
