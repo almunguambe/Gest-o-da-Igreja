@@ -29,12 +29,47 @@ TURSO_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6Ik
 
 def get_db():
     try:
-        import libsql_experimental as libsql
-        conn = libsql.connect(database=TURSO_URL, auth_token=TURSO_TOKEN)
-        conn.row_factory = sqlite3.Row
-        return conn
+        import libsql_client
+        conn = libsql_client.create_client_sync(url=TURSO_URL, auth_token=TURSO_TOKEN)
+        # Adaptador para compatibilidade com a sintaxe do SQLite existente
+        class LibSqlWrapper:
+            def __init__(self, client):
+                self.client = client
+            def cursor(self):
+                return self
+            def execute(self, query, params=None):
+                if params:
+                    res = self.client.execute(query, list(params))
+                else:
+                    res = self.client.execute(query)
+                self._res = res
+                self._rows = res.rows
+                self._idx = 0
+                return self
+            def executemany(self, query, seq_params):
+                for p in seq_params:
+                    self.execute(query, p)
+                return self
+            def fetchone(self):
+                if hasattr(self, '_rows') and self._idx < len(self._rows):
+                    row = self._rows[self._idx]
+                    self._idx += 1
+                    return row
+                return None
+            def fetchall(self):
+                if hasattr(self, '_rows'):
+                    return self._rows
+                return []
+            def commit(self):
+                pass
+            def close(self):
+                try:
+                    self.client.close()
+                except:
+                    pass
+        return LibSqlWrapper(conn)
     except Exception as err:
-        print(f"Aviso conexao Turso, usando sqlite local: {err}")
+        print(f"Aviso ao ligar Turso, usando sqlite local: {err}")
         conn = sqlite3.connect(DB_NAME)
         conn.row_factory = sqlite3.Row
         return conn
