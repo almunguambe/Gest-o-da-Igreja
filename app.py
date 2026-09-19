@@ -1230,14 +1230,14 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 def obter_caminho_logo():
-    caminhos = [
-        os.path.join(app.root_path, 'static', 'img', 'logo.png'),
-        os.path.join(app.root_path, 'static', 'logo.png'),
-        os.path.join(app.root_path, 'logo.png')
-    ]
-    for c in caminhos:
-        if os.path.exists(c):
-            return c
+    # Percorre recursivamente a pasta static para encontrar qualquer imagem de logo
+    static_dir = os.path.join(app.root_path, "static")
+    if os.path.exists(static_dir):
+        for raiz, _, arquivos in os.walk(static_dir):
+            for arq in arquivos:
+                # Procura por arquivos de imagem comuns usados como logo
+                if any(tag in arq.lower() for tag in ["logo", "emblema", "iead", "icone"]) and arq.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    return os.path.join(raiz, arq)
     return None
 
 @app.route('/membro/<int:id>/certificado_batismo')
