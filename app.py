@@ -1452,7 +1452,6 @@ def emitir_certificado_batismo(id):
         return send_file(buffer, mimetype='application/pdf', as_attachment=False, download_name=f"Certificado_Batismo_{id}.pdf")
     except Exception as e:
         return f"Erro ao processar certificado: {e}", 500
-
 @app.route('/membro/<int:id>/carta_recomendacao')
 @app.route('/membro/certificado_pdf/<int:id>/recomendacao')
 def emitir_carta_recomendacao(id):
@@ -1464,19 +1463,26 @@ def emitir_carta_recomendacao(id):
         conn.close()
 
         if not membro:
-            return "Membro não encontrado", 404
+            return "Membro não encontrado.", 404
 
         dados = extrair_dados_membro(membro)
 
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            leftMargin=2*cm,
+            rightMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
         elementos = []
         estilos = getSampleStyleSheet()
 
         logo_path = obter_caminho_logo()
         if logo_path and os.path.exists(logo_path):
             try:
-                elementos.append(RLImage(logo_path, width=60, height=60))
+                elementos.append(RLImage(logo_path, width=65, height=65))
                 elementos.append(Spacer(1, 8))
             except Exception:
                 pass
@@ -1487,26 +1493,27 @@ def emitir_carta_recomendacao(id):
         estilo_corpo = ParagraphStyle('Corpo', parent=estilos['Normal'], fontName='Helvetica', fontSize=11, leading=19, alignment=4)
 
         elementos.append(Paragraph("IGREJA EVANGÉLICA ASSEMBLEIA DE DEUS", estilo_inst))
-        elementos.append(Paragraph("COMUNIDADE DE CHICUQUE – PROVÍNCIA DE INHAMBANE", estilo_sub))
+        elementos.append(Paragraph(f"CONGREGAÇÃO DE {dados['bairro'].upper()} – MOÇAMBIQUE", estilo_sub))
         elementos.append(Spacer(1, 20))
         elementos.append(Paragraph("CARTA PASTORAL DE RECOMENDAÇÃO", estilo_tit))
         elementos.append(Spacer(1, 25))
 
-        nome_l = str(dados['nome']).replace("<", "").replace(">", "")
-        cargo_l = str(dados['cargo']).replace("<", "").replace(">", "")
-        cong_l = str(dados['congregacao']).replace("<", "").replace(">", "")
+        nome_l = dados['nome'].replace("<", "").replace(">", "")
+        cargo_l = dados['posicao'].replace("<", "").replace(">", "")
+        cong_l = dados['bairro'].replace("<", "").replace(">", "")
+        depto_l = dados['departamento'].replace("<", "").replace(">", "")
 
         elementos.append(Paragraph("Aos Amados Irmãos em Cristo da Igreja Co-Irmã:", estilo_corpo))
         elementos.append(Spacer(1, 10))
-        elementos.append(Paragraph(f"Pela presente, temos a honra de recomendar à vossa comunhão e aos santos cuidados espirituais o(a) nosso(a) estimado(a) irmão(ã) <b>{nome_l}</b>, que serve nesta comunidade eclesial na qualidade de <b>{cargo_l}</b>.", estilo_corpo))
+        elementos.append(Paragraph(f"Pela presente, temos a honra de recomendar à vossa comunhão e aos santos cuidados o(a) estimado(a) irmão(ã) <b>{nome_l}</b>, que serve nesta comunidade eclesial na qualidade de <b>{cargo_l}</b> (Ministério/Departamento: <b>{depto_l}</b>).", estilo_corpo))
         elementos.append(Spacer(1, 10))
-        elementos.append(Paragraph(f"Enquanto esteve connosco na congregação de <b>{cong_l}</b>, manteve conduta bíblica e eclesiástica exemplar, com testemunho digno do Evangelho de Cristo.", estilo_corpo))
+        elementos.append(Paragraph(f"Enquanto esteve connosco na congregação de <b>{cong_l}</b>, manteve um testemunho exemplar, irrepreensível e fiel aos princípios das Sagradas Escrituras e aos estatutos eclesiásticos da nossa denominação.", estilo_corpo))
         elementos.append(Spacer(1, 10))
-        elementos.append(Paragraph("Rogamos que o(a) recebam no Senhor com a devida hospitalidade cristã, prestando-lhe todo o suporte fraternal na obra de Deus.", estilo_corpo))
+        elementos.append(Paragraph("Rogamos que o(a) recebam no Senhor com todo o apreço e hospitalidade cristã, prestando-lhe todo o apoio e acompanhamento espiritual na continuação da sua jornada de fé.", estilo_corpo))
         elementos.append(Spacer(1, 15))
         elementos.append(Paragraph("<i>&quot;Portanto, recebei-vos uns aos outros, como também Cristo nos recebeu para glória de Deus.&quot; (Romanos 15:7)</i>", estilo_corpo))
         elementos.append(Spacer(1, 35))
-        elementos.append(Paragraph("Chicuque, Moçambique.", estilo_corpo))
+        elementos.append(Paragraph(f"{cong_l}, Moçambique.", estilo_corpo))
         elementos.append(Spacer(1, 35))
 
         tabela_ass = Table([
