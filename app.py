@@ -1,3 +1,10 @@
+import os
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except ImportError:
+    psycopg2 = None
+
 import urllib.request
 import os
 import sqlite3
