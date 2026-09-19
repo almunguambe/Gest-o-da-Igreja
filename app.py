@@ -36,6 +36,8 @@ GIST_URL = "https://gist.githubusercontent.com/almunguambe/b9f7af1814fb7674e3a0d
 
 def sync_puxar_nuvem():
     """Restaura automaticamente todos os utilizadores e alunos do Gist para o SQLite local"""
+    import urllib.request
+    import json
     import ssl
     try:
         ctx = ssl.create_default_context()
