@@ -24,55 +24,11 @@ UPLOAD_FOLDER = os.path.join("static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-TURSO_URL = os.environ.get("TURSO_DATABASE_URL", "libsql://iead-chicuque-db-almunguambe.aws-us-east-1.turso.io")
-TURSO_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MjgxNTAsImlkIjoiMDFhMGJhMTEtNTMwMS03NjVkLTliYmMtZjFiNDY1NmZmNGVjIiwia2lkIjoiUWx4ajBQTlRubjExcXVoRWpldmVmZG11Vko3T3ZsbDVwemlNUEdic2xudyIsInJpZCI6IjBmZDA1YTY4LTY0YjctNGE2Zi1hZGQxLWU2NjgzNmE5ODNmZCJ9.3ccLSnWMbwUEiWjzItQ-cHvLjyRTmHLYINWktZVyirs22ckyD6Ml2pEf6H-wGZDIN18CXYi73jy0xEVNOLNmAg")
-
 def get_db():
-    try:
-        import libsql_client
-        conn = libsql_client.create_client_sync(url=TURSO_URL, auth_token=TURSO_TOKEN)
-        # Adaptador para compatibilidade com a sintaxe do SQLite existente
-        class LibSqlWrapper:
-            def __init__(self, client):
-                self.client = client
-            def cursor(self):
-                return self
-            def execute(self, query, params=None):
-                if params:
-                    res = self.client.execute(query, list(params))
-                else:
-                    res = self.client.execute(query)
-                self._res = res
-                self._rows = res.rows
-                self._idx = 0
-                return self
-            def executemany(self, query, seq_params):
-                for p in seq_params:
-                    self.execute(query, p)
-                return self
-            def fetchone(self):
-                if hasattr(self, '_rows') and self._idx < len(self._rows):
-                    row = self._rows[self._idx]
-                    self._idx += 1
-                    return row
-                return None
-            def fetchall(self):
-                if hasattr(self, '_rows'):
-                    return self._rows
-                return []
-            def commit(self):
-                pass
-            def close(self):
-                try:
-                    self.client.close()
-                except:
-                    pass
-        return LibSqlWrapper(conn)
-    except Exception as err:
-        print(f"Aviso ao ligar Turso, usando sqlite local: {err}")
-        conn = sqlite3.connect(DB_NAME)
-        conn.row_factory = sqlite3.Row
-        return conn
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 def init_db():
     conn = get_db()
     c = conn.cursor()
@@ -227,14 +183,14 @@ def init_db():
         data_envio TEXT NOT NULL
     )''')
 
-    # Contas fixas e permanentes da congregação
-    contas_permanentes = [
+    # Contas fixas e permanentes garantidas
+    contas = [
         ('admin', 'chicuque123', 'Pastor Presidente'),
         ('secretaria', '12345', 'Secretário'),
         ('tesouraria', 'senha12345', 'Tesoureiro'),
         ('doutrina', 'senha12345', 'Aluno')
     ]
-    for usr, pwd, crg in contas_permanentes:
+    for usr, pwd, crg in contas:
         c.execute("INSERT OR IGNORE INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)", (usr, pwd, crg))
 
     deptos = ['Activista', 'Juventude', 'Mulher (Senhoras)', 'Boa Esperança (Crianças)', 'Homens / Obreiros', 'Louvor / Música', 'Ação Social', 'Construção']
@@ -755,7 +711,7 @@ def certificado_membro_pdf(id, tipo):
     else:
         corpo = f"Pela presente recomendamos o(a) nosso(a) irmão(ã) em Cristo <b>{m['nome'].upper()}</b>, que congregou connosco em plena comunhão fraterna como <b>{m['posicao_atual']}</b>, prestando serviços no departamento <b>{m['departamento']}</b>. Rogamos que seja acolhido(a) no amor fraterno pelo vosso ministério."
 
-    elementos.append(Paragraph(f"<para leading=22><font color='#1e293b' size=13>{corpo}</font>", ParagraphStyle('B', alignment=4, spaceAfter=25)))
+    elementos.append(Paragraph(f"<para ><font color='#1e293b' size=13>{corpo}</font>", ParagraphStyle('B', alignment=4, spaceAfter=25)))
     elementos.append(Paragraph(f"<i><font color='#64748b' size=10>{versiculo}</font></i>", ParagraphStyle('V', alignment=1, spaceAfter=35)))
     elementos.append(Spacer(1, 1*cm))
     elementos.append(Paragraph(f"<font color='#334155' size=10><b>Chicuque, aos {datetime.now().strftime('%d de %B de %Y')}.</b></font>", ParagraphStyle('D', alignment=1, spaceAfter=30)))

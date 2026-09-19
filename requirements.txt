@@ -4,4 +4,3 @@ openpyxl
 werkzeug
 reportlab
 pillow
-libsql-experimental
