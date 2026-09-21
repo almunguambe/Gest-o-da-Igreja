@@ -1314,36 +1314,14 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 def obter_caminho_logo():
-    # 1. Se já existir um logo em png ou jpg, usa diretamente
-    static_dir = os.path.join(app.root_path, "static")
-    candidatos = [
-        os.path.join(static_dir, "logo.png"),
-        os.path.join(static_dir, "img", "logo.png"),
-        os.path.join(static_dir, "logo.jpg")
-    ]
-    for c in candidatos:
-        if os.path.exists(c):
-            return c
-
-    # 2. Se tiver logo.svg, converter para PNG simples em runtime
-    svg_path = os.path.join(static_dir, "logo.svg")
-    png_alvo = os.path.join(static_dir, "logo_auto.png")
-    if os.path.exists(png_alvo):
-        return png_alvo
-
-    # Tenta criar imagem a partir de PIL se possível
-    try:
-        from PIL import Image, ImageDraw, ImageFont
-        img = Image.new('RGBA', (200, 200), color=(13, 59, 102, 255))
-        d = ImageDraw.Draw(img)
-        d.ellipse([10, 10, 190, 190], outline=(255, 215, 0), width=6)
-        d.text((100, 100), "IEAD", fill=(255, 255, 255), anchor="mm")
-        img.save(png_alvo)
-        return png_alvo
-    except Exception:
-        pass
-
+    caminho = os.path.join(app.root_path, "static", "logo.png")
+    if os.path.exists(caminho):
+        return caminho
+    caminho_rel = os.path.join("static", "logo.png")
+    if os.path.exists(caminho_rel):
+        return os.path.abspath(caminho_rel)
     return None
+
 @app.route('/membro/<int:id>/certificado_batismo')
 @app.route('/membro/certificado_pdf/<int:id>/batismo')
 def emitir_certificado_batismo(id):
