@@ -879,14 +879,13 @@ def cartao_membro_pdf(id):
 
     c.setFillColor(colors.white)
 
-        # Inserção do Logo Oficial no Cartão
-        logo_path = obter_caminho_logo()
-        if logo_path and os.path.exists(logo_path):
-            try:
-                # Desenha o logo proporcional no canto superior esquerdo ou central
-                c.drawImage(logo_path, x_inicio + 10, y_topo - 45, width=40, height=40, preserveAspectRatio=True, mask='auto')
-            except Exception as err:
-                print(f"Aviso logo cartao: {err}")
+    # Inserção do Logo Oficial no Cartão
+    logo_path = obter_caminho_logo()
+    if logo_path and os.path.exists(logo_path):
+        try:
+            c.drawImage(logo_path, 0.4*cm, 4.3*cm, width=0.9*cm, height=0.9*cm, preserveAspectRatio=True, mask='auto')
+        except Exception as err:
+            print(f"Aviso logo cartao: {err}")
 
     c.setFont("Helvetica-Bold", 7.5)
     c.drawCentredString(4.25*cm, 4.85*cm, "IGREJA EVANGÉLICA ASSEMBLEIA DE DEUS")
