@@ -591,7 +591,7 @@ def dashboard():
 
     lista_deptos = conn.execute("SELECT * FROM departamentos_lista ORDER BY nome ASC").fetchall()
     lista_categorias = conn.execute("SELECT * FROM categorias_financeiras ORDER BY tipo, nome ASC").fetchall()
-        try:
+    try:
         lista_zonas = conn.execute("SELECT * FROM zonas_lista ORDER BY nome ASC").fetchall()
     except Exception:
         lista_zonas = []
