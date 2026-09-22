@@ -515,12 +515,9 @@ def dashboard():
                            saidas_valores=json.dumps(saidas_valores))
 
 @app.route('/estudos')
-def portal_estudos():
-    if 'usuario' not in session:
-        return redirect(url_for('login'))
-    resultado_teste = session.pop('resultado_teste', None)
-    return render_template('estudos.html', resultado_teste=resultado_teste, tel_pastor="258866677810")
-
+def estudos():
+    from flask import redirect
+    return redirect('/discipulado/classe/c1')
 
 @app.route('/estudos/duvida', methods=['POST'])
 def enviar_duvida():
