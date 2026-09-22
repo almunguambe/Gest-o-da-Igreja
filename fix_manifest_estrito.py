@@ -1,0 +1,34 @@
+import json
+
+manifest = {
+    "name": "IEAD Chicuque - Gestão & Ensino",
+    "short_name": "IEAD Chicuque",
+    "description": "Sistema Eclesiástico e Escola Bíblica da IEAD Chicuque",
+    "start_url": "/",
+    "scope": "/",
+    "id": "/",
+    "display": "standalone",
+    "display_override": ["standalone", "window-controls-overlay"],
+    "background_color": "#0d3b66",
+    "theme_color": "#0d3b66",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/static/logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/static/logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
+
+with open("static/manifest.json", "w", encoding="utf-8") as f:
+    json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+print("✓ static/manifest.json atualizado com identificador e escopo completos!")
