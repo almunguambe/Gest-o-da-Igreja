@@ -730,9 +730,9 @@ def responder_estudos():
 def novo_membro():
     if not can_cadastro(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
-        zona = request.form.get('zona', '').strip()
-        celula = request.form.get('celula', '').strip()
-        distrito = request.form.get('distrito', '').strip()
+    zona = request.form.get('zona', '').strip()
+    celula = request.form.get('celula', '').strip()
+    distrito = request.form.get('distrito', '').strip()
     num_doc = request.form.get('numero_documento', '').strip()
     tipo_doc = request.form.get('tipo_documento', 'BI')
 
@@ -1263,9 +1263,9 @@ def apagar_registo(tabela, id):
 def novo_depto():
     if not is_admin(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
-        zona = request.form.get('zona', '').strip()
-        celula = request.form.get('celula', '').strip()
-        distrito = request.form.get('distrito', '').strip()
+    zona = request.form.get('zona', '').strip()
+    celula = request.form.get('celula', '').strip()
+    distrito = request.form.get('distrito', '').strip()
     if nome:
         conn = get_db()
         try:
@@ -1308,9 +1308,9 @@ def apagar_categoria(id):
 def nova_zona():
     if not is_admin(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
-        zona = request.form.get('zona', '').strip()
-        celula = request.form.get('celula', '').strip()
-        distrito = request.form.get('distrito', '').strip()
+    zona = request.form.get('zona', '').strip()
+    celula = request.form.get('celula', '').strip()
+    distrito = request.form.get('distrito', '').strip()
     if nome:
         conn = get_db()
         try:
