@@ -541,6 +541,9 @@ def dashboard():
 
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
+    return render_template('dashboard.html',
+                           duvidas=duvidas_lista,
+                           discipulado_alunos=candidatos_discipulado,
                            pode_cadastro=can_cadastro(),
                            pode_tesouraria=can_tesouraria(),
                            e_admin=is_admin(),
