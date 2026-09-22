@@ -454,6 +454,44 @@ try:
 except Exception:
     pass
 
+
+def assegurar_colunas_geograficas():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        colunas = [
+            ("zona", "VARCHAR(100)"),
+            ("celula", "VARCHAR(100)"),
+            ("bairro", "VARCHAR(100)"),
+            ("distrito", "VARCHAR(100)")
+        ]
+        for col, tipo in colunas:
+            if DATABASE_URL and psycopg2:
+                c.execute(f"""
+                    DO $$ 
+                    BEGIN 
+                        BEGIN
+                            ALTER TABLE membros ADD COLUMN {col} {tipo};
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                    END $$;
+                """)
+            else:
+                try:
+                    c.execute(f"ALTER TABLE membros ADD COLUMN {col} TEXT;")
+                except Exception:
+                    pass
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Aviso migracao geografica: {e}")
+
+try:
+    assegurar_colunas_geograficas()
+except Exception:
+    pass
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -692,6 +730,9 @@ def responder_estudos():
 def novo_membro():
     if not can_cadastro(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
+        zona = request.form.get('zona', '').strip()
+        celula = request.form.get('celula', '').strip()
+        distrito = request.form.get('distrito', '').strip()
     num_doc = request.form.get('numero_documento', '').strip()
     tipo_doc = request.form.get('tipo_documento', 'BI')
 
@@ -1222,6 +1263,9 @@ def apagar_registo(tabela, id):
 def novo_depto():
     if not is_admin(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
+        zona = request.form.get('zona', '').strip()
+        celula = request.form.get('celula', '').strip()
+        distrito = request.form.get('distrito', '').strip()
     if nome:
         conn = get_db()
         try:
@@ -1264,6 +1308,9 @@ def apagar_categoria(id):
 def nova_zona():
     if not is_admin(): return redirect(url_for('dashboard'))
     nome = request.form.get('nome', '').strip()
+        zona = request.form.get('zona', '').strip()
+        celula = request.form.get('celula', '').strip()
+        distrito = request.form.get('distrito', '').strip()
     if nome:
         conn = get_db()
         try:
