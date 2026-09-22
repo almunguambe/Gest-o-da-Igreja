@@ -211,10 +211,10 @@
 
             <!-- ================= ABA 1: MEMBROS ================= -->
             <section id="aba-membros" class="tab-content {% if pode_cadastro %}active{% endif %} space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
                     
                     <!-- Formulário -->
-                    <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5 sm:p-6">
+                    <div class="xl:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5 sm:p-6">
                         <div class="flex items-center justify-between pb-4 mb-5 border-b border-indigo-50">
                             <div>
                                 <h2 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
@@ -366,7 +366,7 @@
                     </div>
 
                     <!-- Cards dos Membros -->
-                    <div class="lg:col-span-7 space-y-4">
+                    <div class="xl:col-span-7 space-y-4">
                         <div class="bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5 flex justify-between items-center">
                             <div>
                                 <h3 class="text-base font-black text-slate-900">Membros Registados ({{ total_membros }})</h3>
@@ -437,8 +437,8 @@
 
             <!-- ================= ABA 2: CULTOS ================= -->
             <section id="aba-cultos" class="tab-content space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                    <div class="xl:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">⛪ Registo Rápido de Culto</h3>
                         <form action="/cultos/novo" method="POST" class="space-y-3">
                             <div class="grid grid-cols-2 gap-2">
@@ -489,8 +489,8 @@
 
             <!-- ================= ABA 3: DISCIPULADO ================= -->
             <section id="aba-convertidos" class="tab-content space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                    <div class="xl:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">🌱 Registar Novo Convertido</h3>
                         <form action="/convertidos/novo" method="POST" class="space-y-3">
                             <input type="text" name="nome" required placeholder="Nome Completo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
