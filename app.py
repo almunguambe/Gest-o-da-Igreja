@@ -510,7 +510,34 @@ def dashboard():
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
 
-    return render_template('dashboard.html',
+    
+        # Carregar dúvidas bíblicas para o painel pastoral
+        duvidas_lista = []
+        candidatos_discipulado = []
+        try:
+            c.execute("SELECT * FROM duvidas_discipulado ORDER BY id DESC LIMIT 20")
+            duvidas_lista = c.fetchall()
+        except Exception:
+            pass
+
+        try:
+            query_prog = """
+                SELECT m.id, m.nome, m.foto_path, m.telefone,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
+                FROM membros m
+                LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
+                GROUP BY m.id, m.nome, m.foto_path, m.telefone
+                ORDER BY m.id DESC
+            """
+            c.execute(query_prog)
+            candidatos_discipulado = c.fetchall()
+        except Exception:
+            pass
+
+        return render_template('dashboard.html', duvidas=duvidas_lista, discipulado_alunos=candidatos_discipulado,
                            pode_cadastro=can_cadastro(),
                            pode_tesouraria=can_tesouraria(),
                            e_admin=is_admin(),
@@ -1895,3 +1922,27 @@ def emitir_certificado_conclusao(id):
         return send_file(buffer, mimetype='application/pdf', as_attachment=False, download_name=f"Certificado_Conclusao_Discipulado_{id}.pdf")
     except Exception as e:
         return f"Erro ao gerar certificado de conclusão: {e}", 500
+
+
+@app.route('/discipulado/responder_duvida/<int:id>', methods=['POST'])
+def responder_duvida_discipulado(id):
+    from flask import request, redirect
+    resposta = request.form.get('resposta', '').strip()
+    if resposta:
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("""
+                UPDATE duvidas_discipulado 
+                SET resposta = %s 
+                WHERE id = %s
+            """ if DATABASE_URL and psycopg2 else """
+                UPDATE duvidas_discipulado 
+                SET resposta = ? 
+                WHERE id = ?
+            """, (resposta, id))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Erro ao salvar resposta: {e}")
+    return redirect('/#secao-discipulado')
