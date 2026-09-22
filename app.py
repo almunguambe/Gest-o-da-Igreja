@@ -972,11 +972,13 @@ def novo_patrimonio():
 def nova_escala():
     if not is_admin() and not can_cadastro(): return redirect(url_for('dashboard'))
     conn = get_db()
-    conn.execute('''INSERT INTO escalas (data_escala, tipo_culto, dirigente, pregador, leitura_palavra, louvor_grupo, diaconos_servico, observacoes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+    igreja_id = session.get('igreja_id', 1)
+    conn.execute('''INSERT INTO escalas (data_escala, tipo_culto, dirigente, pregador, leitura_palavra, louvor_grupo, diaconos_servico, observacoes, telefone_dirigente, telefone_pregador, igreja_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                  (request.form['data_escala'], request.form['tipo_culto'], request.form.get('dirigente', ''),
                   request.form.get('pregador', ''), request.form.get('leitura_palavra', ''),
-                  request.form.get('louvor_grupo', ''), request.form.get('diaconos_servico', ''), request.form.get('observacoes', '')))
+                  request.form.get('louvor_grupo', ''), request.form.get('diaconos_servico', ''), request.form.get('observacoes', ''),
+                  request.form.get('telefone_dirigente', ''), request.form.get('telefone_pregador', ''), igreja_id))
     conn.commit()
     conn.close()
     session['sucesso_cadastro'] = "Escala registada!"
