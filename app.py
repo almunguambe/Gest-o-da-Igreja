@@ -401,6 +401,59 @@ try:
 except Exception:
     pass
 
+
+def assegurar_coluna_obito():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if DATABASE_URL and psycopg2:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS obitos (
+                    id SERIAL PRIMARY KEY,
+                    membro_id INTEGER REFERENCES membros(id),
+                    nome VARCHAR(150),
+                    data_morte DATE,
+                    causa TEXT,
+                    observacoes TEXT,
+                    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            c.execute("""
+                DO $$
+                BEGIN
+                    BEGIN
+                        ALTER TABLE obitos ADD COLUMN membro_id INTEGER;
+                    EXCEPTION
+                        WHEN duplicate_column THEN RAISE NOTICE 'membro_id ja existe';
+                    END;
+                END $$;
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS obitos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    membro_id INTEGER,
+                    nome TEXT,
+                    data_morte DATE,
+                    causa TEXT,
+                    observacoes TEXT,
+                    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            try:
+                c.execute("ALTER TABLE obitos ADD COLUMN membro_id INTEGER")
+            except Exception:
+                pass
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Aviso tabela obitos: {e}")
+
+try:
+    assegurar_coluna_obito()
+except Exception:
+    pass
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -825,6 +878,16 @@ def cartao_membro_pdf(id):
     c.rect(0, 4.15*cm, 8.5*cm, 0.06*cm, fill=1, stroke=0)
 
     c.setFillColor(colors.white)
+
+        # Inserção do Logo Oficial no Cartão
+        logo_path = obter_caminho_logo()
+        if logo_path and os.path.exists(logo_path):
+            try:
+                # Desenha o logo proporcional no canto superior esquerdo ou central
+                c.drawImage(logo_path, x_inicio + 10, y_topo - 45, width=40, height=40, preserveAspectRatio=True, mask='auto')
+            except Exception as err:
+                print(f"Aviso logo cartao: {err}")
+
     c.setFont("Helvetica-Bold", 7.5)
     c.drawCentredString(4.25*cm, 4.85*cm, "IGREJA EVANGÉLICA ASSEMBLEIA DE DEUS")
     c.setFont("Helvetica", 6)
