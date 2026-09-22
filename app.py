@@ -591,7 +591,10 @@ def dashboard():
 
     lista_deptos = conn.execute("SELECT * FROM departamentos_lista ORDER BY nome ASC").fetchall()
     lista_categorias = conn.execute("SELECT * FROM categorias_financeiras ORDER BY tipo, nome ASC").fetchall()
-    lista_zonas = conn.execute("SELECT * FROM zonas_lista ORDER BY nome ASC").fetchall()
+        try:
+        lista_zonas = conn.execute("SELECT * FROM zonas_lista ORDER BY nome ASC").fetchall()
+    except Exception:
+        lista_zonas = []
 
     categorias_json = json.dumps([{'tipo': c['tipo'], 'nome': c['nome']} for c in lista_categorias])
     membros_json = json.dumps([dict(m) for m in todos_membros])
@@ -2116,5 +2119,62 @@ def migrar_banco_imediato():
 
 try:
     migrar_banco_imediato()
+except Exception:
+    pass
+
+
+def criar_tabelas_faltantes():
+    try:
+        conn = get_db_connection() if 'get_db_connection' in globals() else get_db()
+        c = conn.cursor() if hasattr(conn, 'cursor') else conn
+        is_pg = bool(DATABASE_URL and psycopg2)
+
+        # Tabela zonas_lista
+        if is_pg:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS zonas_lista (
+                    id SERIAL PRIMARY KEY,
+                    nome VARCHAR(100) UNIQUE NOT NULL
+                );
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS zonas_lista (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT UNIQUE NOT NULL
+                );
+            """)
+
+        # Tabela avaliacoes_estudantes se faltar
+        if is_pg:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
+                    id SERIAL PRIMARY KEY,
+                    usuario VARCHAR(150),
+                    licao VARCHAR(50),
+                    nota INTEGER,
+                    total INTEGER,
+                    data_resposta VARCHAR(50)
+                );
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario TEXT,
+                    licao TEXT,
+                    nota INTEGER,
+                    total INTEGER,
+                    data_resposta TEXT
+                );
+            """)
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Aviso criacao tabelas: {e}")
+
+try:
+    criar_tabelas_faltantes()
 except Exception:
     pass
