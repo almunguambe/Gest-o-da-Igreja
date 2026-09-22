@@ -1952,3 +1952,13 @@ def responder_duvida_discipulado(id):
         except Exception as e:
             print(f"Erro ao salvar resposta: {e}")
     return redirect('/#secao-discipulado')
+
+@app.route('/manifest.json')
+def serve_manifest():
+    from flask import send_from_directory
+    return send_from_directory('static', 'manifest.json', mimetype='application/json')
+
+@app.route('/sw.js')
+def serve_sw():
+    from flask import send_from_directory
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')

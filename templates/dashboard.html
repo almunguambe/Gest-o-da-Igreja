@@ -17,6 +17,22 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+    <!-- Configurações PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d3b66">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IEAD Chicuque">
+    <link rel="apple-touch-icon" href="/static/logo.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('PWA ServiceWorker registado:', reg.scope))
+            .catch(err => console.log('Falha no registo PWA:', err));
+        });
+      }
+    </script>
 </head>
 <body class="bg-gradient-to-br from-slate-100 via-blue-50/50 to-indigo-50/40 text-slate-900 min-h-screen antialiased flex flex-col md:flex-row">
 
