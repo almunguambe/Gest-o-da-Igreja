@@ -28,6 +28,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 # ReportLab para PDFs
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import cm, mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -1108,7 +1109,7 @@ def cartao_membro_pdf(id):
         c.drawImage(ImageReader(qr_buf), 6.65*cm, 0.45*cm, width=1.4*cm, height=1.4*cm)
         c.setFillColor(colors.HexColor("#94a3b8"))
         c.setFont("Helvetica-Bold", 4.5)
-        c.drawCentredString(7.35*cm, 0.2*cm, "VERIFICAR QR")
+        c.drawCentredString(7.35*cm, 0.2*cm, "VALIDAR SIGAD")
     except Exception as eqr:
         print(f"Aviso QR code cartao: {eqr}")
 
@@ -1647,6 +1648,7 @@ MODULOS_DOUTRINA_SEMESTRAL = [
 from io import BytesIO
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import mm, cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
