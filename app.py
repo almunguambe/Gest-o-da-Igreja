@@ -21,7 +21,7 @@ import json
 import io
 import zipfile
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+from flask import flash, Flask, render_template, request, redirect, url_for, session, send_file
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -590,7 +590,7 @@ def login():
 
             if user['cargo'] == 'Estudante':
                 return redirect(url_for('portal_estudos'))
-            return redirect(url_for('dashboard'))
+            return redirect('/')
         return render_template('login.html', erro="Utilizador ou palavra-passe incorretos.")
     return render_template('login.html', erro=None)
 
@@ -833,7 +833,7 @@ def responder_estudos():
 
 @app.route('/membros/novo', methods=['POST'])
 def novo_membro():
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     nome = request.form.get('nome', '').strip()
     zona = request.form.get('zona', '').strip()
     celula = request.form.get('celula', '').strip()
@@ -847,13 +847,13 @@ def novo_membro():
         if existente_doc:
             conn.close()
             session['alerta_duplicado'] = f"Já existe membro com o documento nº {num_doc} ({existente_doc['nome']})."
-            return redirect(url_for('dashboard'))
+            return redirect('/')
 
     existente_nome = conn.execute("SELECT id FROM membros WHERE LOWER(TRIM(nome)) = LOWER(?)", (nome,)).fetchone()
     if existente_nome:
         conn.close()
         session['alerta_duplicado'] = f"O membro '{nome}' já se encontra registado."
-        return redirect(url_for('dashboard'))
+        return redirect('/')
 
     foto_path = ""
     if 'foto' in request.files:
@@ -873,7 +873,7 @@ def novo_membro():
     if not zona:
         conn.close()
         session['alerta_duplicado'] = "O campo Zona é de preenchimento obrigatório."
-        return redirect(url_for('dashboard'))
+        return redirect('/')
 
     c = conn.cursor() if hasattr(conn, 'cursor') else conn
     is_pg = bool(DATABASE_URL and psycopg2)
@@ -909,11 +909,11 @@ def novo_membro():
     conn.commit()
     conn.close()
     session['sucesso_cadastro'] = f"Membro '{nome}' registado com sucesso!"
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/cultos/novo', methods=['POST'])
 def novo_culto():
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     h = int(request.form.get('homens') or 0)
     m = int(request.form.get('mulheres') or 0)
     j = int(request.form.get('jovens') or 0)
@@ -930,11 +930,11 @@ def novo_culto():
     conn.commit()
     conn.close()
     session['sucesso_cadastro'] = "Culto e frequência registados!"
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/convertidos/novo', methods=['POST'])
 def novo_convertido():
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     conn = get_db()
     conn.execute('''INSERT INTO novos_convertidos (nome, telefone, bairro, data_decisao, culto_origem, quem_convidou, status_discipulado, observacoes)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -944,21 +944,21 @@ def novo_convertido():
     conn.commit()
     conn.close()
     session['sucesso_cadastro'] = "Novo convertido registado!"
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/convertidos/atualizar_status/<int:id>', methods=['POST'])
 def atualizar_status_convertido(id):
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     novo_status = request.form.get('status_discipulado')
     conn = get_db()
     conn.execute("UPDATE novos_convertidos SET status_discipulado = ? WHERE id = ?", (novo_status, id))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/patrimonio/novo', methods=['POST'])
 def novo_patrimonio():
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     conn = get_db()
     conn.execute('''INSERT INTO patrimonio (item, departamento, quantidade, estado_conservacao, localizacao, observacoes)
                     VALUES (?, ?, ?, ?, ?, ?)''',
@@ -968,11 +968,11 @@ def novo_patrimonio():
     conn.commit()
     conn.close()
     session['sucesso_cadastro'] = "Património registado!"
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/escalas/novo', methods=['POST'])
 def nova_escala():
-    if not is_admin() and not can_cadastro(): return redirect(url_for('dashboard'))
+    if not is_admin() and not can_cadastro(): return redirect('/')
     conn = get_db()
     igreja_id = session.get('igreja_id', 1)
     conn.execute('''INSERT INTO escalas (data_escala, tipo_culto, dirigente, pregador, leitura_palavra, louvor_grupo, diaconos_servico, observacoes, telefone_dirigente, telefone_pregador, igreja_id)
@@ -984,14 +984,14 @@ def nova_escala():
     conn.commit()
     conn.close()
     session['sucesso_cadastro'] = "Escala registada!"
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/escalas/pdf/<int:id>')
 def escala_pdf(id):
     conn = get_db()
     e = conn.execute("SELECT * FROM escalas WHERE id = ?", (id,)).fetchone()
     conn.close()
-    if not e: return redirect(url_for('dashboard'))
+    if not e: return redirect('/')
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
@@ -1043,11 +1043,11 @@ def validar_membro_publico(id):
 
 @app.route('/membro/cartao_pdf/<int:id>')
 def cartao_membro_pdf(id):
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     conn = get_db()
     m = conn.execute("SELECT * FROM membros WHERE id = ?", (id,)).fetchone()
     conn.close()
-    if not m: return redirect(url_for('dashboard'))
+    if not m: return redirect('/')
 
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=(8.5*cm, 5.4*cm))
@@ -1141,11 +1141,11 @@ def cartao_membro_pdf(id):
 
 @app.route('/membro/certificado_pdf/<int:id>/<tipo>')
 def certificado_membro_pdf(id, tipo):
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     conn = get_db()
     m = conn.execute("SELECT * FROM membros WHERE id = ?", (id,)).fetchone()
     conn.close()
-    if not m: return redirect(url_for('dashboard'))
+    if not m: return redirect('/')
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=2*cm, rightMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
@@ -1191,11 +1191,11 @@ def certificado_membro_pdf(id, tipo):
 
 @app.route('/financeiro/recibo_pdf/<int:id>')
 def recibo_financeiro_pdf(id):
-    if not can_tesouraria(): return redirect(url_for('dashboard'))
+    if not can_tesouraria(): return redirect('/')
     conn = get_db()
     f = conn.execute("SELECT * FROM financeiro WHERE id = ?", (id,)).fetchone()
     conn.close()
-    if not f: return redirect(url_for('dashboard'))
+    if not f: return redirect('/')
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
@@ -1237,7 +1237,7 @@ def recibo_financeiro_pdf(id):
 
 @app.route('/financeiro/balancete_pdf')
 def balancete_financeiro_pdf():
-    if not can_tesouraria(): return redirect(url_for('dashboard'))
+    if not can_tesouraria(): return redirect('/')
     conn = get_db()
     entrada_caixa = conn.execute("SELECT SUM(valor) FROM financeiro WHERE tipo = 'Entrada' AND (local_movimento = 'Caixa' OR local_movimento IS NULL)").fetchone()[0] or 0.0
     saida_caixa = conn.execute("SELECT SUM(valor) FROM financeiro WHERE tipo = 'Saída' AND (local_movimento = 'Caixa' OR local_movimento IS NULL)").fetchone()[0] or 0.0
@@ -1304,7 +1304,7 @@ def balancete_financeiro_pdf():
 
 @app.route('/sistema/backup')
 def backup_sistema():
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zipf:
         if os.path.exists(DB_NAME):
@@ -1319,7 +1319,7 @@ def backup_sistema():
 
 @app.route('/financeiro/novo', methods=['POST'])
 def novo_financeiro():
-    if not can_tesouraria(): return redirect(url_for('dashboard'))
+    if not can_tesouraria(): return redirect('/')
     data_raw = request.form.get('data_movimento') or datetime.now().strftime("%Y-%m-%d")
     dt_obj = datetime.strptime(data_raw, "%Y-%m-%d")
     conn = get_db()
@@ -1332,11 +1332,11 @@ def novo_financeiro():
                   datetime.now().strftime("%d/%m/%Y %H:%M"), request.form.get('membro_id') or None, request.form['descricao'], metodo, referencia))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/financeiro/transferir', methods=['POST'])
 def transferir_fundos():
-    if not can_tesouraria(): return redirect(url_for('dashboard'))
+    if not can_tesouraria(): return redirect('/')
     data_raw = request.form.get('data_movimento') or datetime.now().strftime("%Y-%m-%d")
     dt_obj = datetime.strptime(data_raw, "%Y-%m-%d")
     origem_local, origem_depto = request.form['origem_local'], request.form['origem_depto']
@@ -1357,11 +1357,11 @@ def transferir_fundos():
                  (dt_obj.strftime("%d/%m/%Y"), origem_local, origem_depto, destino_local, destino_depto, valor, motivo, agora))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/casamentos/novo', methods=['POST'])
 def novo_casamento():
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     conn = get_db()
     conn.execute('''INSERT INTO casamentos (noivo, noiva, data_casamento, pastor_oficiante, data_registo)
                     VALUES (?, ?, ?, ?, ?)''',
@@ -1369,11 +1369,11 @@ def novo_casamento():
                   request.form.get('pastor_oficiante', ''), datetime.now().strftime("%d/%m/%Y")))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/mortes/novo', methods=['POST'])
 def novo_morte():
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     conn = get_db()
     conn.execute('''INSERT INTO mortes (nome_falecido, data_falecimento, observacoes, data_registo)
                     VALUES (?, ?, ?, ?)''',
@@ -1381,11 +1381,11 @@ def novo_morte():
                   request.form.get('observacoes', ''), datetime.now().strftime("%d/%m/%Y")))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/usuarios/novo', methods=['POST'])
 def novo_usuario():
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     user = (request.form.get('usuario') or '').strip()
     senha = (request.form.get('senha') or '').strip()
     cargo = (request.form.get('cargo') or '').strip()
@@ -1398,22 +1398,22 @@ def novo_usuario():
         except Exception:
             session['alerta_duplicado'] = f"Utilizador '{user}' já existe."
         conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/usuarios/apagar/<int:id>')
 def apagar_usuario(id):
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     conn = get_db()
     u = conn.execute("SELECT usuario FROM usuarios WHERE id = ?", (id,)).fetchone()
     if u and u['usuario'] != 'admin':
         conn.execute("DELETE FROM usuarios WHERE id = ?", (id,))
         conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/apagar/<tabela>/<int:id>')
 def apagar_registo(tabela, id):
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     mapa = {'membro': ('membros', 'id'), 'financeiro': ('financeiro', 'id'), 'casamento': ('casamentos', 'id'), 'morte': ('mortes', 'id'), 'patrimonio': ('patrimonio', 'id'), 'escala': ('escalas', 'id'), 'culto': ('cultos_frequencia', 'id'), 'convertido': ('novos_convertidos', 'id')}
     if tabela in mapa:
         tab, col = mapa[tabela]
@@ -1421,11 +1421,11 @@ def apagar_registo(tabela, id):
         conn.execute(f"DELETE FROM {tab} WHERE {col} = ?", (id,))
         conn.commit()
         conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/config/departamento/novo', methods=['POST'])
 def novo_depto():
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     nome = request.form.get('nome', '').strip()
     zona = request.form.get('zona', '').strip()
     celula = request.form.get('celula', '').strip()
@@ -1437,40 +1437,40 @@ def novo_depto():
             conn.commit()
         except Exception: pass
         conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/config/departamento/apagar/<int:id>')
 def apagar_depto(id):
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     conn = get_db()
     conn.execute("DELETE FROM departamentos_lista WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/config/categoria/novo', methods=['POST'])
 def nova_categoria():
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     tipo, nome = request.form.get('tipo'), request.form.get('nome', '').strip()
     if tipo and nome:
         conn = get_db()
         conn.execute("INSERT INTO categorias_financeiras (tipo, nome) VALUES (?, ?)", (tipo, nome))
         conn.commit()
         conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/config/categoria/apagar/<int:id>')
 def apagar_categoria(id):
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     conn = get_db()
     conn.execute("DELETE FROM categorias_financeiras WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/config/zona/novo', methods=['POST'])
 def nova_zona():
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     nome = request.form.get('nome', '').strip()
     zona = request.form.get('zona', '').strip()
     celula = request.form.get('celula', '').strip()
@@ -1482,20 +1482,20 @@ def nova_zona():
             conn.commit()
         except Exception: pass
         conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/config/zona/apagar/<int:id>')
 def apagar_zona(id):
-    if not is_admin(): return redirect(url_for('dashboard'))
+    if not is_admin(): return redirect('/')
     conn = get_db()
     conn.execute("DELETE FROM zonas_lista WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 @app.route('/exportar/financeiro')
 def exportar_financeiro():
-    if not can_tesouraria(): return redirect(url_for('dashboard'))
+    if not can_tesouraria(): return redirect('/')
     conn = get_db()
     rows = conn.execute("SELECT data_movimento, tipo, local_movimento, departamento, categoria, descricao, valor FROM financeiro ORDER BY id DESC").fetchall()
     conn.close()
@@ -1523,7 +1523,7 @@ def exportar_financeiro():
 
 @app.route('/exportar/membros')
 def exportar_membros():
-    if not can_cadastro(): return redirect(url_for('dashboard'))
+    if not can_cadastro(): return redirect('/')
     conn = get_db()
     rows = conn.execute('''
         SELECT nome, telefone, genero, data_nascimento, faixa_etaria, naturalidade, bairro, 
@@ -1564,7 +1564,7 @@ def exportar_membros():
 @app.route('/estudos/duvidas/responder/<int:id>', methods=['POST'])
 def responder_duvida_pastor(id):
     if not (is_admin() or can_cadastro()):
-        return redirect(url_for('dashboard'))
+        return redirect('/')
     
     resposta = request.form.get('resposta', '').strip()
     if resposta:
@@ -1575,7 +1575,7 @@ def responder_duvida_pastor(id):
         conn.close()
         session['sucesso_cadastro'] = "Resposta pastoral enviada com sucesso para a sala de aula do aluno!"
     
-    return redirect(url_for('dashboard'))
+    return redirect('/')
 
 
 # ==============================================================================
@@ -2328,7 +2328,7 @@ except Exception:
 def superadmin_igrejas():
     if 'usuario' not in session or not session.get('is_superadmin'):
         flash("Acesso restrito ao Super Administrador.", "erro")
-        return redirect(url_for('dashboard'))
+        return redirect('/')
     
     conn = get_db()
     if request.method == 'POST':
@@ -2378,7 +2378,7 @@ def superadmin_igrejas():
 def superadmin_estatisticas():
     if 'usuario' not in session or not session.get('is_superadmin'):
         flash("Acesso restrito ao Super Administrador.", "erro")
-        return redirect(url_for('dashboard'))
+        return redirect('/')
     
     conn = get_db()
     
@@ -2433,7 +2433,7 @@ def superadmin_estatisticas():
 def superadmin_estatisticas_pdf():
     if 'usuario' not in session or not session.get('is_superadmin'):
         flash("Acesso restrito.", "erro")
-        return redirect(url_for('dashboard'))
+        return redirect('/')
         
     conn = get_db()
     igrejas = conn.execute("SELECT * FROM igrejas ORDER BY id ASC").fetchall()
@@ -2504,3 +2504,34 @@ def superadmin_estatisticas_pdf():
     doc.build(elementos)
     buf.seek(0)
     return send_file(buf, as_attachment=True, download_name="Relatorio_Consolidado_SIGAD.pdf", mimetype='application/pdf')
+
+
+# ================= ROTA DE GESTÃO DO FUNIL DE DISCIPULADO =================
+@app.route('/discipulado/atualizar_fase', methods=['POST'])
+def atualizar_fase_discipulado():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+        
+    membro_id = request.form.get('membro_id')
+    nova_fase = request.form.get('nova_fase')
+    discipulador = request.form.get('discipulador', '').strip()
+    data_batismo = request.form.get('data_batismo', '').strip()
+    
+    conn = get_db()
+    if nova_fase == 'Batizado' and data_batismo:
+        conn.execute("""
+            UPDATE membros 
+            SET fase_discipulado = ?, discipulador = COALESCE(NULLIF(?, ''), discipulador), data_batismo = ?
+            WHERE id = ?
+        """, (nova_fase, discipulador, data_batismo, membro_id))
+    else:
+        conn.execute("""
+            UPDATE membros 
+            SET fase_discipulado = ?, discipulador = COALESCE(NULLIF(?, ''), discipulador)
+            WHERE id = ?
+        """, (nova_fase, discipulador, membro_id))
+        
+    conn.commit()
+    conn.close()
+    flash("Fase de discipulado atualizada com sucesso!", "sucesso")
+    return redirect('/#secao-discipulado')
