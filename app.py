@@ -364,6 +364,43 @@ def extrair_dados_membro(membro):
         "foto_path": str(foto_path).strip()
     }
 
+
+def inicializar_tabela_discipulado():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if DATABASE_URL and psycopg2:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                    id SERIAL PRIMARY KEY,
+                    membro_id INTEGER NOT NULL,
+                    classe_id VARCHAR(10) NOT NULL,
+                    nota NUMERIC(4,2) DEFAULT 0,
+                    status VARCHAR(20) DEFAULT 'Pendente',
+                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    membro_id INTEGER NOT NULL,
+                    classe_id TEXT NOT NULL,
+                    nota REAL DEFAULT 0,
+                    status TEXT DEFAULT 'Pendente',
+                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Aviso ao inicializar tabela discipulado: {e}")
+
+try:
+    inicializar_tabela_discipulado()
+except Exception:
+    pass
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -1524,26 +1561,56 @@ def ver_classe_discipulado(cid):
         return "Classe não encontrada", 404
 
     classe = CURRICULO_CLASSES[cid]
-    # Recupera o primeiro membro cadastrado para vincular a sessão de teste
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, nome FROM membros ORDER BY id ASC LIMIT 1")
-    membro = c.fetchone()
-    
-    # Obter histórico de aprovações
-    m_id = membro['id'] if hasattr(membro, 'keys') else (membro[0] if membro else 1)
-    c.execute("SELECT classe_id, nota, status FROM progresso_discipulado WHERE membro_id = %s" if DATABASE_URL and psycopg2 else "SELECT classe_id, nota, status FROM progresso_discipulado WHERE membro_id = ?", (m_id,))
-    registos = c.fetchall()
-    conn.close()
-
     aprovadas = set()
-    for r in registos:
-        c_id = r['classe_id'] if hasattr(r, 'keys') else r[0]
-        st = r['status'] if hasattr(r, 'keys') else r[2]
-        if st == 'Aprovado':
-            aprovadas.add(c_id)
+    m_id = 1
 
-    # Verificar bloqueio progressivo
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        # Assegurar tabela caso ainda não tenha sido executada
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                id SERIAL PRIMARY KEY,
+                membro_id INTEGER NOT NULL,
+                classe_id VARCHAR(10) NOT NULL,
+                nota NUMERIC(4,2) DEFAULT 0,
+                status VARCHAR(20) DEFAULT 'Pendente',
+                data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """ if DATABASE_URL and psycopg2 else """
+            CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                membro_id INTEGER NOT NULL,
+                classe_id TEXT NOT NULL,
+                nota REAL DEFAULT 0,
+                status TEXT DEFAULT 'Pendente',
+                data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+
+        c.execute("SELECT id, nome FROM membros ORDER BY id ASC LIMIT 1")
+        membro = c.fetchone()
+        if membro:
+            if hasattr(membro, 'keys') and 'id' in membro.keys():
+                m_id = membro['id']
+            elif isinstance(membro, dict) and 'id' in membro:
+                m_id = membro['id']
+            else:
+                m_id = membro[0]
+
+        c.execute("SELECT classe_id, nota, status FROM progresso_discipulado WHERE membro_id = %s" if DATABASE_URL and psycopg2 else "SELECT classe_id, nota, status FROM progresso_discipulado WHERE membro_id = ?", (m_id,))
+        registos = c.fetchall()
+        conn.close()
+
+        for r in registos:
+            c_id = r['classe_id'] if hasattr(r, 'keys') else (r[0] if isinstance(r, (list, tuple)) else getattr(r, 'classe_id', ''))
+            st = r['status'] if hasattr(r, 'keys') else (r[2] if isinstance(r, (list, tuple)) else getattr(r, 'status', ''))
+            if st == 'Aprovado':
+                aprovadas.add(str(c_id).strip())
+    except Exception as err:
+        print(f"Erro ao verificar progresso: {err}")
+
     bloqueada = False
     if cid == 'c2' and 'c1' not in aprovadas:
         bloqueada = True
@@ -1557,75 +1624,76 @@ def ver_classe_discipulado(cid):
     from flask import render_template_string
     html = """
     <!DOCTYPE html>
-    <html>
+    <html lang="pt">
     <head>
         <meta charset="utf-8">
         <title>{{ classe.nome }} - IEAD Chicuque</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
-            body { background: #f8fafc; font-family: 'Segoe UI', sans-serif; }
-            .card-aula { border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-            .card-header-aula { background: #0d3b66; color: white; border-radius: 12px 12px 0 0; padding: 12px 20px; font-weight: bold; }
-            .badge-ouro { background: #d4af37; color: #111; font-weight: bold; }
+            body { background: #f8fafc; font-family: 'Segoe UI', sans-serif; color: #1e293b; }
+            .card-aula { border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); background: #ffffff; }
+            .card-header-aula { background: #0d3b66; color: white; border-radius: 12px 12px 0 0; padding: 14px 20px; font-weight: 700; font-size: 1.05rem; }
+            .badge-ouro { background: #d4af37; color: #0d3b66; font-weight: 700; font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; }
+            .conteudo-licao { font-size: 1.02rem; line-height: 1.75; color: #334155; }
         </style>
     </head>
     <body class="p-3 p-md-5">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div class="container" style="max-width: 900px;">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 pb-3 border-bottom">
                 <div>
-                    <h2 class="text-primary fw-bold mb-0">{{ classe.nome }}</h2>
-                    <span class="text-muted">{{ classe.duracao }} • 6 Lições Exclusivas</span>
+                    <h2 class="fw-bold mb-1" style="color: #0d3b66;">{{ classe.nome }}</h2>
+                    <span class="text-muted fw-semibold">{{ classe.duracao }} • Manual Oficial de Discipulado</span>
                 </div>
-                <div>
-                    <a href="/estudos" class="btn btn-outline-secondary">← Voltar às Classes</a>
+                <div class="d-flex gap-2">
+                    <a href="/" class="btn btn-outline-secondary">← Painel Principal</a>
                     {% if concluiu_todas %}
                     <a href="/membro/{{ m_id }}/certificado_conclusao_discipulado" target="_blank" class="btn btn-success fw-bold">🎓 Emitir Certificado de Conclusão</a>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Navegador de Classes -->
             <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
-                <a href="/discipulado/classe/c1" class="btn btn-sm {% if cid == 'c1' %}btn-primary{% else %}btn-light border{% endif %}">Classe I {% if 'c1' in aprovadas %}✓{% endif %}</a>
-                <a href="/discipulado/classe/c2" class="btn btn-sm {% if cid == 'c2' %}btn-primary{% else %}btn-light border{% endif %}">Classe II {% if 'c2' in aprovadas %}✓{% endif %}</a>
-                <a href="/discipulado/classe/c3" class="btn btn-sm {% if cid == 'c3' %}btn-primary{% else %}btn-light border{% endif %}">Classe III {% if 'c3' in aprovadas %}✓{% endif %}</a>
-                <a href="/discipulado/classe/c4" class="btn btn-sm {% if cid == 'c4' %}btn-primary{% else %}btn-light border{% endif %}">Classe IV {% if 'c4' in aprovadas %}✓{% endif %}</a>
+                <a href="/discipulado/classe/c1" class="btn {% if cid == 'c1' %}btn-primary{% else %}btn-light border{% endif %} fw-semibold">Classe I {% if 'c1' in aprovadas %}✓{% endif %}</a>
+                <a href="/discipulado/classe/c2" class="btn {% if cid == 'c2' %}btn-primary{% else %}btn-light border{% endif %} fw-semibold">Classe II {% if 'c2' in aprovadas %}✓{% endif %}</a>
+                <a href="/discipulado/classe/c3" class="btn {% if cid == 'c3' %}btn-primary{% else %}btn-light border{% endif %} fw-semibold">Classe III {% if 'c3' in aprovadas %}✓{% endif %}</a>
+                <a href="/discipulado/classe/c4" class="btn {% if cid == 'c4' %}btn-primary{% else %}btn-light border{% endif %} fw-semibold">Classe IV {% if 'c4' in aprovadas %}✓{% endif %}</a>
             </div>
 
             {% if bloqueada %}
-            <div class="alert alert-warning p-4 rounded-3 text-center">
-                <h4 class="fw-bold">Classe Bloqueada 🔒</h4>
-                <p class="mb-0">Para estudar esta classe, é necessário primeiro responder ao questionário da classe anterior e obter aprovação com nota mínima de 70%.</p>
+            <div class="alert alert-warning p-4 rounded-4 shadow-sm text-center">
+                <h4 class="fw-bold text-dark mb-2">Classe Bloqueada 🔒</h4>
+                <p class="mb-0 text-secondary">Para ter acesso a esta classe, é necessário primeiro responder ao questionário da classe anterior e obter aprovação com nota mínima de 70%.</p>
             </div>
             {% else %}
-                <h4 class="fw-bold mb-3 text-dark">Matéria Completa das 6 Lições</h4>
+                <h4 class="fw-bold mb-3" style="color: #0d3b66;">Conteúdo Integral das Lições</h4>
                 {% for lic in classe.licoes %}
                 <div class="card card-aula">
-                    <div class="card-header card-header-aula d-flex justify-content-between">
+                    <div class="card-header card-header-aula d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <span>Lição {{ lic.numero }}: {{ lic.titulo }}</span>
+                        {% if lic.versiculo %}
                         <span class="badge badge-ouro">{{ lic.versiculo }}</span>
+                        {% endif %}
                     </div>
                     <div class="card-body p-4">
-                        <p class="mb-0 text-secondary" style="font-size: 1.05rem; line-height: 1.7;">{{ lic.conteudo }}</p>
+                        <div class="conteudo-licao">{{ lic.conteudo | safe }}</div>
                     </div>
                 </div>
                 {% endfor %}
 
-                <!-- Questionário da Classe -->
                 <div class="card border-0 shadow-sm rounded-4 mt-5">
-                    <div class="card-header bg-dark text-white p-3 rounded-top-4">
-                        <h5 class="mb-0 fw-bold">📝 Prova de Avaliação da {{ classe.nome }}</h5>
-                        <small class="text-light">Responda a todas as questões para desbloquear a classe seguinte.</small>
+                    <div class="card-header bg-dark text-white p-3 px-4 rounded-top-4">
+                        <h5 class="mb-0 fw-bold">📝 Questionário de Avaliação — {{ classe.nome }}</h5>
+                        <small class="text-light">Responda às questões com atenção para desbloquear a classe seguinte.</small>
                     </div>
                     <div class="card-body p-4">
                         <form action="/discipulado/avaliar/{{ cid }}" method="POST">
                             <input type="hidden" name="membro_id" value="{{ m_id }}">
                             {% for q in classe.questionario %}
-                            <div class="mb-4">
+                            <div class="mb-4 pb-3 border-bottom">
                                 <p class="fw-bold text-dark mb-2">{{ loop.index }}. {{ q.pergunta }}</p>
                                 {% for op in q.opcoes %}
-                                <div class="form-check mb-1">
+                                <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio" name="resp_{{ q.id }}" value="{{ loop.index0 }}" id="q_{{ q.id }}_{{ loop.index0 }}" required>
                                     <label class="form-check-label text-secondary" for="q_{{ q.id }}_{{ loop.index0 }}">{{ op }}</label>
                                 </div>
