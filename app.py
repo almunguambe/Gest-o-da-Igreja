@@ -636,8 +636,8 @@ def dashboard():
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
     return render_template('dashboard.html',
-                            todos_membros=todos_membros,
-                            lista_zonas=lista_zonas if 'lista_zonas' in locals() else [],
+                           todos_membros=todos_membros,
+                           lista_zonas=lista_zonas if 'lista_zonas' in locals() else [],
                            duvidas=duvidas_lista,
                            discipulado_alunos=candidatos_discipulado,
                            pode_cadastro=can_cadastro(),
@@ -653,7 +653,6 @@ def dashboard():
                            saldo_total=saldo_total,
                            aniversariantes_dia=aniversariantes_dia,
                            campanhas=campanhas,
-                           
                            todas_financas=todas_financas,
                            todos_casamentos=todos_casamentos,
                            todas_mortes=todas_mortes,
@@ -666,7 +665,6 @@ def dashboard():
                            todas_duvidas=todas_duvidas,
                            lista_deptos=lista_deptos,
                            lista_categorias=lista_categorias,
-                           lista_zonas=lista_zonas,
                            ultimas_transferencias=ultimas_transferencias,
                            categorias_json=categorias_json,
                            membros_json=membros_json,
@@ -678,7 +676,8 @@ def dashboard():
                            fontes_labels=json.dumps(fontes_labels),
                            fontes_valores=json.dumps(fontes_valores),
                            saidas_labels=json.dumps(saidas_labels),
-                           saidas_valores=json.dumps(saidas_valores))
+                           saidas_valores=json.dumps(saidas_valores)
+    )
 
 @app.route('/estudos')
 def estudos():
