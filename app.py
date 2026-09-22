@@ -505,39 +505,42 @@ def dashboard():
     categorias_json = json.dumps([{'tipo': c['tipo'], 'nome': c['nome']} for c in lista_categorias])
     membros_json = json.dumps([dict(m) for m in todos_membros])
 
-    conn.close()
 
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
 
     
         # Carregar dúvidas bíblicas para o painel pastoral
-        duvidas_lista = []
-        candidatos_discipulado = []
-        try:
-            c.execute("SELECT * FROM duvidas_discipulado ORDER BY id DESC LIMIT 20")
-            duvidas_lista = c.fetchall()
-        except Exception:
-            pass
+    # Carregar dúvidas bíblicas para o painel pastoral
+    duvidas_lista = []
+    candidatos_discipulado = []
+    try:
+        c.execute("SELECT * FROM duvidas_discipulado ORDER BY id DESC LIMIT 20")
+        duvidas_lista = c.fetchall()
+    except Exception:
+        pass
 
-        try:
-            query_prog = """
-                SELECT m.id, m.nome, m.foto_path, m.telefone,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
-                FROM membros m
-                LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
-                GROUP BY m.id, m.nome, m.foto_path, m.telefone
-                ORDER BY m.id DESC
-            """
-            c.execute(query_prog)
-            candidatos_discipulado = c.fetchall()
-        except Exception:
-            pass
+    try:
+        query_prog = """
+            SELECT m.id, m.nome, m.foto_path, m.telefone,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
+            FROM membros m
+            LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
+            GROUP BY m.id, m.nome, m.foto_path, m.telefone
+            ORDER BY m.id DESC
+        """
+        c.execute(query_prog)
+        candidatos_discipulado = c.fetchall()
+    except Exception:
+        pass
 
-        return render_template('dashboard.html', duvidas=duvidas_lista, discipulado_alunos=candidatos_discipulado,
+    conn.close()
+
+    alerta_duplicado = session.pop('alerta_duplicado', None)
+    sucesso_cadastro = session.pop('sucesso_cadastro', None)
                            pode_cadastro=can_cadastro(),
                            pode_tesouraria=can_tesouraria(),
                            e_admin=is_admin(),
