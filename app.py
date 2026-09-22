@@ -636,6 +636,8 @@ def dashboard():
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
     return render_template('dashboard.html',
+                            todos_membros=todos_membros,
+                            lista_zonas=lista_zonas if 'lista_zonas' in locals() else [],
                            duvidas=duvidas_lista,
                            discipulado_alunos=candidatos_discipulado,
                            pode_cadastro=can_cadastro(),
