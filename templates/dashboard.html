@@ -784,6 +784,15 @@
                             </div>
                             <input type="number" step="0.01" name="valor" required placeholder="Valor (MT) *" class="w-full h-11 px-3 text-sm font-black border-2 rounded-xl">
                             <input type="text" name="descricao" required placeholder="Descrição / Detalhes *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
+                            <div class="grid grid-cols-2 gap-2">
+                                <select name="metodo_pagamento" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
+                                    <option value="Dinheiro">💵 Dinheiro / Espécie</option>
+                                    <option value="M-Pesa">📱 M-Pesa</option>
+                                    <option value="e-Mola">📱 e-Mola</option>
+                                    <option value="Banco">🏦 Depósito / Transferência</option>
+                                </select>
+                                <input type="text" name="referencia_transacao" placeholder="Cód. Transação / Ref. (opcional)" class="w-full h-11 px-3 text-xs border-2 rounded-xl font-mono">
+                            </div>
                             <button type="submit" class="w-full h-12 bg-emerald-600 text-white font-black text-sm rounded-2xl shadow">Gravar Movimento</button>
                         </form>
                     </div>
