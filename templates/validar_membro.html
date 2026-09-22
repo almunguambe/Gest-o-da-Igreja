@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGAD • Validação Oficial de Membro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-slate-800/90 rounded-3xl border border-slate-700 shadow-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden">
+        <!-- Barra de Destaque -->
+        <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500"></div>
+
+        <!-- Cabeçalho Institucional -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg p-2 mb-3 ring-4 ring-emerald-500/20">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="IEAD" class="w-full h-full object-contain">
+            </div>
+            <p class="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400">Assembleia de Deus • SIGAD</p>
+            <h1 class="text-lg font-black text-white mt-0.5">Certificado de Autenticidade</h1>
+            <p class="text-xs text-slate-400">Registo Eclesiástico Oficial</p>
+        </div>
+
+        {% if membro %}
+        <!-- Selo de Status Ativo -->
+        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3.5 mb-6 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black flex-shrink-0 text-lg">✓</div>
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-wider text-emerald-400">Registo Verificado</p>
+                <p class="text-sm font-bold text-emerald-200">Membro Regular em Plena Comunhão</p>
+            </div>
+        </div>
+
+        <!-- Ficha de Identificação -->
+        <div class="space-y-3.5 bg-slate-900/60 rounded-2xl p-4 border border-slate-700/60">
+            <div>
+                <span class="text-[11px] uppercase tracking-wider text-slate-400 font-bold block">Nome Completo</span>
+                <span class="text-base font-black text-white">{{ membro['nome'] }}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                <div>
+                    <span class="text-[10px] uppercase text-slate-400 font-bold block">Cargo / Ministério</span>
+                    <span class="text-xs font-black text-indigo-300">{{ membro['cargo'] or 'Membro' }}</span>
+                </div>
+                <div>
+                    <span class="text-[10px] uppercase text-slate-400 font-bold block">Nº de Registo</span>
+                    <span class="text-xs font-mono font-black text-amber-400">#{{ '%05d' % membro['id'] }}</span>
+                </div>
+            </div>
+            <div class="pt-2 border-t border-slate-800">
+                <span class="text-[10px] uppercase text-slate-400 font-bold block">Congregação de Origem</span>
+                <span class="text-xs font-bold text-slate-200">{{ congregacao_nome or 'IEAD Congregação Local' }}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                <div>
+                    <span class="text-[10px] uppercase text-slate-400 font-bold block">Zona Eclesiástica</span>
+                    <span class="text-xs text-slate-300">{{ membro['zona'] or 'Sede' }}</span>
+                </div>
+                <div>
+                    <span class="text-[10px] uppercase text-slate-400 font-bold block">Data de Batismo</span>
+                    <span class="text-xs text-slate-300">{{ membro['data_batismo'] or 'Registado' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 text-center">
+            <p class="text-[10px] text-slate-500">Documento autenticado digitalmente pelo sistema SIGAD • IEAD Moçambique</p>
+        </div>
+        {% else %}
+        <!-- Membro não localizado -->
+        <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-center">
+            <p class="text-sm font-bold text-red-400">Registo Não Encontrado</p>
+            <p class="text-xs text-slate-400 mt-1">Este cartão pode estar cancelado ou o código é inválido.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
