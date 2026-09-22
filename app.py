@@ -653,7 +653,7 @@ def dashboard():
                            saldo_total=saldo_total,
                            aniversariantes_dia=aniversariantes_dia,
                            campanhas=campanhas,
-                           todos_membros=todos_membros,
+                           
                            todas_financas=todas_financas,
                            todos_casamentos=todos_casamentos,
                            todas_mortes=todas_mortes,
