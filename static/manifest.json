@@ -1,9 +1,15 @@
 {
   "name": "IEAD Chicuque - Gestão & Ensino",
   "short_name": "IEAD Chicuque",
-  "description": "Sistema de Gestão Eclesiástica e Escola Bíblica / Discipulado da IEAD Chicuque",
+  "description": "Sistema Eclesiástico e Escola Bíblica da IEAD Chicuque",
   "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "window-controls-overlay"
+  ],
   "background_color": "#0d3b66",
   "theme_color": "#0d3b66",
   "orientation": "portrait-primary",
