@@ -764,22 +764,43 @@ def novo_membro():
     ano_conv = request.form.get('ano_conversao')
     ano_conv_val = int(ano_conv) if ano_conv and ano_conv.isdigit() else None
 
-    conn.execute('''
+    # Verificação obrigatória do campo Zona
+    if not zona:
+        conn.close()
+        session['alerta_duplicado'] = "O campo Zona é de preenchimento obrigatório."
+        return redirect(url_for('dashboard'))
+
+    c = conn.cursor() if hasattr(conn, 'cursor') else conn
+    is_pg = bool(DATABASE_URL and psycopg2)
+    marcador = "%s" if is_pg else "?"
+
+    sql_insert = f"""
         INSERT INTO membros (
             nome, telefone, genero, data_nascimento, faixa_etaria,
-            naturalidade, bairro, filiacao, tipo_documento, numero_documento,
+            naturalidade, bairro, zona, celula, distrito,
+            filiacao, tipo_documento, numero_documento,
             ano_conversao, data_batismo, posicao_atual, progressoes,
-            departamento, foto_path, observacoes, data_registo
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
+            departamento, foto_path, observacoes, data_registo, estado
+        ) VALUES ({', '.join([marcador]*22)})
+    """
+
+    valores = (
         nome, request.form.get('telefone', '').strip(), request.form.get('genero', 'Masculino'),
         request.form.get('data_nascimento', ''), request.form.get('faixa_etaria', 'Adulto'),
-        request.form.get('naturalidade', '').strip(), request.form.get('bairro', ''),
+        request.form.get('naturalidade', '').strip(), request.form.get('bairro', '').strip(),
+        zona, celula, distrito,
         request.form.get('filiacao', '').strip(), tipo_doc, num_doc, ano_conv_val,
         request.form.get('data_batismo', ''), request.form.get('posicao_atual', 'Membro em Comunhão'),
         request.form.get('progressoes', '').strip(), request.form.get('departamento', 'Geral'),
-        foto_path, request.form.get('observacoes', '').strip(), datetime.now().strftime("%d/%m/%Y")
-    ))
+        foto_path, request.form.get('observacoes', '').strip(), datetime.now().strftime("%d/%m/%Y"),
+        'Activo'
+    )
+
+    if is_pg:
+        c.execute(sql_insert, valores)
+    else:
+        conn.execute(sql_insert, valores)
+
     conn.commit()
     conn.close()
     session['sucesso_cadastro'] = f"Membro '{nome}' registado com sucesso!"
@@ -2071,3 +2092,29 @@ def serve_manifest():
 def serve_sw():
     from flask import send_from_directory
     return send_from_directory('static', 'sw.js', mimetype='application/javascript')
+
+def migrar_banco_imediato():
+    try:
+        conn = get_db_connection() if 'get_db_connection' in globals() else get_db()
+        c = conn.cursor() if hasattr(conn, 'cursor') else conn
+        colunas = [
+            ("zona", "VARCHAR(150)"),
+            ("celula", "VARCHAR(150)"),
+            ("bairro", "VARCHAR(150)"),
+            ("distrito", "VARCHAR(150)"),
+            ("estado", "VARCHAR(50) DEFAULT 'Activo'")
+        ]
+        for col, tipo in colunas:
+            try:
+                c.execute(f"ALTER TABLE membros ADD COLUMN {col} {tipo};")
+                conn.commit()
+            except Exception:
+                if hasattr(conn, 'rollback'): conn.rollback()
+        conn.close()
+    except Exception as err:
+        print(f"Aviso migracao: {err}")
+
+try:
+    migrar_banco_imediato()
+except Exception:
+    pass
