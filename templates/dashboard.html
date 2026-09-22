@@ -47,7 +47,7 @@
                     </div>
                     <div>
                         <h1 class="text-xs sm:text-sm font-extrabold uppercase leading-tight tracking-wider text-white">Assembleia de Deus</h1>
-                        <p class="text-[11px] text-indigo-300 font-semibold">Chicuque • Gestão 360°</p>
+                        <p class="text-[11px] text-indigo-300 font-semibold">{{ session.get('igreja_nome', 'IEAD Sede') }} • Gestão 360°</p>
                     </div>
                 </div>
                 <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white text-xl font-black">&times;</button>

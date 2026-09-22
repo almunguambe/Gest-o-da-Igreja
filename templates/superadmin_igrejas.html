@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Geral - Gestão de Congregações IEAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <!-- Barra Superior -->
+    <header class="bg-slate-800/90 border-b border-slate-700 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <img src="{{ url_for('static', filename='logo.png') }}" class="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow">
+                <div>
+                    <h1 class="text-base font-black tracking-wide text-white">IEAD • ADMINISTRAÇÃO GERAL</h1>
+                    <p class="text-xs text-indigo-400">SuperAdmin Multi-Congregações</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                    <span>⬅ Voltar ao Painel da Congregação</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition">
+                    Sair
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Formulário para Criar Nova Congregação -->
+        <div class="bg-slate-800 rounded-3xl border border-slate-700 p-6 md:p-8 shadow-xl">
+            <div class="border-b border-slate-700 pb-4 mb-6">
+                <h2 class="text-lg font-black text-white flex items-center gap-2">
+                    <span>🏛️</span> Registar Nova Congregação / Sede
+                </h2>
+                <p class="text-xs text-slate-400">Cada igreja terá o seu ambiente isolado mantendo a mesma identidade institucional da IEAD.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('superadmin_igrejas') }}" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Nome da Congregação *</label>
+                        <input type="text" name="nome" required placeholder="Ex: Sede de Maxixe"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Cidade / Província</label>
+                        <input type="text" name="cidade" placeholder="Ex: Inhambane"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Distrito / Localidade</label>
+                        <input type="text" name="distrito" placeholder="Ex: Maxixe"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Pastor Responsável</label>
+                        <input type="text" name="pastor" placeholder="Ex: Pr. João Silva"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Contacto Telefónico</label>
+                        <input type="text" name="telefone" placeholder="Ex: +258 84 123 4567"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Utilizador Inicial (Login do Pastor)</label>
+                        <input type="text" name="admin_user" placeholder="Ex: pastor.maxixe"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Palavra-Passe Inicial</label>
+                        <input type="password" name="admin_pass" placeholder="Definir palavra-passe"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-lg transition">
+                        + Criar Congregação e Credenciais
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabela de Congregações Cadastradas -->
+        <div class="bg-slate-800 rounded-3xl border border-slate-700 p-6 md:p-8 shadow-xl space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-700">
+                <div>
+                    <h3 class="text-base font-black text-white">Congregações Registadas ({{ igrejas|length }})</h3>
+                    <p class="text-xs text-slate-400">Pode alternar para qualquer congregação para inspecionar os dados.</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-slate-400 border-b border-slate-700">
+                            <th class="pb-3 font-bold">ID</th>
+                            <th class="pb-3 font-bold">Congregação</th>
+                            <th class="pb-3 font-bold">Localidade</th>
+                            <th class="pb-3 font-bold">Pastor</th>
+                            <th class="pb-3 font-bold">Contacto</th>
+                            <th class="pb-3 font-bold text-center">Membros</th>
+                            <th class="pb-3 font-bold text-center">Utilizadores</th>
+                            <th class="pb-3 font-bold text-right">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        {% for ig in igrejas %}
+                        <tr class="hover:bg-slate-700/40 transition">
+                            <td class="py-3 text-slate-400 font-mono">#{{ ig.id }}</td>
+                            <td class="py-3 font-bold text-white">{{ ig.nome }}</td>
+                            <td class="py-3 text-slate-300">{{ ig.cidade or '-' }} / {{ ig.distrito or '-' }}</td>
+                            <td class="py-3 text-slate-300">{{ ig.pastor or 'Não atribuído' }}</td>
+                            <td class="py-3 text-slate-300 font-mono">{{ ig.telefone or '-' }}</td>
+                            <td class="py-3 text-center font-bold text-indigo-400">{{ ig.total_membros }}</td>
+                            <td class="py-3 text-center font-bold text-emerald-400">{{ ig.total_usuarios }}</td>
+                            <td class="py-3 text-right">
+                                <a href="{{ url_for('dashboard', igreja_id=ig.id) }}" 
+                                   class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold transition">
+                                    Aceder Painel ➜
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>
