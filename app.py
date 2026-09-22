@@ -1130,9 +1130,9 @@ def cartao_membro_pdf(id):
     c.setFont("Helvetica", 5)
     c.setFillColor(colors.HexColor("#64748b"))
     c.drawString(0.5*cm, 0.4*cm, f"ID #{m['id']} • Válido com carimbo pastoral")
-    c.drawRightString(8.0*cm, 0.4*cm, "Pastor Presidente")
+    c.drawCentredString(4.5*cm, 0.4*cm, "Pastor Presidente")
     c.setStrokeColor(colors.HexColor("#475569"))
-    c.line(5.5*cm, 0.65*cm, 8.0*cm, 0.65*cm)
+    c.line(2.8*cm, 0.65*cm, 6.2*cm, 0.65*cm)
 
     c.showPage()
     c.save()
