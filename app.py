@@ -683,6 +683,20 @@ def dashboard():
     todos_cultos = conn.execute("SELECT * FROM cultos_frequencia WHERE igreja_id = ? ORDER BY id DESC LIMIT 25", (igreja_id,)).fetchall()
     todos_convertidos = conn.execute("SELECT * FROM novos_convertidos WHERE igreja_id = ? ORDER BY id DESC", (igreja_id,)).fetchall()
     todo_patrimonio = conn.execute("SELECT * FROM patrimonio WHERE igreja_id = ? ORDER BY departamento, item ASC", (igreja_id,)).fetchall()
+    conn.execute("""CREATE TABLE IF NOT EXISTS escalas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data_escala TEXT NOT NULL,
+        tipo_culto TEXT NOT NULL,
+        dirigente TEXT,
+        pregador TEXT,
+        leitura_palavra TEXT,
+        louvor_grupo TEXT,
+        diaconos_servico TEXT,
+        observacoes TEXT,
+        telefone_dirigente TEXT,
+        telefone_pregador TEXT,
+        igreja_id INTEGER DEFAULT 1
+    )""")
     todas_escalas = conn.execute("SELECT * FROM escalas WHERE igreja_id = ? ORDER BY data_escala DESC LIMIT 20", (igreja_id,)).fetchall()
     lista_usuarios = conn.execute("SELECT id, usuario, cargo FROM usuarios WHERE igreja_id = ? ORDER BY id ASC", (igreja_id,)).fetchall()
     ultimas_transferencias = conn.execute("SELECT * FROM transferencias WHERE igreja_id = ? ORDER BY id DESC LIMIT 20", (igreja_id,)).fetchall()
