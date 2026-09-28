@@ -697,6 +697,27 @@ def dashboard():
         telefone_pregador TEXT,
         igreja_id INTEGER DEFAULT 1
     )""")
+        # Garantir estrutura completa da tabela escalas
+    conn.execute('''CREATE TABLE IF NOT EXISTS escalas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data_escala TEXT NOT NULL,
+        tipo_culto TEXT NOT NULL,
+        dirigente TEXT,
+        pregador TEXT,
+        leitura_palavra TEXT,
+        louvor_grupo TEXT,
+        diaconos_servico TEXT,
+        observacoes TEXT,
+        telefone_dirigente TEXT,
+        telefone_pregador TEXT,
+        igreja_id INTEGER DEFAULT 1
+    )''')
+    for col in ['telefone_dirigente', 'telefone_pregador', 'igreja_id']:
+        try:
+            conn.execute(f"ALTER TABLE escalas ADD COLUMN {col} TEXT")
+            conn.commit()
+        except Exception:
+            pass
     todas_escalas = conn.execute("SELECT * FROM escalas WHERE igreja_id = ? ORDER BY data_escala DESC LIMIT 20", (igreja_id,)).fetchall()
     lista_usuarios = conn.execute("SELECT id, usuario, cargo FROM usuarios WHERE igreja_id = ? ORDER BY id ASC", (igreja_id,)).fetchall()
     ultimas_transferencias = conn.execute("SELECT * FROM transferencias WHERE igreja_id = ? ORDER BY id DESC LIMIT 20", (igreja_id,)).fetchall()
