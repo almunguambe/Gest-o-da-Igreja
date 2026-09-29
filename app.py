@@ -1000,19 +1000,44 @@ def novo_culto():
     if not can_cadastro(): return redirect('/')
     h = int(request.form.get('homens') or 0)
     m = int(request.form.get('mulheres') or 0)
-    j = int(request.form.get('jovens') or 0)
-    c = int(request.form.get('criancas') or 0)
-    v = int(request.form.get('visitantes') or 0)
+    jh = int(request.form.get('jovens_homens') or 0)
+    jm = int(request.form.get('jovens_mulheres') or 0)
+    cm = int(request.form.get('criancas_meninos') or 0)
+    cf = int(request.form.get('criancas_meninas') or 0)
+    vh = int(request.form.get('visitantes_homens') or 0)
+    vf = int(request.form.get('visitantes_mulheres') or 0)
     nc = int(request.form.get('novos_convertidos') or 0)
-    total = h + m + j + c + v
+
+    j_total = jh + jm
+    c_total = cm + cf
+    v_total = vh + vf
+    total = h + m + j_total + c_total + v_total
 
     conn = get_db()
-    conn.execute('''INSERT INTO cultos_frequencia (data_culto, tipo_culto, homens, mulheres, jovens, criancas, visitantes, novos_convertidos, total_presentes, pregador, tema_mensagem, data_registo)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                 (request.form['data_culto'], request.form['tipo_culto'], h, m, j, c, v, nc, total,
-                  request.form.get('pregador', ''), request.form.get('tema_mensagem', ''), datetime.now().strftime("%d/%m/%Y")))
-    conn.commit()
-    conn.close()
+    # Auto-cura de colunas caso nao existam na tabela ativa
+    for col in ['jovens_homens', 'jovens_mulheres', 'criancas_meninos', 'criancas_meninas', 'visitantes_homens', 'visitantes_mulheres']:
+        try:
+            conn.execute(f"ALTER TABLE cultos_frequencia ADD COLUMN {col} INTEGER DEFAULT 0")
+            conn.commit()
+        except Exception:
+            pass
+
+    try:
+        conn.execute('''INSERT INTO cultos_frequencia (data_culto, tipo_culto, homens, mulheres, jovens_homens, jovens_mulheres, jovens, criancas_meninos, criancas_meninas, criancas, visitantes_homens, visitantes_mulheres, visitantes, novos_convertidos, total_presentes, pregador, tema_mensagem, data_registo)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (request.form['data_culto'], request.form['tipo_culto'], h, m, jh, jm, j_total, cm, cf, c_total, vh, vf, v_total, nc, total,
+                      request.form.get('pregador', ''), request.form.get('tema_mensagem', ''), datetime.now().strftime("%d/%m/%Y")))
+        conn.commit()
+    except Exception as e:
+        # Fallback de compatibilidade
+        conn.execute('''INSERT INTO cultos_frequencia (data_culto, tipo_culto, homens, mulheres, jovens, criancas, visitantes, novos_convertidos, total_presentes, pregador, tema_mensagem, data_registo)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (request.form['data_culto'], request.form['tipo_culto'], h, m, j_total, c_total, v_total, nc, total,
+                      request.form.get('pregador', ''), request.form.get('tema_mensagem', ''), datetime.now().strftime("%d/%m/%Y")))
+        conn.commit()
+    finally:
+        conn.close()
+
     session['sucesso_cadastro'] = "Culto e frequência registados!"
     return redirect('/')
 
