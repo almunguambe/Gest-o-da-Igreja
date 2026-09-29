@@ -819,7 +819,12 @@ def dashboard():
 
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
-    return render_template('dashboard.html',
+    
+    try:
+        planos = conn.execute("SELECT * FROM actividades_planeamento ORDER BY id DESC").fetchall()
+    except Exception:
+        planos = []
+    return render_template('dashboard.html', planos=planos,
                            todos_membros=todos_membros,
                            lista_igrejas=lista_igrejas if 'lista_igrejas' in locals() else [],
                            lista_zonas=lista_zonas if 'lista_zonas' in locals() else [],
