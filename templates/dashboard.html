@@ -297,8 +297,23 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Filiação (Pai & Mãe)</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">💍 Estado Civil</label>
+                                    <select name="estado_civil" class="w-full h-11 px-3 text-sm border-2 rounded-xl bg-white font-semibold focus:border-indigo-600">
+                                        <option value="Solteiro(a)">Solteiro(a)</option>
+                                        <option value="Casado(a) no Religioso">Casado(a) no Religioso</option>
+                                        <option value="Casado(a) no Civil">Casado(a) no Civil</option>
+                                        <option value="Casado(a) Religioso & Civil">Casado(a) Religioso & Civil</option>
+                                        <option value="Viúvo(a)">Viúvo(a)</option>
+                                        <option value="Divorciado(a)">Divorciado(a)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Filiação (Pai & Mãe)</label>
+                                    <input type="text" name="filiacao" placeholder="Nome dos pais..." class="w-full h-11 px-3 text-sm border-2 rounded-xl">
+                                </div>
+                            </div>
                                 <input type="text" name="filiacao" placeholder="Nome dos pais..." class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             </div>
 

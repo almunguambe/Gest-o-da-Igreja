@@ -229,6 +229,11 @@ def init_db():
         senha TEXT NOT NULL,
         cargo TEXT NOT NULL
     )''')
+    
+    try:
+        c.execute("ALTER TABLE membros ADD COLUMN estado_civil TEXT DEFAULT 'Solteiro(a)'")
+    except: pass
+
     c.execute('''CREATE TABLE IF NOT EXISTS membros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -2803,6 +2808,11 @@ def dashboard_membros():
     conn = get_db()
     membros = []
     try:
+        # Garante a existência da coluna no PostgreSQL/SQLite
+        try:
+            conn.execute("ALTER TABLE membros ADD COLUMN estado_civil TEXT DEFAULT 'Solteiro(a)'")
+            conn.commit()
+        except: pass
         membros = conn.execute("SELECT * FROM membros").fetchall()
     except Exception as e:
         print("Erro ao ler membros:", e)
@@ -2832,13 +2842,13 @@ def dashboard_membros():
     for m in membros:
         item = dict(m) if hasattr(m, 'keys') else m
 
-        # 1. Género (suporta 'Masculino', 'Feminino', 'M', 'F')
+        # 1. Género
         raw_gen = str(item.get('genero') or item.get('sexo') or '').strip().lower()
         if raw_gen.startswith('f') or 'mulher' in raw_gen:
-            gen = 'M' # Mulher
+            gen = 'M'
             mulheres += 1
         else:
-            gen = 'H' # Homem
+            gen = 'H'
             homens += 1
 
         # 2. Baptismo / Novos Convertidos
@@ -2853,7 +2863,7 @@ def dashboard_membros():
         else:
             nao_batizados += 1
 
-        # 3. Faixas Etárias (usando data_nasc ou segmento)
+        # 3. Faixas Etárias
         dn = str(item.get('data_nasc') or item.get('data_nascimento') or '').strip()
         segmento = str(item.get('segmento') or '').strip().lower()
         
@@ -2877,14 +2887,13 @@ def dashboard_membros():
             elif 36 <= idade <= 59: faixa_adultos[gen] += 1
             else: faixa_terceira[gen] += 1
         else:
-            # Fallback pelo campo Segmento
             if 'criança' in segmento: faixa_criancas[gen] += 1
             elif 'adolescente' in segmento: faixa_adolescentes[gen] += 1
             elif 'jovem' in segmento: faixa_jovens[gen] += 1
             elif 'idoso' in segmento or 'terceira' in segmento: faixa_terceira[gen] += 1
             else: faixa_adultos[gen] += 1
 
-        # 4. Obreiros / Posição Atual
+        # 4. Obreiros
         if 'pastor' in posicao: obreiros_contagem['Pastores'] += 1
         elif 'presb' in posicao: obreiros_contagem['Presbíteros'] += 1
         elif 'evang' in posicao: obreiros_contagem['Evangelistas'] += 1
@@ -2895,15 +2904,21 @@ def dashboard_membros():
         if not dep or dep.lower() in ['none', 'null', 'nan']: dep = 'Geral'
         departamentos[dep] = departamentos.get(dep, 0) + 1
 
-        # 6. Estado Civil ou Bairro
-        bairro = str(item.get('bairro') or 'Chicuque').strip()
-        if not bairro or bairro.lower() in ['none', 'null', 'nan']: bairro = 'Chicuque'
-        estado_civil[bairro] = estado_civil.get(bairro, 0) + 1
+        # 6. Estado Civil Real
+        ec = str(item.get('estado_civil') or '').strip()
+        if not ec or ec.lower() in ['none', 'null', 'nan']:
+            ec = 'Não Informado'
+        estado_civil[ec] = estado_civil.get(ec, 0) + 1
+
+    perc_homens = round((homens / total * 100), 1) if total > 0 else 0
+    perc_mulheres = round((mulheres / total * 100), 1) if total > 0 else 0
 
     dados_dashboard = {
         'total': total,
         'homens': homens,
         'mulheres': mulheres,
+        'perc_homens': perc_homens,
+        'perc_mulheres': perc_mulheres,
         'batizados': batizados,
         'nao_batizados': nao_batizados,
         'novos_convertidos': novos_convertidos,
