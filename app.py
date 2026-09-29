@@ -2765,3 +2765,34 @@ def atualizar_fase_discipulado():
     conn.close()
     flash("Fase de discipulado atualizada com sucesso!", "sucesso")
     return redirect('/#secao-discipulado')
+
+@app.route('/secretaria/relatorio_oficial')
+def ver_relatorio_oficial():
+    conn = get_db()
+    membros = []
+    cultos = []
+    planos = []
+    casamentos = []
+    
+    try:
+        membros = conn.execute("SELECT * FROM membros").fetchall()
+    except Exception:
+        pass
+        
+    try:
+        cultos = conn.execute("SELECT * FROM cultos_frequencia ORDER BY id DESC").fetchall()
+    except Exception:
+        pass
+        
+    try:
+        planos = conn.execute("SELECT * FROM actividades_planeamento ORDER BY id DESC").fetchall()
+    except Exception:
+        pass
+        
+    try:
+        casamentos = conn.execute("SELECT * FROM casamentos ORDER BY id DESC").fetchall()
+    except Exception:
+        pass
+        
+    conn.close()
+    return render_template('relatorio_oficial_modelo.html', membros=membros, cultos=cultos, planos=planos, casamentos=casamentos)
