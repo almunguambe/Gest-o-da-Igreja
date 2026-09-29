@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Estatístico da Membrezia - IEAD Thavane</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 p-4 md:p-8 min-h-screen">
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Topo com Navegação -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-800/80 p-6 rounded-3xl border border-slate-700 shadow-xl gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">👥</span>
+                    <div>
+                        <h1 class="text-2xl font-black text-white">Raio-X Estatístico da Membrezia</h1>
+                        <p class="text-xs text-slate-400 font-semibold">Igreja Evangélica Assembleia de Deus • Ministério Thavane (Distrito de Maxixe)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="/" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                    <span>⬅️</span> Voltar ao Painel
+                </a>
+                <button onclick="window.print()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-blue-600/30">
+                    <span>🖨️</span> Imprimir Relatório
+                </button>
+            </div>
+        </div>
+
+        <!-- 4 CARDS PRINCIPAIS (KPIs) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total de Membros</span>
+                <div class="text-3xl font-black text-white mt-1">{{ d['total'] }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">👨 {{ d['homens'] }} Homens • 👩 {{ d['mulheres'] }} Mulheres</div>
+            </div>
+            <div class="bg-slate-800 p-5 rounded-2xl border border-blue-900/50">
+                <span class="text-xs font-bold text-blue-400 uppercase tracking-wider block">Baptizados nas Águas</span>
+                <div class="text-3xl font-black text-blue-400 mt-1">{{ d['batizados'] }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">{% if d['total'] > 0 %}{{ ((d['batizados'] / d['total']) * 100)|round(1) }}%{% else %}0%{% endif %} da igreja</div>
+            </div>
+            <div class="bg-slate-800 p-5 rounded-2xl border border-emerald-900/50">
+                <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block">Novos Convertidos</span>
+                <div class="text-3xl font-black text-emerald-400 mt-1">{{ d['novos_convertidos'] }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">Em discipulado e acolhimento</div>
+            </div>
+            <div class="bg-slate-800 p-5 rounded-2xl border border-amber-900/50">
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block">Corpo de Obreiros</span>
+                <div class="text-3xl font-black text-amber-400 mt-1">{{ d['obreiros']['Pastores'] + d['obreiros']['Presbíteros'] + d['obreiros']['Evangelistas'] + d['obreiros']['Diáconos'] }}</div>
+                <div class="text-[11px] text-slate-400 mt-1">Liderança em exercício</div>
+            </div>
+        </div>
+
+        <!-- GRÁFICOS & DISTRIBUIÇÃO ETÁRIA -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Gráfico de Pirâmide Etária IEAD -->
+            <div class="lg:col-span-8 bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-4">
+                <h3 class="text-base font-black text-white flex items-center gap-2">
+                    <span>📊</span> Distribuição Demográfica por Faixa Etária e Género
+                </h3>
+                <div class="h-64">
+                    <canvas id="graficoFaixas"></canvas>
+                </div>
+                <!-- Tabela Resumo Demográfico Modelo Thavane -->
+                <div class="overflow-x-auto pt-2">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900/80 text-slate-300 font-bold border-b border-slate-700">
+                            <tr>
+                                <th class="p-2.5">Categoria / Faixa Etária</th>
+                                <th class="p-2.5 text-center text-blue-400">Masculino (H)</th>
+                                <th class="p-2.5 text-center text-pink-400">Feminino (M)</th>
+                                <th class="p-2.5 text-center text-white">Total (HM)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/60">
+                            <tr>
+                                <td class="p-2.5 font-bold">Boa Esperança - Crianças (0 a 13 anos)</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_criancas']['H'] }}</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_criancas']['M'] }}</td>
+                                <td class="p-2.5 text-center font-black text-white">{{ d['faixa_criancas']['H'] + d['faixa_criancas']['M'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-bold">Boa Esperança - Adolescentes (14 a 17 anos)</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_adolescentes']['H'] }}</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_adolescentes']['M'] }}</td>
+                                <td class="p-2.5 text-center font-black text-white">{{ d['faixa_adolescentes']['H'] + d['faixa_adolescentes']['M'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-bold">Juventude Cristã (18 a 35 anos)</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_jovens']['H'] }}</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_jovens']['M'] }}</td>
+                                <td class="p-2.5 text-center font-black text-white">{{ d['faixa_jovens']['H'] + d['faixa_jovens']['M'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-bold">Adultos (36 a 59 anos)</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_adultos']['H'] }}</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_adultos']['M'] }}</td>
+                                <td class="p-2.5 text-center font-black text-white">{{ d['faixa_adultos']['H'] + d['faixa_adultos']['M'] }}</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2.5 font-bold">Terceira Idade (60+ anos)</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_terceira']['H'] }}</td>
+                                <td class="p-2.5 text-center font-bold">{{ d['faixa_terceira']['M'] }}</td>
+                                <td class="p-2.5 text-center font-black text-white">{{ d['faixa_terceira']['H'] + d['faixa_terceira']['M'] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gráfico de Género & Liderança -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Género -->
+                <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-4">
+                    <h3 class="text-sm font-black text-white flex items-center gap-2">
+                        <span>⚧️</span> Proporção por Género
+                    </h3>
+                    <div class="h-44 flex items-center justify-center">
+                        <canvas id="graficoGenero"></canvas>
+                    </div>
+                </div>
+
+                <!-- Obreiros / Liderança -->
+                <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-3">
+                    <h3 class="text-sm font-black text-white flex items-center gap-2">
+                        <span>✝️</span> Estatística de Obreiros
+                    </h3>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center p-2 bg-slate-900/60 rounded-xl">
+                            <span>Pastores e Esposas</span>
+                            <span class="font-bold text-amber-400">{{ d['obreiros']['Pastores'] }}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-slate-900/60 rounded-xl">
+                            <span>Presbitério</span>
+                            <span class="font-bold text-amber-400">{{ d['obreiros']['Presbíteros'] }}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-slate-900/60 rounded-xl">
+                            <span>Evangelistas</span>
+                            <span class="font-bold text-amber-400">{{ d['obreiros']['Evangelistas'] }}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-slate-900/60 rounded-xl">
+                            <span>Diáconos e Diaconisas</span>
+                            <span class="font-bold text-amber-400">{{ d['obreiros']['Diáconos'] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- DEPARTAMENTOS & ESTADO CIVIL -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-4">
+                <h3 class="text-sm font-black text-white">🏢 Membros por Departamento</h3>
+                <div class="space-y-2 text-xs">
+                    {% for dep, qtd in d['departamentos'].items() %}
+                    <div class="flex justify-between items-center p-2 bg-slate-900/60 rounded-xl">
+                        <span class="font-semibold">{{ dep }}</span>
+                        <span class="font-bold text-blue-400">{{ qtd }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-4">
+                <h3 class="text-sm font-black text-white">💍 Estado Civil da Membrezia</h3>
+                <div class="space-y-2 text-xs">
+                    {% for ec, qtd in d['estado_civil'].items() %}
+                    <div class="flex justify-between items-center p-2 bg-slate-900/60 rounded-xl">
+                        <span class="font-semibold">{{ ec }}</span>
+                        <span class="font-bold text-emerald-400">{{ qtd }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    // Gráfico de Faixas Etárias
+    const ctxFaixas = document.getElementById('graficoFaixas').getContext('2d');
+    new Chart(ctxFaixas, {
+        type: 'bar',
+        data: {
+            labels: ['0-13 (Crianças)', '14-17 (Adolescentes)', '18-35 (Jovens)', '36-59 (Adultos)', '60+ (Anciãos)'],
+            datasets: [
+                {
+                    label: 'Homens',
+                    data: [{{ d['faixa_criancas']['H'] }}, {{ d['faixa_adolescentes']['H'] }}, {{ d['faixa_jovens']['H'] }}, {{ d['faixa_adultos']['H'] }}, {{ d['faixa_terceira']['H'] }}],
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Mulheres',
+                    data: [{{ d['faixa_criancas']['M'] }}, {{ d['faixa_adolescentes']['M'] }}, {{ d['faixa_jovens']['M'] }}, {{ d['faixa_adultos']['M'] }}, {{ d['faixa_terceira']['M'] }}],
+                    backgroundColor: '#ec4899',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+            },
+            plugins: {
+                legend: { labels: { color: '#f8fafc', font: { weight: 'bold' } } }
+            }
+        }
+    });
+
+    // Gráfico Donut Género
+    const ctxGen = document.getElementById('graficoGenero').getContext('2d');
+    new Chart(ctxGen, {
+        type: 'doughnut',
+        data: {
+            labels: ['Homens', 'Mulheres'],
+            datasets: [{
+                data: [{{ d['homens'] }}, {{ d['mulheres'] }}],
+                backgroundColor: ['#3b82f6', '#ec4899'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#f8fafc' } }
+            }
+        }
+    });
+    </script>
+</body>
+</html>
