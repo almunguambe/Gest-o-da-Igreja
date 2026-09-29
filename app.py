@@ -1436,13 +1436,37 @@ def novo_financeiro():
     conn = get_db()
     metodo = request.form.get('metodo_pagamento', 'Dinheiro')
     referencia = request.form.get('referencia_transacao', '').strip() or None
-    conn.execute('''INSERT INTO financeiro (tipo, local_movimento, departamento, categoria, valor, data_movimento, dia, mes, ano, data_registo, membro_id, descricao, metodo_pagamento, referencia_transacao)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                 (request.form['tipo'], request.form.get('local_movimento', 'Caixa'), request.form.get('departamento', 'Geral'),
-                  request.form['categoria'], float(request.form['valor']), dt_obj.strftime("%d/%m/%Y"), dt_obj.day, dt_obj.month, dt_obj.year,
-                  datetime.now().strftime("%d/%m/%Y %H:%M"), request.form.get('membro_id') or None, request.form['descricao'], metodo, referencia))
-    conn.commit()
-    conn.close()
+
+    # Auto-cura: Garantir que as colunas existam na tabela antes de inserir
+    try:
+        conn.execute("ALTER TABLE financeiro ADD COLUMN metodo_pagamento TEXT DEFAULT 'Dinheiro'")
+        conn.commit()
+    except Exception:
+        pass
+
+    try:
+        conn.execute("ALTER TABLE financeiro ADD COLUMN referencia_transacao TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
+    try:
+        conn.execute('''INSERT INTO financeiro (tipo, local_movimento, departamento, categoria, valor, data_movimento, dia, mes, ano, data_registo, membro_id, descricao, metodo_pagamento, referencia_transacao)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (request.form['tipo'], request.form.get('local_movimento', 'Caixa'), request.form.get('departamento', 'Geral'),
+                      request.form['categoria'], float(request.form['valor']), dt_obj.strftime("%d/%m/%Y"), dt_obj.day, dt_obj.month, dt_obj.year,
+                      datetime.now().strftime("%d/%m/%Y %H:%M"), request.form.get('membro_id') or None, request.form['descricao'], metodo, referencia))
+        conn.commit()
+    except Exception as e:
+        # Fallback de seguranca caso ocorra qualquer restricao com as novas colunas
+        conn.execute('''INSERT INTO financeiro (tipo, local_movimento, departamento, categoria, valor, data_movimento, dia, mes, ano, data_registo, membro_id, descricao)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (request.form['tipo'], request.form.get('local_movimento', 'Caixa'), request.form.get('departamento', 'Geral'),
+                      request.form['categoria'], float(request.form['valor']), dt_obj.strftime("%d/%m/%Y"), dt_obj.day, dt_obj.month, dt_obj.year,
+                      datetime.now().strftime("%d/%m/%Y %H:%M"), request.form.get('membro_id') or None, request.form['descricao']))
+        conn.commit()
+    finally:
+        conn.close()
     return redirect('/')
 
 @app.route('/financeiro/transferir', methods=['POST'])
