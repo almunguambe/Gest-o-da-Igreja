@@ -245,6 +245,11 @@ def init_db():
     except:
         pass
 
+    
+    try:
+        c.execute('''CREATE TABLE IF NOT EXISTS config_eventos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+    except: pass
+
     c.execute('''CREATE TABLE IF NOT EXISTS membros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -3055,6 +3060,29 @@ def config_igreja_apagar(id):
     conn = get_db()
     try:
         conn.execute("DELETE FROM igrejas_distritos WHERE id = ?", (id,))
+        conn.commit()
+    except: pass
+    finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+
+@app.route('/config/evento/novo', methods=['POST'])
+def config_evento_novo():
+    nome = request.form.get('nome', '').strip()
+    if nome:
+        conn = get_db()
+        try:
+            conn.execute("INSERT INTO config_eventos (nome) VALUES (?)", (nome,))
+            conn.commit()
+        except: pass
+        finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/evento/apagar/<int:id>')
+def config_evento_apagar(id):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM config_eventos WHERE id = ?", (id,))
         conn.commit()
     except: pass
     finally: conn.close()

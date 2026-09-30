@@ -71,6 +71,10 @@
                         <button onclick="trocarAba('membros')" id="nav-membros" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if pode_cadastro %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}">
                             <span class="text-base">👤</span> <span>Membros ({{ total_membros }})</span>
                         </button>
+
+                         <a href="/secretaria/dashboard_membros" target="_blank" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-black text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition">
+                             <span class="text-base">📊</span> <span>Raio-X da Membrezia</span>
+                         </a>
                         
                          <button onclick="trocarAba('secretaria')" id="nav-secretaria" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
                              <span class="text-base">📋</span> <span>Secretaria & Planos</span>
@@ -382,6 +386,10 @@
                             <a href="/exportar/membros" class="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5">
                                 <span>📥 Baixar Excel</span>
                             </a>
+
+                        <a href="/secretaria/dashboard_membros" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+                            <span>📊</span> Raio-X Estatístico
+                        </a>
                         </div>
 
                         <div class="space-y-4 max-h-[750px] overflow-y-auto pr-1">
@@ -1564,7 +1572,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
     </div>
 
     <!-- 3. SEGUNDA LINHA: 4 NOVOS CARTÕES DE GESTÃO ECLESIÁSTICA -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <!-- Cargos & Posições -->
         <div class="bg-white/95 p-5 rounded-3xl card-glow border border-indigo-100">
             <h3 class="text-sm font-black uppercase text-purple-950 mb-3 pb-2 border-b flex items-center justify-between">
@@ -1604,6 +1612,21 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
             </form>
             <ul class="divide-y text-xs max-h-48 overflow-y-auto">
                 {% for ct in lista_contas %}<li class="py-2 flex justify-between"><span>{{ ct['nome'] }}</span><a href="/config/conta/apagar/{{ ct['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
+            </ul>
+        </div>
+
+        
+        <!-- Tipos de Eventos -->
+        <div class="bg-white/95 p-5 rounded-3xl card-glow border border-indigo-100">
+            <h3 class="text-sm font-black uppercase text-amber-950 mb-3 pb-2 border-b flex items-center justify-between">
+                <span>🎪 Tipos de Eventos</span>
+            </h3>
+            <form action="/config/evento/novo" method="POST" class="flex gap-2 mb-3">
+                <input type="text" name="nome" placeholder="Ex: Vigília, Retiro..." required class="h-10 px-2 text-xs border rounded-xl w-full">
+                <button type="submit" class="bg-amber-600 text-white px-3 font-bold rounded-xl">+</button>
+            </form>
+            <ul class="divide-y text-xs max-h-48 overflow-y-auto">
+                {% for ev in lista_eventos_cfg %}<li class="py-2 flex justify-between"><span>{{ ev['nome'] }}</span><a href="/config/evento/apagar/{{ ev['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
             </ul>
         </div>
 
