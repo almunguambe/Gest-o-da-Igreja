@@ -234,6 +234,17 @@ def init_db():
         c.execute("ALTER TABLE membros ADD COLUMN estado_civil TEXT DEFAULT 'Solteiro(a)'")
     except: pass
 
+    
+    # Novas tabelas de configuração eclesiástica
+    try:
+        c.execute('''CREATE TABLE IF NOT EXISTS config_cargos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_cultos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_contas (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_atividades (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS igrejas_distritos (id INTEGER PRIMARY KEY AUTOINCREMENT, provincia TEXT, distrito TEXT, nome TEXT)''')
+    except:
+        pass
+
     c.execute('''CREATE TABLE IF NOT EXISTS membros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -2934,3 +2945,117 @@ def dashboard_membros():
 
     return render_template('dashboard_membros.html', d=dados_dashboard)
 
+
+
+# --- ROTAS DE CONFIGURAÇÃO ECLESIÁSTICA EXPANDIDA ---
+@app.route('/config/cargo/novo', methods=['POST'])
+def config_cargo_novo():
+    nome = request.form.get('nome', '').strip()
+    if nome:
+        conn = get_db()
+        try:
+            conn.execute("INSERT INTO config_cargos (nome) VALUES (?)", (nome,))
+            conn.commit()
+        except: pass
+        finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/cargo/apagar/<int:id>')
+def config_cargo_apagar(id):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM config_cargos WHERE id = ?", (id,))
+        conn.commit()
+    except: pass
+    finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/culto/novo', methods=['POST'])
+def config_culto_novo():
+    nome = request.form.get('nome', '').strip()
+    if nome:
+        conn = get_db()
+        try:
+            conn.execute("INSERT INTO config_cultos (nome) VALUES (?)", (nome,))
+            conn.commit()
+        except: pass
+        finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/culto/apagar/<int:id>')
+def config_culto_apagar(id):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM config_cultos WHERE id = ?", (id,))
+        conn.commit()
+    except: pass
+    finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/conta/novo', methods=['POST'])
+def config_conta_novo():
+    nome = request.form.get('nome', '').strip()
+    if nome:
+        conn = get_db()
+        try:
+            conn.execute("INSERT INTO config_contas (nome) VALUES (?)", (nome,))
+            conn.commit()
+        except: pass
+        finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/conta/apagar/<int:id>')
+def config_conta_apagar(id):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM config_contas WHERE id = ?", (id,))
+        conn.commit()
+    except: pass
+    finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/atividade/novo', methods=['POST'])
+def config_atividade_novo():
+    nome = request.form.get('nome', '').strip()
+    if nome:
+        conn = get_db()
+        try:
+            conn.execute("INSERT INTO config_atividades (nome) VALUES (?)", (nome,))
+            conn.commit()
+        except: pass
+        finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/atividade/apagar/<int:id>')
+def config_atividade_apagar(id):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM config_atividades WHERE id = ?", (id,))
+        conn.commit()
+    except: pass
+    finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/igreja/nova', methods=['POST'])
+def config_igreja_nova():
+    prov = request.form.get('provincia', '').strip()
+    dist = request.form.get('distrito', '').strip()
+    nome = request.form.get('nome', '').strip()
+    if prov and dist and nome:
+        conn = get_db()
+        try:
+            conn.execute("INSERT INTO igrejas_distritos (provincia, distrito, nome) VALUES (?, ?, ?)", (prov, dist, nome))
+            conn.commit()
+        except: pass
+        finally: conn.close()
+    return redirect('/?tab=configuracoes')
+
+@app.route('/config/igreja/apagar/<int:id>')
+def config_igreja_apagar(id):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM igrejas_distritos WHERE id = ?", (id,))
+        conn.commit()
+    except: pass
+    finally: conn.close()
+    return redirect('/?tab=configuracoes')
