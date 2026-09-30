@@ -845,27 +845,20 @@ def dashboard():
         planos = conn.execute("SELECT * FROM actividades_planeamento ORDER BY id DESC").fetchall()
     except Exception:
         planos = []
-        # Buscar Candidatos ao Batismo para a tela de usuarios
+    # Filtrar Candidatos ao Batismo diretamente da lista oficial de membros em memoria
     candidatos_batismo = []
-    try:
-        cur_cb = conn.cursor() if hasattr(conn, 'cursor') else conn
-        cur_cb.execute("""
-            SELECT id, nome FROM membros 
-            WHERE LOWER(COALESCE(funcao, '')) LIKE '%candidat%' 
-               OR LOWER(COALESCE(funcao, '')) LIKE '%prova%' 
-               OR LOWER(COALESCE(funcao, '')) LIKE '%convertid%'
-               OR LOWER(COALESCE(batizado, '')) IN ('nao', 'não', 'pendente', '')
-               OR funcao IS NULL
-            ORDER BY nome ASC
-        """)
-        candidatos_batismo = cur_cb.fetchall()
-    except Exception:
-        try:
-            cur_cb = conn.cursor() if hasattr(conn, 'cursor') else conn
-            cur_cb.execute("SELECT id, nome FROM membros ORDER BY nome ASC")
-            candidatos_batismo = cur_cb.fetchall()
-        except Exception:
-            pass
+    for m in todos_membros:
+        # Suporta dicionario (PostgreSQL/RealDictCursor) e sqlite3.Row
+        f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
+        b_val = str(m.get('batizado', '') if hasattr(m, 'get') else m['batizado'] if 'batizado' in m.keys() else '').lower()
+        
+        # Considera candidatos ao batismo, membros em prova ou nao batizados
+        if ('candidat' in f_val) or ('prova' in f_val) or ('convertid' in f_val) or (b_val in ['nao', 'não', 'pendente', '']):
+            candidatos_batismo.append(m)
+
+    # Se a lista filtrada estiver vazia, disponibiliza todos os membros para permitir selecao imediata
+    if not candidatos_batismo:
+        candidatos_batismo = todos_membros
 
     return render_template('dashboard.html', candidatos_batismo=candidatos_batismo, planos=planos,
                            todos_membros=todos_membros,
