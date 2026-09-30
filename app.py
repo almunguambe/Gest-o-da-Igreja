@@ -2337,10 +2337,27 @@ def processar_avaliacao_discipulado(cid):
     from flask import request, render_template_string, session
 
     classe = CURRICULO_CLASSES[cid]
-    m_id = request.form.get('membro_id', 1)
+    m_id = request.form.get('membro_id')
+    if not m_id:
+        # Tenta pegar da sessao ou do primeiro membro cadastrado
+        m_id = session.get('membro_id')
+    
+    if not m_id:
+        try:
+            conn_temp = get_db_connection()
+            cur_temp = conn_temp.cursor()
+            cur_temp.execute("SELECT id FROM membros ORDER BY id ASC LIMIT 1")
+            row_primeiro = cur_temp.fetchone()
+            conn_temp.close()
+            if row_primeiro:
+                m_id = row_primeiro[0] if isinstance(row_primeiro, (tuple, list)) else row_primeiro['id']
+            else:
+                m_id = 1
+        except Exception:
+            m_id = 1
     try:
         m_id = int(m_id)
-    except:
+    except Exception:
         m_id = 1
 
     total_questoes = len(classe['questionario'])
@@ -2357,28 +2374,54 @@ def processar_avaliacao_discipulado(cid):
     nota_final = int((acertos / total_questoes) * 100) if total_questoes > 0 else 0
     status = "Aprovado" if nota_final >= 70 else "Reprovado"
 
-    # Gravar progresso de forma segura
+    # Gravar progresso de forma segura (Compatível com PostgreSQL e SQLite)
     try:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS progresso_discipulado (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                membro_id INTEGER,
-                classe_id TEXT,
-                nota REAL,
-                status TEXT,
-                data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        c.execute("""
-            INSERT INTO progresso_discipulado (membro_id, classe_id, nota, status)
-            VALUES (?, ?, ?, ?)
-        """, (m_id, cid, nota_final, status))
+        is_pg = bool(DATABASE_URL and psycopg2)
+
+        if is_pg:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                    id SERIAL PRIMARY KEY,
+                    membro_id INTEGER,
+                    classe_id TEXT,
+                    nota REAL,
+                    status TEXT,
+                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            # Atualiza se ja existir para essa classe, ou insere novo
+            c.execute("""
+                DELETE FROM progresso_discipulado WHERE membro_id = %s AND classe_id = %s
+            """, (m_id, cid))
+            c.execute("""
+                INSERT INTO progresso_discipulado (membro_id, classe_id, nota, status)
+                VALUES (%s, %s, %s, %s)
+            """, (m_id, cid, nota_final, status))
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    membro_id INTEGER,
+                    classe_id TEXT,
+                    nota REAL,
+                    status TEXT,
+                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            c.execute("""
+                DELETE FROM progresso_discipulado WHERE membro_id = ? AND classe_id = ?
+            """, (m_id, cid))
+            c.execute("""
+                INSERT INTO progresso_discipulado (membro_id, classe_id, nota, status)
+                VALUES (?, ?, ?, ?)
+            """, (m_id, cid, nota_final, status))
+
         conn.commit()
         conn.close()
     except Exception as e:
-        print(f"Aviso ao salvar progresso: {e}")
+        print(f"Erro ao salvar progresso do discipulado: {e}")
 
     proxima = classe.get('proxima')
     proxima_url = f"/discipulado/classe/{proxima}" if proxima else f"/discipulado/classe/{cid}"
