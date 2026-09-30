@@ -659,7 +659,7 @@ def login():
             session['igreja_nome'] = ig_info['nome'] if ig_info else 'IEAD - Congregação Local'
 
             if user['cargo'] == 'Estudante':
-                return redirect(url_for('portal_estudos'))
+                return redirect('/estudos')
             return redirect('/')
         return render_template('login.html', erro="Utilizador ou palavra-passe incorretos.")
     return render_template('login.html', erro=None)
@@ -675,7 +675,7 @@ def dashboard():
         return redirect(url_for('login'))
         
     if session.get('cargo') == 'Estudante':
-        return redirect(url_for('portal_estudos'))
+        return redirect('/estudos')
 
     conn = get_db()
     
@@ -890,6 +890,11 @@ def dashboard():
                            saidas_valores=json.dumps(saidas_valores)
     )
 
+
+@app.route('/portal_estudos')
+def portal_estudos():
+    return redirect('/estudos')
+
 @app.route('/estudos')
 def estudos():
     from flask import redirect
@@ -914,7 +919,7 @@ def enviar_duvida():
         conn.close()
         session['resultado_teste'] = "A sua dúvida foi enviada com sucesso à liderança pastoral!"
     
-    return redirect(url_for('portal_estudos'))
+    return redirect('/estudos')
 
 @app.route('/estudos/responder', methods=['POST'])
 def responder_estudos():
@@ -939,7 +944,7 @@ def responder_estudos():
     conn.close()
 
     session['resultado_teste'] = f"Parabéns! Obteve {acertos} de 2 acertos ({nota_final}%) na avaliação."
-    return redirect(url_for('portal_estudos'))
+    return redirect('/estudos')
 
 @app.route('/membros/novo', methods=['POST'])
 def novo_membro():
