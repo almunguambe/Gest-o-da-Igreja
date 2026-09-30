@@ -820,19 +820,52 @@ def dashboard():
         pass
 
     try:
+        # Buscar lista de Professores/Mentores disponiveis
+        professores_discipulado = []
+        for m in todos_membros:
+            f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '')
+            # Membros com ministerio ou em comunhao aptos para discipular
+            if any(term in f_val.lower() for term in ['pastor', 'presb', 'diacon', 'evang', 'obreir', 'lider', 'comunh']):
+                professores_discipulado.append(m)
+        if not professores_discipulado:
+            professores_discipulado = todos_membros
+
+        # Query de progresso trazendo professor_nome
         query_prog = """
             SELECT m.id, m.nome, m.foto_path, m.telefone,
+                   COALESCE(m.professor_nome, 'A designar') as prof_nome,
                    COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
                    COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
                    COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
                    COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
             FROM membros m
             LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
-            GROUP BY m.id, m.nome, m.foto_path, m.telefone
+            WHERE LOWER(COALESCE(m.funcao, '')) LIKE '%candidat%'
+               OR LOWER(COALESCE(m.funcao, '')) LIKE '%prova%'
+               OR LOWER(COALESCE(m.funcao, '')) LIKE '%convertid%'
+               OR LOWER(COALESCE(m.batizado, '')) IN ('nao', 'não', 'pendente', '')
+            GROUP BY m.id, m.nome, m.foto_path, m.telefone, m.professor_nome
             ORDER BY m.id DESC
         """
-        c.execute(query_prog)
-        candidatos_discipulado = c.fetchall()
+        try:
+            c.execute(query_prog)
+            candidatos_discipulado = c.fetchall()
+        except Exception:
+            # Fallback caso a coluna ainda esteja a sincronizar
+            query_prog_fb = """
+                SELECT m.id, m.nome, m.foto_path, m.telefone,
+                       'A designar' as prof_nome,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
+                FROM membros m
+                LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
+                GROUP BY m.id, m.nome, m.foto_path, m.telefone
+                ORDER BY m.id DESC
+            """
+            c.execute(query_prog_fb)
+            candidatos_discipulado = c.fetchall()
     except Exception:
         pass
 
@@ -860,7 +893,7 @@ def dashboard():
     if not candidatos_batismo:
         candidatos_batismo = todos_membros
 
-    return render_template('dashboard.html', candidatos_batismo=candidatos_batismo, planos=planos,
+    return render_template('dashboard.html', professores_discipulado=professores_discipulado, candidatos_batismo=candidatos_batismo, planos=planos,
                            todos_membros=todos_membros,
                            lista_igrejas=lista_igrejas if 'lista_igrejas' in locals() else [],
                            lista_zonas=lista_zonas if 'lista_zonas' in locals() else [],
@@ -1597,6 +1630,18 @@ def novo_usuario():
     cargo = (request.form.get('cargo') or '').strip()
     m_id_form = request.form.get('membro_id')
     m_id_val = int(m_id_form) if (m_id_form and m_id_form.isdigit()) else None
+    prof_id_form = request.form.get('professor_id')
+    prof_id_val = int(prof_id_form) if (prof_id_form and prof_id_form.isdigit()) else None
+    prof_nome_val = (request.form.get('professor_nome') or '').strip()
+
+    if prof_nome_val and m_id_val:
+        try:
+            conn_p = get_db()
+            param_ch = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+            conn_p.execute(f"UPDATE membros SET professor_id = {param_ch}, professor_nome = {param_ch} WHERE id = {param_ch}", (prof_id_val, prof_nome_val, m_id_val))
+            conn_p.commit()
+        except Exception as e:
+            print("Erro ao alocar professor ao membro:", e)
 
     if user and senha:
         conn = get_db()
