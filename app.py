@@ -2175,11 +2175,14 @@ def ver_licao_individual(cid, lid):
                     <span class="text-muted mx-2">/</span>
                     <span class="text-primary fw-semibold">{{ classe.nome }}</span>
                 </div>
-                <div class="d-flex gap-2">
+                                <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-white text-dark border px-3 py-2 fw-semibold">Lição {{ lid + 1 }} de {{ total_licoes }}</span>
                     {% if concluiu_todas %}
                     <a href="/membro/{{ m_id }}/certificado_conclusao_discipulado" target="_blank" class="btn btn-sm btn-success fw-bold">🎓 Certificado</a>
                     {% endif %}
+                    <a href="/logout" class="btn btn-sm btn-outline-danger fw-bold px-3 py-1 shadow-sm d-flex align-items-center gap-1" title="Encerrar sessão e voltar ao login">
+                        <span>🚪</span> Sair da Sala
+                    </a>
                 </div>
             </div>
 
@@ -2303,9 +2306,16 @@ def ver_avaliacao_classe(cid):
     <body class="py-5">
         <div class="container" style="max-width: 800px;">
             <div class="card-prova">
-                <div class="card-header-prova">
-                    <h3 class="fw-bold mb-1">📝 Prova de Avaliação</h3>
-                    <div class="text-light">{{ classe.nome }} • Questionário Oficial</div>
+                <div class="card-header-prova d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h3 class="fw-bold mb-1">📝 Prova de Avaliação</h3>
+                        <div class="text-light">{{ classe.nome }} • Questionário Oficial</div>
+                    </div>
+                    <div>
+                        <a href="/logout" class="btn btn-sm btn-outline-light fw-bold px-3 py-2 shadow-sm d-flex align-items-center gap-1">
+                            <span>🚪</span> Sair da Sala
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body p-4 p-md-5">
                     <form id="formAvaliacao" action="/discipulado/avaliar/{{ cid }}" method="POST">
