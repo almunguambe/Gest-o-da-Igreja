@@ -845,7 +845,29 @@ def dashboard():
         planos = conn.execute("SELECT * FROM actividades_planeamento ORDER BY id DESC").fetchall()
     except Exception:
         planos = []
-    return render_template('dashboard.html', planos=planos,
+        # Buscar Candidatos ao Batismo para a tela de usuarios
+    candidatos_batismo = []
+    try:
+        cur_cb = conn.cursor() if hasattr(conn, 'cursor') else conn
+        cur_cb.execute("""
+            SELECT id, nome FROM membros 
+            WHERE LOWER(COALESCE(funcao, '')) LIKE '%candidat%' 
+               OR LOWER(COALESCE(funcao, '')) LIKE '%prova%' 
+               OR LOWER(COALESCE(funcao, '')) LIKE '%convertid%'
+               OR LOWER(COALESCE(batizado, '')) IN ('nao', 'não', 'pendente', '')
+               OR funcao IS NULL
+            ORDER BY nome ASC
+        """)
+        candidatos_batismo = cur_cb.fetchall()
+    except Exception:
+        try:
+            cur_cb = conn.cursor() if hasattr(conn, 'cursor') else conn
+            cur_cb.execute("SELECT id, nome FROM membros ORDER BY nome ASC")
+            candidatos_batismo = cur_cb.fetchall()
+        except Exception:
+            pass
+
+    return render_template('dashboard.html', candidatos_batismo=candidatos_batismo, planos=planos,
                            todos_membros=todos_membros,
                            lista_igrejas=lista_igrejas if 'lista_igrejas' in locals() else [],
                            lista_zonas=lista_zonas if 'lista_zonas' in locals() else [],
@@ -1580,10 +1602,23 @@ def novo_usuario():
     user = (request.form.get('usuario') or '').strip()
     senha = (request.form.get('senha') or '').strip()
     cargo = (request.form.get('cargo') or '').strip()
+    m_id_form = request.form.get('membro_id')
+    m_id_val = int(m_id_form) if (m_id_form and m_id_form.isdigit()) else None
+
     if user and senha:
         conn = get_db()
         try:
-            conn.execute("INSERT INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)", (user, senha, cargo))
+            try:
+                conn.execute("ALTER TABLE usuarios ADD COLUMN membro_id INTEGER")
+                conn.commit()
+            except Exception:
+                pass
+
+            param_char = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+            if m_id_val:
+                conn.execute(f"INSERT INTO usuarios (usuario, senha, cargo, membro_id) VALUES ({param_char}, {param_char}, {param_char}, {param_char})", (user, senha, cargo, m_id_val))
+            else:
+                conn.execute(f"INSERT INTO usuarios (usuario, senha, cargo) VALUES ({param_char}, {param_char}, {param_char})", (user, senha, cargo))
             conn.commit()
             session['sucesso_cadastro'] = f"Utilizador '{user}' criado com sucesso!"
         except Exception:
