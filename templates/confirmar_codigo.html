@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validar Código de Segurança - IEAD Chicuque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-slate-100">
+        <div class="text-center mb-6">
+            <span class="text-4xl">🔑</span>
+            <h1 class="text-xl font-black text-slate-900 mt-2">Validação de Segurança</h1>
+            <p class="text-xs text-slate-500 mt-1">E-mail validado: <b>{{ email }}</b></p>
+        </div>
+
+        <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+            <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider block">Código de Confirmação Oficial:</span>
+            <span class="text-2xl font-black tracking-widest text-blue-950 font-mono">{{ codigo_dica }}</span>
+            <p class="text-[10px] text-amber-700 mt-1">Válido por 15 minutos</p>
+        </div>
+
+        {% if msg_erro %}
+        <div class="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold text-center">
+            {{ msg_erro }}
+        </div>
+        {% endif %}
+
+        <form action="/confirmar-codigo-recuperacao" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">Código de 6 Dígitos:</label>
+                <input type="text" name="codigo" required maxlength="6" placeholder="Insira o código" class="w-full h-11 px-3 text-center text-lg font-mono tracking-widest border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none font-bold">
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">Nova Palavra-passe:</label>
+                <input type="password" name="nova_senha" required placeholder="Nova palavra-passe" class="w-full h-11 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">Confirmar Nova Palavra-passe:</label>
+                <input type="password" name="confirmar_senha" required placeholder="Repita a palavra-passe" class="w-full h-11 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+            </div>
+
+            <button type="submit" class="w-full h-12 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm rounded-xl shadow-lg transition">
+                Gravar Nova Palavra-passe
+            </button>
+        </form>
+
+        <div class="mt-6 text-center border-t pt-4">
+            <a href="/esqueci-senha" class="text-xs font-bold text-slate-500 hover:text-slate-800">← Reenviar outro código</a>
+        </div>
+    </div>
+</body>
+</html>

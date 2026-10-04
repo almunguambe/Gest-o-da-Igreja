@@ -3308,3 +3308,81 @@ def redefinir_senha_urgente_admin():
         '''
     except Exception as e:
         return f"<h3>Erro ao redefinir: {e}</h3>"
+
+
+# =======================================================
+# MÓDULO DE RECUPERAÇÃO DE PALAVRA-PASSE (ADMIN)
+# =======================================================
+import random
+import time
+
+# Armazena temporariamente códigos de verificação em memória
+# Formato: {'email': {'codigo': '123456', 'expira': timestamp}}
+CODIGOS_RECUPERACAO = {}
+EMAIL_ADMIN_AUTORIZADO = "almunguame@gmail.com"
+
+@app.route('/esqueci-senha', methods=['GET', 'POST'])
+def esqueci_senha():
+    msg_erro = None
+    msg_sucesso = None
+    
+    if request.method == 'POST':
+        email_digitado = (request.form.get('email') or '').strip().lower()
+        
+        if email_digitado == EMAIL_ADMIN_AUTORIZADO.lower():
+            # Gera código aleatório de 6 dígitos
+            codigo = f"{random.randint(100000, 999999)}"
+            CODIGOS_RECUPERACAO[email_digitado] = {
+                'codigo': codigo,
+                'expira': time.time() + 900  # 15 minutos
+            }
+            session['email_reset'] = email_digitado
+            # Redireciona para a tela de confirmação
+            return redirect('/confirmar-codigo-recuperacao')
+        else:
+            msg_erro = "E-mail não reconhecido como administrador autorizado do sistema."
+            
+    return render_template('esqueci_senha.html', msg_erro=msg_erro)
+
+
+@app.route('/confirmar-codigo-recuperacao', methods=['GET', 'POST'])
+def confirmar_codigo_recuperacao():
+    email = session.get('email_reset')
+    if not email or email not in CODIGOS_RECUPERACAO:
+        return redirect('/esqueci-senha')
+        
+    dados_codigo = CODIGOS_RECUPERACAO[email]
+    codigo_ativo = dados_codigo['codigo']
+    msg_erro = None
+    
+    if request.method == 'POST':
+        codigo_informado = (request.form.get('codigo') or '').strip()
+        nova_senha = (request.form.get('nova_senha') or '').strip()
+        confirmar_senha = (request.form.get('confirmar_senha') or '').strip()
+        
+        if time.time() > dados_codigo['expira']:
+            msg_erro = "O código expirou. Solicite um novo código."
+        elif codigo_informado != codigo_ativo:
+            msg_erro = "Código de confirmação incorreto. Verifique atentamente."
+        elif len(nova_senha) < 4:
+            msg_erro = "A nova palavra-passe deve conter pelo menos 4 caracteres."
+        elif nova_senha != confirmar_senha:
+            msg_erro = "As palavras-passe digitadas não coincidem."
+        else:
+            # Atualiza no Banco de Dados
+            try:
+                conn = get_db()
+                cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+                param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+                cur.execute(f"UPDATE usuarios SET senha = {param} WHERE usuario = {param}", (nova_senha, 'admin'))
+                conn.commit()
+                if hasattr(conn, 'close'):
+                    conn.close()
+                del CODIGOS_RECUPERACAO[email]
+                session.pop('email_reset', None)
+                session['sucesso_login_msg'] = "Palavra-passe do administrador redefinida com sucesso!"
+                return redirect('/login')
+            except Exception as e:
+                msg_erro = f"Erro ao atualizar na base de dados: {e}"
+
+    return render_template('confirmar_codigo.html', email=email, codigo_dica=codigo_ativo, msg_erro=msg_erro)

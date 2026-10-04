@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperação de Acesso - IEAD Chicuque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-slate-100">
+        <div class="text-center mb-6">
+            <span class="text-4xl">🔐</span>
+            <h1 class="text-xl font-black text-slate-900 mt-2">Recuperar Acesso do Administrador</h1>
+            <p class="text-xs text-slate-500 mt-1">Insira o e-mail de segurança autorizado para prosseguir</p>
+        </div>
+
+        {% if msg_erro %}
+        <div class="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold text-center">
+            {{ msg_erro }}
+        </div>
+        {% endif %}
+
+        <form action="/esqueci-senha" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">E-mail Cadastrado:</label>
+                <input type="email" name="email" required placeholder="almunguame@gmail.com" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none font-semibold">
+            </div>
+
+            <button type="submit" class="w-full h-12 bg-blue-900 hover:bg-blue-950 text-white font-black text-sm rounded-xl shadow-lg transition">
+                Confirmar E-mail & Gerar Código
+            </button>
+        </form>
+
+        <div class="mt-6 text-center border-t pt-4">
+            <a href="/login" class="text-xs font-bold text-slate-500 hover:text-slate-800">← Voltar ao Login</a>
+        </div>
+    </div>
+</body>
+</html>
