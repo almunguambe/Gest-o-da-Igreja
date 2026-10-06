@@ -3655,6 +3655,42 @@ def descartar_censo(membro_id):
         conn.close()
     return redirect('/admin/censo/homologar')
 
+
+
+# =====================================================================
+# ROTA DE TESTE E DIAGNÓSTICO DO SUPABASE
+# =====================================================================
+@app.route('/debug-db')
+def rota_debug_supabase():
+    import os
+    db_env = os.environ.get('DATABASE_URL', '')
+    status_conexao = "Aguardando teste"
+    erro_detalhado = None
+    total_linhas = -1
+    tipo = "PostgreSQL (Supabase)" if ("postgres" in db_env.lower()) else "SQLite Local"
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        cur.execute("SELECT COUNT(*) FROM membros;")
+        row = cur.fetchone()
+        total_linhas = row[0] if row else 0
+        status_conexao = "Conexão bem sucedida!"
+        if hasattr(conn, 'close'):
+            conn.close()
+    except Exception as e:
+        status_conexao = "Falha ao conectar/consultar"
+        erro_detalhado = str(e)
+
+    return {
+        "banco_detectado": tipo,
+        "database_url_preenchida": bool(db_env),
+        "status_conexao": status_conexao,
+        "total_membros": total_linhas,
+        "detalhe_erro": erro_detalhado
+    }
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
