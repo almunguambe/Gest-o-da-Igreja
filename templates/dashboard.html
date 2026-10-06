@@ -2089,6 +2089,22 @@ function atualizarDistritosPorProvincia() {
     });
 }
 </script>
+
+<script>
+function copiarLinkCensoGeral() {
+    const url = window.location.origin + '/censo';
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('✓ LINK DO CENSO COPIADO COM SUCESSO!\n\n' + url + '\n\nJá pode colar nos grupos de WhatsApp dos membros ou das congregações.');
+        }).catch(() => {
+            prompt('Copie o link abaixo para enviar aos membros no WhatsApp:', url);
+        });
+    } else {
+        prompt('Copie o link abaixo para enviar aos membros no WhatsApp:', url);
+    }
+}
+</script>
+
 </body>
 
 
