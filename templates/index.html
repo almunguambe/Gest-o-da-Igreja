@@ -132,5 +132,28 @@
         </div>
 
     </main>
+
+        <!-- BOTÃO OFICIAL DO CENSO E LINKS WHATSAPP -->
+        <a href="/admin/censo/homologar" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition">
+            <i class="fa-solid fa-clipboard-check text-sm"></i>
+            <span>Homologar Censo & Links</span>
+        </a>
+        <button onclick="copiarLinkCensoGeral()" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition" title="Copiar Link para WhatsApp">
+            <i class="fa-brands fa-whatsapp text-sm"></i>
+            <span>Copiar Link Censo</span>
+        </button>
+
+
+<script>
+function copiarLinkCensoGeral() {
+    const link = window.location.origin + '/censo';
+    navigator.clipboard.writeText(link).then(() => {
+        alert('✓ Link do Censo copiado:\n' + link + '\n\nJá pode colar nos grupos de WhatsApp dos membros!');
+    }).catch(() => {
+        prompt('Copie o link abaixo para enviar aos membros:', link);
+    });
+}
+</script>
+
 </body>
 </html>
