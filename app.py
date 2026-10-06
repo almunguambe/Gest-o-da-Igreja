@@ -45,12 +45,24 @@ except ImportError:
     psycopg2 = None
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+def get_db():
+    global DATABASE_URL
+    if DATABASE_URL and psycopg2:
+        try:
+            conn = psycopg2.connect(DATABASE_URL)
+            return conn
+        except Exception as e:
+            print(f"[ALERTA BD] Falha ao conectar ao Supabase: {e}")
+    # Fallback SQLite local
+    conn = sqlite3.connect("gestao_chicuque.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def get_db_connection():
-    if DATABASE_URL and psycopg2:
-        conn = psycopg2.connect(DATABASE_URL)
-        conn.cursor_factory = psycopg2.extras.RealDictCursor
-        return conn
+    return get_db()
     conn = sqlite3.connect("gestao_chicuque.db")
     conn.row_factory = sqlite3.Row
     return conn
