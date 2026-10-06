@@ -3439,7 +3439,7 @@ def censo_publico():
             conn = get_db()
             cur = conn.cursor() if hasattr(conn, 'cursor') else conn
             param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-            status_inicial = 'Ativo' if session.get('usuario') else 'Pendente de Validação'
+            status_inicial = 'Pendente de Validação'
             
             sql = f'''
                 INSERT INTO membros (
