@@ -383,6 +383,14 @@
                                 <h3 class="text-base font-black text-slate-900">Membros Registados ({{ total_membros }})</h3>
                                 <p class="text-xs text-slate-500">Cartões em PDF, WhatsApp e Certificados</p>
                             </div>
+                            <!-- BOTÕES OFICIAIS DO CENSO -->
+                            <a href="/admin/censo/homologar" class="h-10 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5" title="Aprovar e homologar fichas do censo">
+                                <span>📋 Homologar Censo</span>
+                            </a>
+                            <button type="button" onclick="copiarLinkCensoGeral()" class="h-10 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5" title="Copiar link para WhatsApp">
+                                <span>📱 Link Censo (WhatsApp)</span>
+                            </button>
+                            <a href="/exportar/membros"
                             <a href="/exportar/membros" class="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5">
                                 <span>📥 Baixar Excel</span>
                             </a>
