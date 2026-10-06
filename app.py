@@ -3394,6 +3394,9 @@ def confirmar_codigo_recuperacao():
 import os
 from werkzeug.utils import secure_filename
 
+# =======================================================
+# MÓDULO DE CENSO E AUTO-RECENSEAMENTO (ALINHADO)
+# =======================================================
 @app.route('/censo', methods=['GET', 'POST'])
 def censo_publico():
     msg_erro = None
@@ -3461,47 +3464,6 @@ def censo_publico():
             msg_erro = f"Erro ao registar a ficha: {e}"
 
     return render_template('censo_form.html', msg_erro=msg_erro)
-            
-        foto_path = None
-        if 'foto' in request.files:
-            file = request.files['foto']
-            if file and file.filename != '':
-                ext = file.filename.rsplit('.', 1)[-1].lower()
-                nome_foto = f"membro_{int(time.time())}.{ext}"
-                caminho_salvar = os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), nome_foto)
-                file.save(caminho_salvar)
-                foto_path = f"/static/uploads/{nome_foto}"
-
-        try:
-            conn = get_db()
-            cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-            param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-            
-            # Se for feito por membro online, fica como 'Pendente de Validação'
-            # Se for cadastrado por uma brigada/pastor logado, entra direto como 'Ativo'
-            status_inicial = 'Ativo' if session.get('usuario') else 'Pendente de Validação'
-            
-            sql = f'''
-                INSERT INTO membros (
-                    nome, data_nascimento, genero, estado_civil, telefone,
-                    bairro, endereco, profissao, batizado, data_batismo,
-                    departamento, funcao, status, foto_path, professor_nome
-                ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param})
-            '''
-            cur.execute(sql, (
-                nome, data_nascimento, genero, estado_civil, telefone,
-                bairro, endereco, profissao, batizado, data_batismo,
-                departamento, funcao, status_inicial, foto_path, recenseador
-            ))
-            conn.commit()
-            if hasattr(conn, 'close'):
-                conn.close()
-                
-            return render_template('censo_sucesso.html', nome=nome, status=status_inicial)
-        except Exception as e:
-            msg_erro = f"Erro ao registar a ficha: {e}"
-
-    return render_template('censo_form.html', msg_erro=msg_erro)
 
 
 @app.route('/admin/censo/homologar')
@@ -3549,3 +3511,7 @@ def descartar_censo(membro_id):
     if hasattr(conn, 'close'):
         conn.close()
     return redirect('/admin/censo/homologar')
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
