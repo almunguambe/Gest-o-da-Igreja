@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Censo Oficial - IEAD Chicuque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+    <header class="bg-blue-950 text-white py-6 px-4 text-center shadow-lg sticky top-0 z-30">
+        <div class="inline-block p-3 bg-white/10 rounded-2xl mb-2 backdrop-blur-sm">
+            <i class="fa-solid fa-church text-3xl text-amber-400"></i>
+        </div>
+        <h1 class="text-xl font-black uppercase tracking-wider">IEAD Chicuque</h1>
+        <p class="text-xs text-blue-200 mt-1 font-medium">Ficha Oficial de Recenseamento de Membros</p>
+    </header>
+
+    <main class="max-w-lg mx-auto p-4 sm:p-6 pb-20">
+        {% if msg_erro %}
+        <div class="mb-4 p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 text-xs rounded-xl shadow-sm font-bold flex items-center gap-3">
+            <i class="fa-solid fa-circle-exclamation text-base text-rose-600"></i>
+            <span>{{ msg_erro }}</span>
+        </div>
+        {% endif %}
+
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+            <form action="/censo" method="POST" enctype="multipart/form-data" class="space-y-5">
+                
+                <!-- Secção 1: Identificação -->
+                <div>
+                    <h2 class="text-xs font-black uppercase tracking-wider text-blue-900 border-b pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-user text-amber-500"></i> Dados Pessoais
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
+                            <input type="text" name="nome" required placeholder="Ex: Lucas Manuel" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Data Nascimento</label>
+                                <input type="date" name="data_nascimento" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Género</label>
+                                <select name="genero" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Estado Civil</label>
+                                <select name="estado_civil" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                                    <option value="Solteiro(a)">Solteiro(a)</option>
+                                    <option value="Casado(a)">Casado(a)</option>
+                                    <option value="Viúvo(a)">Viúvo(a)</option>
+                                    <option value="Divorciado(a)">Divorciado(a)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Profissão</label>
+                                <input type="text" name="profissao" placeholder="Ex: Professor" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secção 2: Contacto e Localização -->
+                <div class="pt-2">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-blue-900 border-b pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-phone text-amber-500"></i> Contactos & Bairro
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Telefone / WhatsApp *</label>
+                            <input type="tel" name="telefone" required placeholder="84... / 82..." class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none font-semibold">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Bairro</label>
+                                <input type="text" name="bairro" placeholder="Ex: Chicuque" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Quarteirão / Rua</label>
+                                <input type="text" name="endereco" placeholder="Q. 04 / Casa 12" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secção 3: Vida Eclesiástica -->
+                <div class="pt-2">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-blue-900 border-b pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-cross text-amber-500"></i> Informação Eclesiástica
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Batizado nas Águas?</label>
+                                <select name="batizado" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Ano de Batismo</label>
+                                <input type="text" name="data_batismo" placeholder="Ex: 2021" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Departamento / Ministério</label>
+                            <select name="departamento" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                                <option value="Geral">Membro Geral</option>
+                                <option value="Jovens">Mocidade / Jovens</option>
+                                <option value="Senhoras">Senhoras (MIFED)</option>
+                                <option value="Homens">Homens (MIFED)</option>
+                                <option value="Louvor">Louvor / Música</option>
+                                <option value="Diaconato">Diaconato / Acolhimento</option>
+                                <option value="Criancas">Escola Bíblica Infantil</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Fotografia Tipo Passe (Opcional)</label>
+                            <input type="file" name="foto" accept="image/*" capture="user" class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-900 hover:file:bg-blue-100">
+                            <p class="text-[10px] text-slate-400 mt-1">Pode tirar uma selfie na hora com a câmara do telemóvel.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full h-14 bg-blue-900 hover:bg-blue-950 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl transition flex items-center justify-center gap-2 mt-6">
+                    <i class="fa-solid fa-paper-plane"></i> Submeter Ficha de Membro
+                </button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

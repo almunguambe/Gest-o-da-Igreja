@@ -3386,3 +3386,122 @@ def confirmar_codigo_recuperacao():
                 msg_erro = f"Erro ao atualizar na base de dados: {e}"
 
     return render_template('confirmar_codigo.html', email=email, codigo_dica=codigo_ativo, msg_erro=msg_erro)
+
+
+# =======================================================
+# MÓDULO DE CENSO E AUTO-RECENSEAMENTO (PÚBLICO & BRIGADAS)
+# =======================================================
+import os
+from werkzeug.utils import secure_filename
+
+@app.route('/censo', methods=['GET', 'POST'])
+def censo_publico():
+    msg_erro = None
+    if request.method == 'POST':
+        nome = (request.form.get('nome') or '').strip()
+        data_nascimento = request.form.get('data_nascimento')
+        genero = request.form.get('genero')
+        estado_civil = request.form.get('estado_civil')
+        telefone = (request.form.get('telefone') or '').strip()
+        bairro = request.form.get('bairro')
+        endereco = request.form.get('endereco')
+        profissao = request.form.get('profissao')
+        batizado = request.form.get('batizado', 'Não')
+        data_batismo = request.form.get('data_batismo')
+        departamento = request.form.get('departamento')
+        funcao = request.form.get('funcao', 'Membro')
+        
+        # Identificação de quem registou (Se for brigada logada ou público)
+        recenseador = session.get('usuario', 'Auto-recenseamento (WhatsApp)')
+        
+        if not nome or not telefone:
+            msg_erro = "Por favor, preencha o Nome Completo e o Contacto telefónico."
+            return render_template('censo_form.html', msg_erro=msg_erro)
+            
+        foto_path = None
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and file.filename != '':
+                ext = file.filename.rsplit('.', 1)[-1].lower()
+                nome_foto = f"membro_{int(time.time())}.{ext}"
+                caminho_salvar = os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), nome_foto)
+                file.save(caminho_salvar)
+                foto_path = f"/static/uploads/{nome_foto}"
+
+        try:
+            conn = get_db()
+            cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+            param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+            
+            # Se for feito por membro online, fica como 'Pendente de Validação'
+            # Se for cadastrado por uma brigada/pastor logado, entra direto como 'Ativo'
+            status_inicial = 'Ativo' if session.get('usuario') else 'Pendente de Validação'
+            
+            sql = f'''
+                INSERT INTO membros (
+                    nome, data_nascimento, genero, estado_civil, telefone,
+                    bairro, endereco, profissao, batizado, data_batismo,
+                    departamento, funcao, status, foto_path, professor_nome
+                ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param})
+            '''
+            cur.execute(sql, (
+                nome, data_nascimento, genero, estado_civil, telefone,
+                bairro, endereco, profissao, batizado, data_batismo,
+                departamento, funcao, status_inicial, foto_path, recenseador
+            ))
+            conn.commit()
+            if hasattr(conn, 'close'):
+                conn.close()
+                
+            return render_template('censo_sucesso.html', nome=nome, status=status_inicial)
+        except Exception as e:
+            msg_erro = f"Erro ao registar a ficha: {e}"
+
+    return render_template('censo_form.html', msg_erro=msg_erro)
+
+
+@app.route('/admin/censo/homologar')
+def painel_homologacao_censo():
+    if not session.get('usuario'):
+        return redirect('/login')
+        
+    conn = get_db()
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+    
+    cur.execute(f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, professor_nome, data_cadastro FROM membros WHERE status = {param} ORDER BY id DESC", ('Pendente de Validação',))
+    pendentes = cur.fetchall()
+    if hasattr(conn, 'close'):
+        conn.close()
+        
+    return render_template('censo_homologar.html', pendentes=pendentes)
+
+
+@app.route('/admin/censo/aprovar/<int:membro_id>', methods=['POST'])
+def aprovar_censo(membro_id):
+    if not session.get('usuario'):
+        return redirect('/login')
+        
+    conn = get_db()
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+    cur.execute(f"UPDATE membros SET status = {param} WHERE id = {param}", ('Ativo', membro_id))
+    conn.commit()
+    if hasattr(conn, 'close'):
+        conn.close()
+    return redirect('/admin/censo/homologar')
+
+
+@app.route('/admin/censo/descartar/<int:membro_id>', methods=['POST'])
+def descartar_censo(membro_id):
+    if not session.get('usuario'):
+        return redirect('/login')
+        
+    conn = get_db()
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
+    cur.execute(f"DELETE FROM membros WHERE id = {param}", (membro_id,))
+    conn.commit()
+    if hasattr(conn, 'close'):
+        conn.close()
+    return redirect('/admin/censo/homologar')
