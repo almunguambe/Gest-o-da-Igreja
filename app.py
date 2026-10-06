@@ -3397,12 +3397,15 @@ from werkzeug.utils import secure_filename
 # =======================================================
 # MÓDULO DE CENSO E AUTO-RECENSEAMENTO (ALINHADO)
 # =======================================================
+
+# =====================================================================
+# ROTA OFICIAL DO CENSO MULTI-CONGREGAÇÃO (AUTO-RECUPERÁVEL)
+# =====================================================================
 @app.route('/censo', methods=['GET', 'POST'])
 def censo_publico():
     msg_erro = None
     igreja_param = request.args.get('igreja', 'IEAD Chicuque')
     
-    # 1. Garantir que as colunas críticas existam imediatamente
     colunas_obrigatorias = [
         ("igreja", "TEXT"),
         ("batizado", "TEXT"),
@@ -3437,7 +3440,6 @@ def censo_publico():
             if is_pg:
                 conn.rollback()
 
-    # Buscar lista de congregações
     lista_igrejas = ['IEAD Chicuque']
     try:
         cur.execute("SELECT nome FROM igrejas ORDER BY nome ASC")
@@ -3495,7 +3497,6 @@ def censo_publico():
         }
 
         try:
-            # Obter lista de colunas ativas na tabela
             if is_pg:
                 cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
                 cols_db = [r[0].lower() for r in cur.fetchall()]
@@ -3519,47 +3520,6 @@ def censo_publico():
     if hasattr(conn, 'close'):
         conn.close()
     return render_template('censo_form.html', msg_erro=msg_erro, igrejas=lista_igrejas, igreja_selecionada=igreja_param)
-            
-        foto_path = None
-        if 'foto' in request.files:
-            file = request.files['foto']
-            if file and file.filename != '':
-                ext = file.filename.rsplit('.', 1)[-1].lower()
-                nome_foto = f"membro_{int(time.time())}.{ext}"
-                caminho_salvar = os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), nome_foto)
-                os.makedirs(os.path.dirname(caminho_salvar), exist_ok=True)
-                file.save(caminho_salvar)
-                foto_path = f"/static/uploads/{nome_foto}"
-
-        try:
-            conn = get_db()
-            cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-            param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-            status_inicial = 'Pendente de Validação'
-            
-            sql = f'''
-                INSERT INTO membros (
-                    nome, data_nascimento, genero, estado_civil, telefone,
-                    bairro, endereco, naturalidade, filiacao, tipo_doc, num_doc,
-                    segmento, ano_conversao, batizado, cargo, departamento,
-                    status, foto_path, professor_nome
-                ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param})
-            '''
-            cur.execute(sql, (
-                nome, data_nascimento, genero, estado_civil, telefone,
-                bairro, endereco, naturalidade, filiacao, tipo_doc, num_doc,
-                segmento, ano_conversao, batizado, cargo, departamento,
-                status_inicial, foto_path, recenseador
-            ))
-            conn.commit()
-            if hasattr(conn, 'close'):
-                conn.close()
-                
-            return render_template('censo_sucesso.html', nome=nome, status=status_inicial)
-        except Exception as e:
-            msg_erro = f"Erro ao registar a ficha: {e}"
-
-    return render_template('censo_form.html', msg_erro=msg_erro)
 
 
 @app.route('/admin/censo/homologar')
@@ -3575,11 +3535,8 @@ def painel_homologacao_censo():
     usuario_nivel = session.get('nivel', '') or session.get('cargo', '')
     usuario_igreja = session.get('igreja', '')
     is_sede = usuario_nivel in ['Superadmin', 'Pastor Presidente', 'Administrador'] or not usuario_igreja
-    
-    # Filtro opcional selecionado na URL pelo Admin da Sede
     filtro_igreja = request.args.get('igreja_filtro', '')
     
-    # Buscar lista de todas as congregações cadastradas
     lista_igrejas = ['IEAD Chicuque']
     try:
         cur.execute("SELECT nome FROM igrejas ORDER BY nome ASC")
@@ -3591,20 +3548,15 @@ def painel_homologacao_censo():
     except Exception:
         pass
     
-    # Construir consulta de membros pendentes conforme permissão
     colunas_sql = "id, nome, telefone, bairro, batizado, departamento, foto_path, professor_nome, igreja, data_cadastro"
     
     if is_sede:
         if filtro_igreja and filtro_igreja != 'Todas':
-            query = f"SELECT {colunas_sql} FROM membros WHERE status = {param} AND igreja = {param} ORDER BY id DESC"
-            cur.execute(query, ('Pendente de Validação', filtro_igreja))
+            cur.execute(f"SELECT {colunas_sql} FROM membros WHERE status = {param} AND igreja = {param} ORDER BY id DESC", ('Pendente de Validação', filtro_igreja))
         else:
-            query = f"SELECT {colunas_sql} FROM membros WHERE status = {param} ORDER BY id DESC"
-            cur.execute(query, ('Pendente de Validação',))
+            cur.execute(f"SELECT {colunas_sql} FROM membros WHERE status = {param} ORDER BY id DESC", ('Pendente de Validação',))
     else:
-        # Secretário local: restrito à sua congregação
-        query = f"SELECT {colunas_sql} FROM membros WHERE status = {param} AND igreja = {param} ORDER BY id DESC"
-        cur.execute(query, ('Pendente de Validação', usuario_igreja))
+        cur.execute(f"SELECT {colunas_sql} FROM membros WHERE status = {param} AND igreja = {param} ORDER BY id DESC", ('Pendente de Validação', usuario_igreja))
         
     pendentes = cur.fetchall()
     if hasattr(conn, 'close'):
@@ -3624,7 +3576,6 @@ def painel_homologacao_censo():
 def aprovar_censo(membro_id):
     if not session.get('usuario'):
         return redirect('/login')
-        
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
     param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
@@ -3639,7 +3590,6 @@ def aprovar_censo(membro_id):
 def descartar_censo(membro_id):
     if not session.get('usuario'):
         return redirect('/login')
-        
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
     param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
@@ -3652,53 +3602,3 @@ def descartar_censo(membro_id):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
-
-def garantir_colunas_membros():
-    """Garante que todas as colunas da tabela membros existam no banco ativo"""
-    colunas_necessarias = [
-        ('endereco', 'TEXT'),
-        ('bairro', 'VARCHAR(100)'),
-        ('naturalidade', 'VARCHAR(100)'),
-        ('filiacao', 'VARCHAR(255)'),
-        ('tipo_doc', 'VARCHAR(50)'),
-        ('num_doc', 'VARCHAR(100)'),
-        ('segmento', 'VARCHAR(50)'),
-        ('ano_conversao', 'VARCHAR(50)'),
-        ('cargo', 'VARCHAR(100)'),
-        ('professor_nome', 'VARCHAR(150)')
-    ]
-    try:
-        conn = get_db()
-        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-        is_postgres = bool(DATABASE_URL and psycopg2)
-        
-        if is_postgres:
-            for col, tipo in colunas_necessarias:
-                try:
-                    cur.execute(f"ALTER TABLE membros ADD COLUMN IF NOT EXISTS {col} {tipo};")
-                    conn.commit()
-                except Exception:
-                    conn.rollback()
-        else:
-            # SQLite
-            cur.execute("PRAGMA table_info(membros);")
-            existentes = [linha[1] for linha in cur.fetchall()]
-            for col, tipo in colunas_necessarias:
-                if col not in existentes:
-                    try:
-                        cur.execute(f"ALTER TABLE membros ADD COLUMN {col} {tipo};")
-                        conn.commit()
-                    except Exception:
-                        pass
-        if hasattr(conn, 'close'):
-            conn.close()
-        print("✓ Estrutura da tabela membros verificada e atualizada com sucesso!")
-    except Exception as e:
-        print(f"! Aviso na verificação de colunas: {e}")
-
-# Executa ao iniciar o app
-try:
-    garantir_colunas_membros()
-except Exception as e:
-    pass
