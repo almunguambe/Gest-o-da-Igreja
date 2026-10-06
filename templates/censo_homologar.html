@@ -21,6 +21,47 @@
             </a>
         </div>
 
+        
+        <!-- PAINEL RÁPIDO DE LINKS DO CENSO -->
+        <div class="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-slate-200">
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-share-nodes text-blue-900"></i> Links Oficiais do Censo para Envio
+            </h2>
+            <p class="text-xs text-slate-500 mb-4">Clique nos botões abaixo para partilhar o link pronto de cada congregação no WhatsApp:</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-black text-blue-950 block">IEAD Chicuque (Sede)</span>
+                        <span class="text-[10px] text-slate-400">Link geral / Sede</span>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="copiarLinkCenso('IEAD Chicuque')" class="flex-1 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-100">
+                            📋 Copiar
+                        </button>
+                        <a href="https://api.whatsapp.com/send?text=A%20Paz%20do%20Senhor!%20Participe%20no%20Censo%20Oficial%20da%20IEAD%20Chicuque.%20Preencha%20a%20sua%20ficha:%20https://iead-chicuque.onrender.com/censo?igreja=IEAD%20Chicuque" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 flex items-center gap-1">
+                            <i class="fa-brands fa-whatsapp"></i> Enviar
+                        </a>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-black text-blue-950 block">Link Geral (Livre Escolha)</span>
+                        <span class="text-[10px] text-slate-400">O membro escolhe a congregação</span>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="navigator.clipboard.writeText(window.location.origin + '/censo'); alert('✓ Link geral copiado!');" class="flex-1 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-100">
+                            📋 Copiar
+                        </button>
+                        <a href="https://api.whatsapp.com/send?text=A%20Paz%20do%20Senhor!%20Participe%20no%20Censo%20Oficial%20da%20nossa%20igreja.%20Preencha%20a%20sua%20ficha:%20https://iead-chicuque.onrender.com/censo" target="_blank" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 flex items-center gap-1">
+                            <i class="fa-brands fa-whatsapp"></i> Enviar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% if pendentes %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for m in pendentes %}
@@ -71,5 +112,17 @@
         </div>
         {% endif %}
     </div>
+
+<script>
+function copiarLinkCenso(nomeIgreja) {
+    const url = window.location.origin + '/censo?igreja=' + encodeURIComponent(nomeIgreja);
+    navigator.clipboard.writeText(url).then(() => {
+        alert('✓ Link do censo para a congregação "' + nomeIgreja + '" copiado com sucesso! Pode colar no WhatsApp.');
+    }).catch(err => {
+        prompt('Copie o link abaixo:', url);
+    });
+}
+</script>
+
 </body>
 </html>
