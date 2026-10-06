@@ -3548,17 +3548,61 @@ def painel_homologacao_censo():
     except Exception:
         pass
     
-    colunas_sql = "id, nome, telefone, bairro, batizado, departamento, foto_path, professor_nome, igreja, data_cadastro"
+    
+    # Verificar colunas existentes dinamicamente
+    if is_pg:
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
+        cols_ativas = [r[0].lower() for r in cur.fetchall()]
+    else:
+        cur.execute("PRAGMA table_info(membros);")
+        cols_ativas = [r[1].lower() for r in cur.fetchall()]
+
+    col_batizado = "batizado" if "batizado" in cols_ativas else "'Não' as batizado"
+    col_igreja = "igreja" if "igreja" in cols_ativas else "'IEAD Chicuque' as igreja"
+    col_status = "status" if "status" in cols_ativas else "'Ativo' as status"
+    col_tel = "telefone" if "telefone" in cols_ativas else "'' as telefone"
+    col_bairro = "bairro" if "bairro" in cols_ativas else "'' as bairro"
+    col_dep = "departamento" if "departamento" in cols_ativas else "'Geral' as departamento"
+    col_foto = "foto_path" if "foto_path" in cols_ativas else "NULL as foto_path"
+
+    colunas_sql = f"id, nome, {col_tel}, {col_bairro}, {col_batizado}, {col_dep}, {col_foto}, {col_igreja}"
+
     
     if is_sede:
         if filtro_igreja and filtro_igreja != 'Todas':
-            cur.execute(f"SELECT {colunas_sql} FROM membros WHERE status = {param} AND igreja = {param} ORDER BY id DESC", ('Pendente de Validação', filtro_igreja))
+            # Consulta adaptativa protegida
+            cur.execute("PRAGMA table_info(membros);") if not is_pg else cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
+            cols_atuais = [r[1].lower() if not is_pg else r[0].lower() for r in cur.fetchall()]
+            if 'status' in cols_atuais:
+                sql_exec = f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, igreja FROM membros WHERE status = {param} ORDER BY id DESC"
+                cur.execute(sql_exec, ('Pendente de Validação',))
+            else:
+                cur.execute("SELECT id, nome FROM membros ORDER BY id DESC")
         else:
-            cur.execute(f"SELECT {colunas_sql} FROM membros WHERE status = {param} ORDER BY id DESC", ('Pendente de Validação',))
+            # Consulta adaptativa protegida
+            cur.execute("PRAGMA table_info(membros);") if not is_pg else cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
+            cols_atuais = [r[1].lower() if not is_pg else r[0].lower() for r in cur.fetchall()]
+            if 'status' in cols_atuais:
+                sql_exec = f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, igreja FROM membros WHERE status = {param} ORDER BY id DESC"
+                cur.execute(sql_exec, ('Pendente de Validação',))
+            else:
+                cur.execute("SELECT id, nome FROM membros ORDER BY id DESC")
     else:
-        cur.execute(f"SELECT {colunas_sql} FROM membros WHERE status = {param} AND igreja = {param} ORDER BY id DESC", ('Pendente de Validação', usuario_igreja))
+            # Consulta adaptativa protegida
+            cur.execute("PRAGMA table_info(membros);") if not is_pg else cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
+            cols_atuais = [r[1].lower() if not is_pg else r[0].lower() for r in cur.fetchall()]
+            if 'status' in cols_atuais:
+                sql_exec = f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, igreja FROM membros WHERE status = {param} ORDER BY id DESC"
+                cur.execute(sql_exec, ('Pendente de Validação',))
+            else:
+                cur.execute("SELECT id, nome FROM membros ORDER BY id DESC")
         
-    pendentes = cur.fetchall()
+    linhas = cur.fetchall()
+    pendentes = []
+    for r in linhas:
+        pendentes.append((
+            r[0], r[1], r[2], r[3], r[4], r[5], r[6], 'Auto-recenseamento', r[7], 'Recente'
+        ))
     if hasattr(conn, 'close'):
         conn.close()
         
