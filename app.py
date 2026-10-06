@@ -3400,29 +3400,125 @@ from werkzeug.utils import secure_filename
 @app.route('/censo', methods=['GET', 'POST'])
 def censo_publico():
     msg_erro = None
+    igreja_param = request.args.get('igreja', 'IEAD Chicuque')
+    
+    # 1. Garantir que as colunas críticas existam imediatamente
+    colunas_obrigatorias = [
+        ("igreja", "TEXT"),
+        ("batizado", "TEXT"),
+        ("data_batismo", "TEXT"),
+        ("endereco", "TEXT"),
+        ("bairro", "TEXT"),
+        ("naturalidade", "TEXT"),
+        ("filiacao", "TEXT"),
+        ("tipo_doc", "TEXT"),
+        ("num_doc", "TEXT"),
+        ("segmento", "TEXT"),
+        ("ano_conversao", "TEXT"),
+        ("cargo", "TEXT"),
+        ("departamento", "TEXT"),
+        ("status", "TEXT"),
+        ("foto_path", "TEXT"),
+        ("professor_nome", "TEXT")
+    ]
+    
+    conn = get_db()
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    is_pg = bool(DATABASE_URL and psycopg2)
+    
+    for col, tipo in colunas_obrigatorias:
+        try:
+            if is_pg:
+                cur.execute(f"ALTER TABLE membros ADD COLUMN IF NOT EXISTS {col} {tipo};")
+            else:
+                cur.execute(f"ALTER TABLE membros ADD COLUMN {col} {tipo};")
+            conn.commit()
+        except Exception:
+            if is_pg:
+                conn.rollback()
+
+    # Buscar lista de congregações
+    lista_igrejas = ['IEAD Chicuque']
+    try:
+        cur.execute("SELECT nome FROM igrejas ORDER BY nome ASC")
+        rows = cur.fetchall()
+        if rows:
+            lista_igrejas = [r[0] for r in rows if r[0]]
+            if 'IEAD Chicuque' not in lista_igrejas:
+                lista_igrejas.insert(0, 'IEAD Chicuque')
+    except Exception:
+        pass
+
     if request.method == 'POST':
         nome = (request.form.get('nome') or '').strip()
-        data_nascimento = request.form.get('data_nascimento')
-        genero = request.form.get('genero')
-        estado_civil = request.form.get('estado_civil')
         telefone = (request.form.get('telefone') or '').strip()
-        bairro = request.form.get('bairro')
-        endereco = request.form.get('endereco') or request.form.get('bairro')
-        naturalidade = request.form.get('naturalidade')
-        filiacao = request.form.get('filiacao')
-        tipo_doc = request.form.get('tipo_doc')
-        num_doc = request.form.get('num_doc')
-        segmento = request.form.get('segmento')
-        ano_conversao = request.form.get('ano_conversao')
-        batizado = request.form.get('batizado', 'Não')
-        cargo = request.form.get('cargo', 'Membro em Comunhão')
-        departamento = request.form.get('departamento', 'Geral')
-        
-        recenseador = session.get('usuario', 'Auto-recenseamento (WhatsApp)')
+        igreja_escolhida = request.form.get('igreja') or igreja_param
         
         if not nome or not telefone:
             msg_erro = "Por favor, preencha o Nome Completo e o Contacto telefónico."
-            return render_template('censo_form.html', msg_erro=msg_erro)
+            if hasattr(conn, 'close'):
+                conn.close()
+            return render_template('censo_form.html', msg_erro=msg_erro, igrejas=lista_igrejas, igreja_selecionada=igreja_param)
+            
+        foto_path = None
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and file.filename != '':
+                ext = file.filename.rsplit('.', 1)[-1].lower()
+                nome_foto = f"membro_{int(time.time())}.{ext}"
+                caminho_salvar = os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), nome_foto)
+                os.makedirs(os.path.dirname(caminho_salvar), exist_ok=True)
+                file.save(caminho_salvar)
+                foto_path = f"/static/uploads/{nome_foto}"
+
+        campos = {
+            'nome': nome,
+            'telefone': telefone,
+            'igreja': igreja_escolhida,
+            'data_nascimento': request.form.get('data_nascimento'),
+            'genero': request.form.get('genero'),
+            'estado_civil': request.form.get('estado_civil'),
+            'bairro': request.form.get('bairro'),
+            'endereco': request.form.get('endereco') or request.form.get('bairro'),
+            'naturalidade': request.form.get('naturalidade'),
+            'filiacao': request.form.get('filiacao'),
+            'tipo_doc': request.form.get('tipo_doc'),
+            'num_doc': request.form.get('num_doc'),
+            'segmento': request.form.get('segmento'),
+            'ano_conversao': request.form.get('ano_conversao'),
+            'batizado': request.form.get('batizado', 'Não'),
+            'cargo': request.form.get('cargo', 'Membro em Comunhão'),
+            'departamento': request.form.get('departamento', 'Geral'),
+            'status': 'Pendente de Validação',
+            'foto_path': foto_path,
+            'professor_nome': session.get('usuario', 'Auto-recenseamento')
+        }
+
+        try:
+            # Obter lista de colunas ativas na tabela
+            if is_pg:
+                cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
+                cols_db = [r[0].lower() for r in cur.fetchall()]
+            else:
+                cur.execute("PRAGMA table_info(membros);")
+                cols_db = [r[1].lower() for r in cur.fetchall()]
+                
+            cols_inserir = [k for k in campos.keys() if k.lower() in cols_db]
+            vals_inserir = [campos[k] for k in cols_inserir]
+            
+            param = "%s" if is_pg else "?"
+            sql = f"INSERT INTO membros ({', '.join(cols_inserir)}) VALUES ({', '.join([param]*len(cols_inserir))})"
+            cur.execute(sql, tuple(vals_inserir))
+            conn.commit()
+            if hasattr(conn, 'close'):
+                conn.close()
+            return render_template('censo_sucesso.html', nome=nome, status='Pendente de Validação', igreja=igreja_escolhida)
+        except Exception as e:
+            msg_erro = f"Erro ao registar a ficha: {e}"
+
+    if hasattr(conn, 'close'):
+        conn.close()
+    return render_template('censo_form.html', msg_erro=msg_erro, igrejas=lista_igrejas, igreja_selecionada=igreja_param)
             
         foto_path = None
         if 'foto' in request.files:
