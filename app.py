@@ -46,16 +46,51 @@ except ImportError:
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    import os
+import sqlite3
+import urllib.parse as up
+
+# Suporte nativo a PostgreSQL via pg8000 (compatível com Python 3.14+)
+has_postgres = False
+try:
+    import pg8000.dbapi as pg_driver
+    has_postgres = True
+except Exception:
+    try:
+        import psycopg2 as pg_driver
+        has_postgres = True
+    except Exception:
+        pg_driver = None
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 def get_db():
-    global DATABASE_URL
-    if DATABASE_URL and psycopg2:
+    global DATABASE_URL, has_postgres, pg_driver
+    if DATABASE_URL:
+        # Tentativa 1: pg8000 dbapi com decomposição de URL
         try:
-            conn = psycopg2.connect(DATABASE_URL)
+            import pg8000.dbapi
+            u = up.urlparse(DATABASE_URL)
+            conn = pg8000.dbapi.connect(
+                user=u.username,
+                password=u.password,
+                host=u.hostname,
+                port=u.port or 5432,
+                database=u.path.lstrip('/')
+            )
             return conn
-        except Exception as e:
-            print(f"[ALERTA BD] Falha ao conectar ao Supabase: {e}")
+        except Exception as e_pg8000:
+            print(f"[ALERTA BD] Erro ao conectar via pg8000: {e_pg8000}")
+
+        # Tentativa 2: psycopg2 caso esteja disponível
+        try:
+            import psycopg2
+            return psycopg2.connect(DATABASE_URL)
+        except Exception:
+            pass
+
     # Fallback SQLite local
     conn = sqlite3.connect("gestao_chicuque.db")
     conn.row_factory = sqlite3.Row
@@ -63,9 +98,7 @@ def get_db():
 
 def get_db_connection():
     return get_db()
-    conn = sqlite3.connect("gestao_chicuque.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+
 
 app.secret_key = "iead_chicuque_chave_super_segura_2026"
 import os
