@@ -64,41 +64,32 @@ except Exception:
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 def get_db():
-    global DATABASE_URL, has_postgres, pg_driver
-    if DATABASE_URL:
-        # Tentativa 1: pg8000 dbapi com decomposição de URL
-        try:
-            import pg8000.dbapi
-            u = up.urlparse(DATABASE_URL)
-            conn = pg8000.dbapi.connect(
-                user=u.username,
-                password=u.password,
-                host=u.hostname,
-                port=u.port or 5432,
-                database=u.path.lstrip('/')
-            )
-            return conn
-        except Exception as e_pg8000:
-            print(f"[ALERTA BD] Erro ao conectar via pg8000: {e_pg8000}")
+    db_url = os.environ.get("DATABASE_URL", "")
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
 
-        # Tentativa 2: psycopg2 caso esteja disponível
+    if db_url:
         try:
             import psycopg2
-            return psycopg2.connect(DATABASE_URL)
-        except Exception:
-            pass
+            from psycopg2.extras import DictCursor
+            conn = psycopg2.connect(db_url)
+            return conn
+        except Exception as e:
+            print(f"[ERRO POSTGRES] Falha ao conectar: {e}")
 
-    # Fallback SQLite local
+    # Fallback SQLite apenas se não houver DATABASE_URL
+    import sqlite3
     conn = sqlite3.connect("gestao_chicuque.db")
     conn.row_factory = sqlite3.Row
     return conn
 
 def get_db_connection():
     return get_db()
-
 
 app.secret_key = "iead_chicuque_chave_super_segura_2026"
 import os
@@ -3558,7 +3549,9 @@ def censo_publico():
             cols_inserir = [k for k in campos.keys() if k.lower() in cols_db]
             vals_inserir = [campos[k] for k in cols_inserir]
             
-            param = "%s" if is_pg else "?"
+            # Detectar dinamicamente se o conn é postgres ou sqlite
+            is_real_pg = 'psycopg' in str(type(conn)).lower()
+            param = "%s" if is_real_pg else "?"
             sql = f"INSERT INTO membros ({', '.join(cols_inserir)}) VALUES ({', '.join([param]*len(cols_inserir))})"
             cur.execute(sql, tuple(vals_inserir))
             conn.commit()
@@ -3702,42 +3695,38 @@ def descartar_censo(membro_id):
 @app.route('/debug-db')
 def rota_debug_supabase():
     import os
+    import sys
     db_env = os.environ.get('DATABASE_URL', '')
-    status_conexao = "Aguardando teste"
-    erro_detalhado = None
-    total_linhas = -1
-    tipo = "PostgreSQL (Supabase)" if ("postgres" in db_env.lower()) else "SQLite Local"
     
+    teste_conexao_direta = None
+    erro_direto = None
+    try:
+        import psycopg2
+        c = psycopg2.connect(db_env)
+        teste_conexao_direta = "Sucesso na conexão direta via psycopg2"
+        c.close()
+    except Exception as e:
+        erro_direto = str(e)
+
+    # Testar o que get_db() devolve
+    tipo_get_db = None
+    erro_get_db = None
     try:
         conn = get_db()
-        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-        cur.execute("SELECT COUNT(*) FROM membros;")
-        row = cur.fetchone()
-        total_linhas = row[0] if row else 0
-        status_conexao = "Conexão bem sucedida!"
+        tipo_get_db = str(type(conn))
         if hasattr(conn, 'close'):
             conn.close()
     except Exception as e:
-        status_conexao = "Falha ao conectar/consultar"
-        erro_detalhado = str(e)
+        erro_get_db = str(e)
 
     return {
-        "banco_detectado": tipo,
-        "database_url_preenchida": bool(db_env),
-        "status_conexao": status_conexao,
-        "total_membros": total_linhas,
-        "detalhe_erro": erro_detalhado
+        "DATABASE_URL_configurada": bool(db_env),
+        "conexao_direta_psycopg2": teste_conexao_direta,
+        "erro_conexao_direta": erro_direto,
+        "tipo_retornado_por_get_db": tipo_get_db,
+        "erro_get_db": erro_get_db
     }
 
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
-
-
-# =====================================================================
-# TESTE DIRETO DE INSERÇÃO NO SUPABASE VIA WEB
-# =====================================================================
 @app.route('/debug-inserir-censo')
 def debug_inserir_censo():
     import os
