@@ -41,6 +41,14 @@ def _val(row):
         return list(row.values())[0]
     return row[0]
 
+import json
+_original_dumps = json.dumps
+def _custom_dumps(*args, **kwargs):
+    if 'default' not in kwargs:
+        kwargs['default'] = str
+    return _original_dumps(*args, **kwargs)
+json.dumps = _custom_dumps
+
 app = Flask(__name__)
 
 import os
@@ -607,7 +615,7 @@ def dashboard():
         lista_zonas = []
 
     categorias_json = json.dumps([{'tipo': c['tipo'], 'nome': c['nome']} for c in lista_categorias])
-    membros_json = json.dumps([dict(m) for m in todos_membros])
+    membros_json = json.dumps([dict(m) for m in todos_membros], default=str)
 
 
     alerta_duplicado = session.pop('alerta_duplicado', None)
