@@ -72,17 +72,17 @@ def get_db():
     db_url = os.environ.get("DATABASE_URL", "")
     if db_url and db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
-
+    
     if db_url:
         try:
             import psycopg2
-            from psycopg2.extras import DictCursor
-            conn = psycopg2.connect(db_url)
+            from psycopg2.extras import RealDictCursor
+            # cursor_factory=RealDictCursor permite aceder a r['campo'] exatamente como no SQLite
+            conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
             return conn
         except Exception as e:
-            print(f"[ERRO POSTGRES] Falha ao conectar: {e}")
+            print(f"[ERRO POSTGRES get_db] {e}")
 
-    # Fallback SQLite apenas se não houver DATABASE_URL
     import sqlite3
     conn = sqlite3.connect("gestao_chicuque.db")
     conn.row_factory = sqlite3.Row
@@ -160,7 +160,13 @@ def executar_migracao_garantida():
         
         # 1. Tabela igrejas
         c.execute("""
-            CREATE TABLE IF NOT EXISTS igrejas (
+            CREATE TABLE IF NOT EXISTS usuarios (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT NOT NULL UNIQUE,
+                    senha TEXT NOT NULL,
+                    nivel TEXT DEFAULT 'admin'
+                );
+                CREATE TABLE IF NOT EXISTS igrejas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nome TEXT NOT NULL UNIQUE,
                 cidade TEXT,
@@ -3430,3 +3436,22 @@ def debug_check_env():
         "variaveis_relacionadas": todas_chaves_db,
         "python_version": sys.version
     }
+
+
+@app.errorhandler(500)
+def handle_500(e):
+    import traceback
+    orig = getattr(e, 'original_exception', e)
+    tb = traceback.format_exc()
+    return f'''
+    <div style="font-family: monospace; padding: 20px; background: #fff3f3; border: 2px solid #e74c3c;">
+        <h2 style="color: #c0392b;">Erro 500 no Servidor</h2>
+        <p><b>Exceção:</b> {orig}</p>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">{tb}</pre>
+    </div>
+    ''', 500
+
+
+def erro_interno_500(e):
+    import traceback
+    return f"<h3>Erro Interno (500):</h3><pre>{traceback.format_exc()}</pre>", 500
