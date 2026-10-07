@@ -51,6 +51,14 @@ json.dumps = _custom_dumps
 
 app = Flask(__name__)
 
+def can_tesouraria():
+    from flask import session
+    cargo = str(session.get('cargo', '')).lower()
+    # Dá permissão geral aos cargos administrativos para o painel abrir
+    return cargo in ['pastor', 'admin', 'superadmin', 'tesoureiro', 'tesouraria', 'secretário', 'secretaria', 'lider', 'líder']
+
+
+
 def can_cadastro():
     from flask import session
     cargo = str(session.get('cargo', '')).lower()
