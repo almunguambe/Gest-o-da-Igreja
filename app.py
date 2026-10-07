@@ -95,10 +95,15 @@ class HybridCursor:
         self._cur = cur
 
     def execute(self, sql, params=None):
-        # Converte ? para %s se for PostgreSQL
-        if params is not None and '?' in sql:
-            sql = sql.replace('?', '%s')
-        if params:
+        import re
+        if isinstance(sql, str):
+            # Converte tipos e palavras exclusivas do SQLite para PostgreSQL
+            if 'AUTOINCREMENT' in sql.upper():
+                sql = re.sub(r'INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT', 'SERIAL PRIMARY KEY', sql, flags=re.IGNORECASE)
+                sql = re.sub(r'AUTOINCREMENT', '', sql, flags=re.IGNORECASE)
+            if params is not None and '?' in sql:
+                sql = sql.replace('?', '%s')
+        if params is not None:
             return self._cur.execute(sql, params)
         return self._cur.execute(sql)
 
@@ -106,14 +111,13 @@ class HybridCursor:
         row = self._cur.fetchone()
         if row is None:
             return None
-        return HybridRow(self._cur, row)
+        return row
 
     def fetchall(self):
-        rows = self._cur.fetchall()
-        return [HybridRow(self._cur, r) for r in rows]
+        return self._cur.fetchall()
 
     def __iter__(self):
-        for r in self.fetchall():
+        for r in self._cur:
             yield r
 
     def __getattr__(self, name):
@@ -240,7 +244,7 @@ def executar_migracao_garantida():
                     nivel TEXT DEFAULT 'admin'
                 );
                 CREATE TABLE IF NOT EXISTS igrejas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 nome TEXT NOT NULL UNIQUE,
                 cidade TEXT,
                 distrito TEXT,
@@ -354,7 +358,7 @@ def init_db():
     # Caso seja SQLite local (fallback de desenvolvimento)
     try:
         c.execute('''CREATE TABLE IF NOT EXISTS igrejas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             nome TEXT NOT NULL UNIQUE,
             localizacao TEXT,
             responsavel TEXT,
@@ -486,7 +490,7 @@ def dashboard():
     todos_convertidos = conn.execute("SELECT * FROM novos_convertidos WHERE igreja_id = ? ORDER BY id DESC", (igreja_id,)).fetchall()
     todo_patrimonio = conn.execute("SELECT * FROM patrimonio WHERE igreja_id = ? ORDER BY departamento, item ASC", (igreja_id,)).fetchall()
     conn.execute("""CREATE TABLE IF NOT EXISTS escalas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data_escala TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         dirigente TEXT,
@@ -501,7 +505,7 @@ def dashboard():
     )""")
         # Garantir estrutura completa da tabela escalas
     conn.execute('''CREATE TABLE IF NOT EXISTS escalas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data_escala TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         dirigente TEXT,
@@ -907,7 +911,7 @@ def nova_escala():
 
      conn = get_db()
      conn.execute('''CREATE TABLE IF NOT EXISTS escalas (
-         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         id SERIAL PRIMARY KEY,
          data_escala TEXT NOT NULL,
          tipo_culto TEXT NOT NULL,
          dirigente TEXT,
@@ -1903,7 +1907,7 @@ def ver_licao_individual(cid, lid):
             );
         """ if DATABASE_URL and psycopg2 else """
             CREATE TABLE IF NOT EXISTS duvidas_discipulado (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 membro_id INTEGER,
                 membro_nome TEXT,
                 classe_nome TEXT,
@@ -2282,7 +2286,7 @@ def processar_avaliacao_discipulado(cid):
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS progresso_discipulado (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     membro_id INTEGER,
                     classe_id TEXT,
                     nota REAL,
@@ -2455,7 +2459,7 @@ def criar_tabelas_faltantes():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS zonas_lista (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     nome TEXT UNIQUE NOT NULL
                 );
             """)
@@ -2475,7 +2479,7 @@ def criar_tabelas_faltantes():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     usuario TEXT,
                     licao TEXT,
                     nota INTEGER,
