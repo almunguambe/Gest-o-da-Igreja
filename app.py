@@ -3668,7 +3668,7 @@ def planificacao_nova():
         except Exception as e:
             pass
         flash('Plano eclesiástico gravado com sucesso!', 'success')
-        return redirect('/secretaria/planificacao/nova')
+        return redirect(request.referrer or '/')
         
     # Sistema inteligente para encontrar o nome do ficheiro HTML que desenhou
     templates_possiveis = [
@@ -3684,4 +3684,4 @@ def planificacao_nova():
             return render_template(html)
             
     # Se não encontrar nenhum dos nomes comuns, tenta abrir o padrão
-    return render_template('nova_planificacao.html')
+    return render_template('dashboard.html')
