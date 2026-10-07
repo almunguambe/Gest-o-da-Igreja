@@ -105,7 +105,13 @@ class HybridCursor:
                 sql = sql.replace('?', '%s')
         if params is not None:
             return self._cur.execute(sql, params)
-        return self._cur.execute(sql)
+        try:
+            return self._cur.execute(sql)
+        except Exception as e:
+            if 'CREATE TABLE' in str(sql).upper():
+                print(f"[AVISO IGNORADO CREATE TABLE] {e}")
+                return None
+            raise e
 
     def fetchone(self):
         row = self._cur.fetchone()
@@ -156,6 +162,7 @@ def get_db():
         try:
             import psycopg2
             raw_conn = psycopg2.connect(db_url)
+            raw_conn.autocommit = True
             return HybridConn(raw_conn)
         except Exception as e:
             print(f"[ERRO POSTGRES get_db] {e}")
