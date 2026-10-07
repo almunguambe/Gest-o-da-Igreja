@@ -2117,3 +2117,62 @@ function copiarLinkCensoGeral() {
 
 
 </html>
+
+
+<!-- SUPER MOTOR DE GRAVACAO -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Procurar o botao de gravar
+    let botoes = document.querySelectorAll("button, a");
+    let btnGravar = null;
+    for(let b of botoes) {
+        if(b.innerText && b.innerText.includes("Gravar Planifica")) {
+            btnGravar = b;
+            break;
+        }
+    }
+    
+    if(btnGravar) {
+        // 2. Limpar qualquer bloqueio invisivel substituindo o botao
+        let novoBtn = btnGravar.cloneNode(true);
+        btnGravar.parentNode.replaceChild(novoBtn, btnGravar);
+        
+        // 3. Criar a ordem absoluta de envio
+        novoBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            novoBtn.innerText = "A gravar... Aguarde!";
+            novoBtn.style.opacity = "0.6";
+            
+            let form = document.createElement("form");
+            form.method = "POST";
+            form.style.display = "none";
+            
+            // 4. Apanhar todos os campos que o Anselmo preencheu
+            let inputs = document.querySelectorAll("input, select, textarea");
+            inputs.forEach(inp => {
+                let name = inp.name || inp.id;
+                let placeholder = (inp.placeholder || "").toLowerCase();
+                
+                // Se o campo não tiver nome no código HTML, deduz pelo texto de ajuda
+                if(!name) {
+                    if(placeholder.includes("semin") || placeholder.includes("ex:")) name = "nome_actividade";
+                    else if(placeholder.includes("odete") || placeholder.includes("respons")) name = "responsavel_directo";
+                    else if(placeholder.includes("825") || placeholder.includes("contact")) name = "contacto";
+                }
+                
+                if(name) {
+                    let hidden = document.createElement("input");
+                    hidden.type = "hidden";
+                    hidden.name = name;
+                    hidden.value = inp.value;
+                    form.appendChild(hidden);
+                }
+            });
+            
+            // 5. Enviar para a base de dados
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+});
+</script>
