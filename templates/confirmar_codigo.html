@@ -29,17 +29,17 @@
         <form enctype="multipart/form-data" novalidate action="/confirmar-codigo-recuperacao" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">Código de 6 Dígitos:</label>
-                <input type="text" name="codigo" required maxlength="6" placeholder="Insira o código" class="w-full h-11 px-3 text-center text-lg font-mono tracking-widest border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none font-bold">
+                <input type="text" name="codigo"  maxlength="6" placeholder="Insira o código" class="w-full h-11 px-3 text-center text-lg font-mono tracking-widest border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none font-bold">
             </div>
 
             <div>
                 <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">Nova Palavra-passe:</label>
-                <input type="password" name="nova_senha" required placeholder="Nova palavra-passe" class="w-full h-11 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                <input type="password" name="nova_senha"  placeholder="Nova palavra-passe" class="w-full h-11 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">Confirmar Nova Palavra-passe:</label>
-                <input type="password" name="confirmar_senha" required placeholder="Repita a palavra-passe" class="w-full h-11 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
+                <input type="password" name="confirmar_senha"  placeholder="Repita a palavra-passe" class="w-full h-11 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none">
             </div>
 
             <button type="submit" class="w-full h-12 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm rounded-xl shadow-lg transition">
