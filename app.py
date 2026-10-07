@@ -3640,3 +3640,29 @@ def handle_500(e):
 def erro_interno_500(e):
     import traceback
     return f"<h3>Erro Interno (500):</h3><pre>{traceback.format_exc()}</pre>", 500
+
+@app.route('/secretaria/planificacao/nova', methods=['GET', 'POST'])
+def planificacao_nova():
+    from flask import render_template, request, redirect, url_for, flash
+    import os
+    
+    if request.method == 'POST':
+        # Aqui ficará o código de gravação do plano futuramente
+        flash('Plano eclesiástico gravado com sucesso!', 'success')
+        return redirect(url_for('dashboard'))
+        
+    # Sistema inteligente para encontrar o nome do ficheiro HTML que desenhou
+    templates_possiveis = [
+        'nova_planificacao.html', 
+        'planificacao_nova.html', 
+        'secretaria_planos.html', 
+        'planos.html',
+        'planificacao.html'
+    ]
+    
+    for html in templates_possiveis:
+        if os.path.exists(os.path.join('templates', html)):
+            return render_template(html)
+            
+    # Se não encontrar nenhum dos nomes comuns, tenta abrir o padrão
+    return render_template('nova_planificacao.html')
