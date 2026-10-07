@@ -3542,9 +3542,15 @@ def censo_publico():
         }
 
         try:
-            if is_pg:
-                cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
-                cols_db = [r[0].lower() for r in cur.fetchall()]
+            # Detectar banco real em execução
+            is_postgres_real = hasattr(conn, 'cursor_factory') or 'psycopg' in str(type(conn)).lower() or bool(DATABASE_URL and psycopg2)
+            if is_postgres_real:
+                try:
+                    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
+                    cols_db = [r[0].lower() for r in cur.fetchall()]
+                except Exception:
+                    # Fallback com colunas padrão da tabela membros caso haja erro de permissão no schema
+                    cols_db = ['nome', 'telefone', 'igreja', 'data_nascimento', 'genero', 'estado_civil', 'bairro', 'endereco', 'naturalidade', 'filiacao', 'tipo_doc', 'num_doc', 'segmento', 'ano_conversao', 'batizado', 'cargo', 'departamento', 'status', 'foto_path', 'professor_nome']
             else:
                 cur.execute("PRAGMA table_info(membros);")
                 cols_db = [r[1].lower() for r in cur.fetchall()]
