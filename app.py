@@ -9,7 +9,7 @@ except ImportError:
 
 import os
 try:
-    from psycopg2.extras import RealDictCursor
+    from psycopg2.extras import DictCursor
 except ImportError:
     psycopg2 = None
 
@@ -33,6 +33,13 @@ from reportlab.lib.units import cm, mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
+
+def _val(row):
+    if row is None:
+        return 0
+    if isinstance(row, dict):
+        return list(row.values())[0]
+    return row[0]
 
 app = Flask(__name__)
 
@@ -211,7 +218,7 @@ def get_db():
         try:
             if pg_url.startswith("postgres://"):
                 pg_url = pg_url.replace("postgres://", "postgresql://", 1)
-            conn = psycopg2.connect(pg_url, cursor_factory=psycopg2.extras.RealDictCursor)
+            conn = psycopg2.connect(pg_url, cursor_factory=psycopg2.extras.DictCursor)
             return CompatConn(conn, is_pg=True)
         except Exception as e:
             print(f"Erro ao conectar ao PostgreSQL, usando fallback SQLite: {e}")
@@ -418,7 +425,7 @@ def dashboard():
 
     lista_igrejas = conn.execute("SELECT * FROM igrejas WHERE ativa = 1 ORDER BY nome ASC").fetchall() if is_super else []
 
-    total_membros = conn.execute("SELECT COUNT(*) FROM membros WHERE igreja_id = ?", (igreja_id,)).fetchone()[0]
+    total_membros = _val(conn.execute("SELECT COUNT(*) FROM membros WHERE igreja_id = ?", (igreja_id,)).fetchone())
     total_casamentos = conn.execute("SELECT COUNT(*) FROM casamentos WHERE igreja_id = ?", (igreja_id,)).fetchone()[0]
     total_mortes = conn.execute("SELECT COUNT(*) FROM mortes WHERE igreja_id = ?", (igreja_id,)).fetchone()[0]
 
@@ -606,7 +613,7 @@ def dashboard():
     # Filtrar Candidatos ao Batismo diretamente da lista oficial de membros em memoria
     candidatos_batismo = []
     for m in todos_membros:
-        # Suporta dicionario (PostgreSQL/RealDictCursor) e sqlite3.Row
+        # Suporta dicionario (PostgreSQL/DictCursor) e sqlite3.Row
         f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
         b_val = str(m.get('batizado', '') if hasattr(m, 'get') else m['batizado'] if 'batizado' in m.keys() else '').lower()
         
