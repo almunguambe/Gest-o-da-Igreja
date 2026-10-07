@@ -3663,9 +3663,9 @@ def planificacao_nova():
         try:
             conn.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
         except Exception as e:
-            print("Erro ao gravar planificacao:", e)
+            return f"<h1>ERRO NO SUPABASE:</h1><p>{e}</p> <br><a href='/secretaria/planificacao/nova'>Voltar</a>"
         flash('Plano eclesiástico gravado com sucesso!', 'success')
-        return redirect(url_for('dashboard'))
+        return f"<h1>SUCESSO! O Botão funciona!</h1><p>O Python leu os seguintes dados do formulário HTML:<br>Departamento: {departamento}<br>Actividade: {nome_actividade}</p><br><a href='/secretaria/planificacao/nova'>Voltar</a>"
         
     # Sistema inteligente para encontrar o nome do ficheiro HTML que desenhou
     templates_possiveis = [
