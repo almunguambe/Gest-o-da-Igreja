@@ -1,38 +1,8 @@
-# -*- coding: utf-8 -*-
-with open("app.py", "r", encoding="utf-8") as f:
-    linhas = f.readlines()
-
-# Localizar trecho de coleta de dúvidas injetado com erro de indentação
-linhas_corrigidas = []
-for i, linha in enumerate(linhas):
-    # Se uma linha isolada tiver 12 ou 8 espaços indevidos fora de bloco de função/try
-    if "duvidas_lista = []" in linha or "candidatos_discipulado = []" in linha:
-        # Alinhar com 4 ou 8 espaços padrão dependendo do escopo
-        indent = len(linha) - len(linha.lstrip())
-        if indent > 8:
-            linha = " " * 8 + linha.lstrip()
-    linhas_corrigidas.append(linha)
-
 with open('app.py', 'r', encoding='utf-8') as f:
-    linhas = f.readlines()
+    code = f.read()
 
-# Localizar o início da rota defeituosa /censo
-indice_inicio = None
-for idx, linha in enumerate(linhas):
-    if "@app.route('/censo'" in linha or '@app.route("/censo"' in linha:
-        indice_inicio = idx
-        break
-
-if indice_inicio is not None:
-    # Mantém todo o código anterior intacto
-    codigo_base = "".join(linhas[:indice_inicio]).rstrip()
-    
-    # Bloco perfeitamente alinhado sem indentação extra
-    bloco_censo_corrigido = """
-
-# =======================================================
-# MÓDULO DE CENSO E AUTO-RECENSEAMENTO (ALINHADO)
-# =======================================================
+# Substituir a inserção do censo para usar as colunas compatíveis
+codigo_censo_novo = """
 @app.route('/censo', methods=['GET', 'POST'])
 def censo_publico():
     msg_erro = None
@@ -100,60 +70,14 @@ def censo_publico():
             msg_erro = f"Erro ao registar a ficha: {e}"
 
     return render_template('censo_form.html', msg_erro=msg_erro)
-
-
-@app.route('/admin/censo/homologar')
-def painel_homologacao_censo():
-    if not session.get('usuario'):
-        return redirect('/login')
-        
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-    
-    cur.execute(f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, professor_nome, data_cadastro FROM membros WHERE status = {param} ORDER BY id DESC", ('Pendente de Validação',))
-    pendentes = cur.fetchall()
-    if hasattr(conn, 'close'):
-        conn.close()
-        
-    return render_template('censo_homologar.html', pendentes=pendentes)
-
-
-@app.route('/admin/censo/aprovar/<int:membro_id>', methods=['POST'])
-def aprovar_censo(membro_id):
-    if not session.get('usuario'):
-        return redirect('/login')
-        
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-    cur.execute(f"UPDATE membros SET status = {param} WHERE id = {param}", ('Ativo', membro_id))
-    conn.commit()
-    if hasattr(conn, 'close'):
-        conn.close()
-    return redirect('/admin/censo/homologar')
-
-
-@app.route('/admin/censo/descartar/<int:membro_id>', methods=['POST'])
-def descartar_censo(membro_id):
-    if not session.get('usuario'):
-        return redirect('/login')
-        
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-    cur.execute(f"DELETE FROM membros WHERE id = {param}", (membro_id,))
-    conn.commit()
-    if hasattr(conn, 'close'):
-        conn.close()
-    return redirect('/admin/censo/homologar')
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
 """
+
+# Se a rota já existia, ajustamos para a versão nova
+import re
+if "@app.route('/censo'" in code:
+    code = re.sub(r"@app\.route\('/censo'[\s\S]*?return render_template\('censo_form\.html', msg_erro=msg_erro\)", codigo_censo_novo.strip(), code)
     with open('app.py', 'w', encoding='utf-8') as f:
-        f.write(codigo_base + bloco_censo_corrigido)
-    print("✓ app.py reescrito e alinhado com sucesso!")
+        f.write(code)
+    print("✓ Rota /censo atualizada com sucesso no app.py!")
 else:
-    print("A rota /censo não foi encontrada no ficheiro.")
+    print("Atenção: rota não localizada para substituição direta.")

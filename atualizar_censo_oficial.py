@@ -1,0 +1,185 @@
+html_censo = """<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Censo Oficial - IEAD Chicuque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+    <header class="bg-slate-900 text-white py-6 px-4 text-center shadow-lg sticky top-0 z-30 border-b-2 border-emerald-600">
+        <div class="inline-block p-3 bg-white/10 rounded-2xl mb-2 backdrop-blur-sm">
+            <i class="fa-solid fa-church text-3xl text-emerald-400"></i>
+        </div>
+        <h1 class="text-xl font-black uppercase tracking-wider">IEAD Chicuque</h1>
+        <p class="text-xs text-slate-300 mt-1 font-medium">Gestão Eclesiástica Integrada - Ficha Oficial de Recenseamento</p>
+    </header>
+
+    <main class="max-w-lg mx-auto p-4 sm:p-6 pb-20">
+        {% if msg_erro %}
+        <div class="mb-4 p-4 bg-rose-50 border-l-4 border-rose-600 text-rose-800 text-xs rounded-xl shadow-sm font-bold flex items-center gap-3">
+            <i class="fa-solid fa-circle-exclamation text-base text-rose-600"></i>
+            <span>{{ msg_erro }}</span>
+        </div>
+        {% endif %}
+
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+            <form action="/censo" method="POST" enctype="multipart/form-data" class="space-y-5">
+                
+                <!-- Secção 1: Identificação Pessoal -->
+                <div>
+                    <h2 class="text-xs font-black uppercase tracking-wider text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-user text-emerald-600"></i> Identificação Pessoal
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
+                            <input type="text" name="nome" required placeholder="Nome e apelido" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Contacto Telefónico *</label>
+                                <input type="tel" name="telefone" required placeholder="+258 8..." class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none font-semibold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Género</label>
+                                <select name="genero" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Data Nascimento</label>
+                                <input type="date" name="data_nascimento" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Segmento *</label>
+                                <select name="segmento" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                                    <option value="Adulto">Adulto</option>
+                                    <option value="Jovem">Jovem</option>
+                                    <option value="Criança">Criança</option>
+                                    <option value="Terceira Idade">Terceira Idade</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Bairro / Residência</label>
+                                <input type="text" name="bairro" placeholder="Ex: Chicuque" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Naturalidade</label>
+                                <input type="text" name="naturalidade" placeholder="Cidade / Província" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Estado Civil</label>
+                            <select name="estado_civil" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                                <option value="Solteiro(a)">Solteiro(a)</option>
+                                <option value="Casado(a)">Casado(a)</option>
+                                <option value="Viúvo(a)">Viúvo(a)</option>
+                                <option value="Divorciado(a)">Divorciado(a)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Filiação (Pai & Mãe)</label>
+                            <input type="text" name="filiacao" placeholder="Nome dos pais..." class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Tipo Doc.</label>
+                                <select name="tipo_doc" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                                    <option value="BI">BI</option>
+                                    <option value="Cédula">Cédula</option>
+                                    <option value="Passaporte">Passaporte</option>
+                                    <option value="DIRE">DIRE</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Nº Documento</label>
+                                <input type="text" name="num_doc" placeholder="Número..." class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secção 2: Vida Eclesiástica e Departamentos -->
+                <div class="pt-2">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-emerald-800 border-b pb-2 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-cross text-emerald-600"></i> Informação Eclesiástica
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Ano Conversão</label>
+                                <input type="text" name="ano_conversao" placeholder="Ex: 2018" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Batizado nas Águas?</label>
+                                <select name="batizado" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Cargo *</label>
+                                <select name="cargo" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none">
+                                    <option value="Membro em Comunhão">Membro em Comunhão</option>
+                                    <option value="Candidato ao Batismo">Candidato ao Batismo</option>
+                                    <option value="Novo Convertido">Novo Convertido</option>
+                                    <option value="Diácono / Diaconisa">Diácono / Diaconisa</option>
+                                    <option value="Evangelista">Evangelista</option>
+                                    <option value="Líder de Departamento">Líder de Departamento</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Departamento / Ministério *</label>
+                                <select name="departamento" class="w-full h-12 px-3 text-sm border-2 rounded-xl border-slate-200 focus:border-emerald-600 focus:outline-none font-semibold text-emerald-950">
+                                    <option value="Geral">Geral</option>
+                                    <option value="Activista">Activista</option>
+                                    <option value="Juventude">Juventude</option>
+                                    <option value="Mulher (Senhoras)">Mulher (Senhoras)</option>
+                                    <option value="Boa Esperança (Crianças)">Boa Esperança (Crianças)</option>
+                                    <option value="Homens / Obreiros">Homens / Obreiros</option>
+                                    <option value="Louvor / Música">Louvor / Música</option>
+                                    <option value="Ação Social">Ação Social</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Fotografia Tipo Passe (Opcional)</label>
+                            <input type="file" name="foto" accept="image/*" capture="user" class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-50 file:text-emerald-900 hover:file:bg-emerald-100">
+                            <p class="text-[10px] text-slate-400 mt-1">Pode tirar fotografia direta na hora com a câmara do telemóvel.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full h-14 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl transition flex items-center justify-center gap-2 mt-6">
+                    <i class="fa-solid fa-floppy-disk"></i> Gravar Ficha de Membro
+                </button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
+"""
+
+with open('templates/censo_form.html', 'w', encoding='utf-8') as f:
+    f.write(html_censo)
+
+print("✓ Template templates/censo_form.html atualizado com os departamentos e vocabulário oficiais!")

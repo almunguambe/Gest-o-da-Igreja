@@ -1,0 +1,184 @@
+template_homologar = """<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homologação do Censo - IEAD Chicuque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+    <!-- BARRA SUPERIOR -->
+    <header class="bg-slate-900 text-white py-4 px-6 shadow-md flex justify-between items-center sticky top-0 z-30 border-b-2 border-emerald-600">
+        <div class="flex items-center gap-3">
+            <a href="/" class="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition" title="Voltar ao Painel">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-base font-black uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-check text-emerald-400"></i> Homologação de Membros (Censo)
+                </h1>
+                <p class="text-[11px] text-slate-300">
+                    {% if is_sede %}
+                        Supervisão Geral do Campo &bull; <span class="text-emerald-400 font-bold">Acesso Sede</span>
+                    {% else %}
+                        Congregação: <span class="text-emerald-400 font-bold">{{ usuario_igreja }}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <a href="/" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl text-slate-200 transition font-bold">
+            Painel Principal
+        </a>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 sm:p-6 pb-20">
+
+        <!-- PAINEL DE DISPONIBILIZAÇÃO DE LINKS WHATSAPP -->
+        <div class="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-slate-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                <div>
+                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-share-nodes text-emerald-700"></i> Links Oficiais para WhatsApp
+                    </h2>
+                    <p class="text-xs text-slate-500">Partilhe o link com a sua congregação para os membros se recensearem:</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {% for ig in igrejas %}
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-black text-slate-800 block truncate">{{ ig }}</span>
+                        <span class="text-[10px] text-emerald-700 font-bold">Link Específico</span>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="copiarLinkCenso('{{ ig }}')" class="flex-1 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg transition shadow-sm">
+                            📋 Copiar
+                        </button>
+                        <a href="https://api.whatsapp.com/send?text={{ ('A Paz do Senhor! Participe no Censo Oficial da Congregação de ' ~ ig ~ '. Preencha a sua ficha aqui: https://iead-chicuque.onrender.com/censo?igreja=' ~ ig) | urlencode }}" 
+                           target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-sm">
+                            <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- BARRA DE FILTRO POR CONGREGAÇÃO (EXCLUSIVO SEDE / SUPERADMIN) -->
+        {% if is_sede %}
+        <div class="bg-emerald-950 text-white rounded-2xl p-4 mb-6 shadow flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-filter text-emerald-400"></i>
+                <span class="text-xs font-bold uppercase tracking-wider">Filtrar Fichas por Congregação:</span>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <select onchange="location.href='/admin/censo/homologar?igreja_filtro=' + encodeURIComponent(this.value)" class="h-10 px-3 bg-slate-900 border border-emerald-500 rounded-xl text-xs font-bold text-white focus:outline-none w-full sm:w-64">
+                    <option value="Todas" {% if igreja_atual == 'Todas' %}selected{% endif %}>🌍 Todas as Congregações</option>
+                    {% for ig in igrejas %}
+                    <option value="{{ ig }}" {% if igreja_atual == ig %}selected{% endif %}>🏛️ {{ ig }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- CABEÇALHO DA LISTAGEM -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-slate-600"></i> 
+                Fichas Pendentes de Validação ({{ pendentes | length }})
+            </h2>
+        </div>
+
+        {% if pendentes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for m in pendentes %}
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+                <div>
+                    <!-- Badge de Congregação -->
+                    <div class="flex justify-between items-start gap-2 mb-3">
+                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-900 font-black text-[10px] uppercase rounded-lg border border-emerald-200 flex items-center gap-1">
+                            <i class="fa-solid fa-church text-emerald-600"></i> {{ m[8] if m[8] else 'IEAD Chicuque' }}
+                        </span>
+                        <span class="px-2 py-0.5 bg-amber-50 text-amber-700 font-bold text-[10px] rounded-md border border-amber-200">
+                            Pendente
+                        </span>
+                    </div>
+
+                    <!-- Foto e Dados -->
+                    <div class="flex items-center gap-3 mb-3">
+                        {% if m[6] %}
+                        <img src="{{ m[6] }}" class="w-12 h-12 rounded-xl object-cover border-2 border-slate-200">
+                        {% else %}
+                        <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-lg">
+                            {{ m[1][:2] | upper }}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-800 leading-tight">{{ m[1] }}</h3>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5"><i class="fa-solid fa-phone text-[10px]"></i> {{ m[2] }}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl mb-4">
+                        <p><span class="font-bold text-slate-700">Bairro:</span> {{ m[3] or 'Não informado' }}</p>
+                        <p><span class="font-bold text-slate-700">Departamento:</span> {{ m[5] or 'Geral' }}</p>
+                        <p><span class="font-bold text-slate-700">Batizado:</span> {{ m[4] or 'Não' }}</p>
+                        <p class="text-[10px] text-slate-400 pt-1 border-t"><i class="fa-regular fa-clock"></i> Submetido em: {{ m[9] if m[9] else 'Recente' }}</p>
+                    </div>
+                </div>
+
+                <!-- Ações de Homologação -->
+                <div class="flex gap-2 pt-2 border-t">
+                    <form action="/admin/censo/aprovar/{{ m[0] }}" method="POST" class="flex-1">
+                        <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-check"></i> Homologar
+                        </button>
+                    </form>
+                    <form action="/admin/censo/descartar/{{ m[0] }}" method="POST" onsubmit="return confirm('Deseja realmente descartar este registo?');">
+                        <button type="submit" class="px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-black transition flex items-center justify-center" title="Descartar Registo">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-3xl p-12 text-center border border-slate-200">
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 class="text-base font-black text-slate-800 uppercase">Tudo em dia!</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+                Não existem fichas pendentes de homologação para a seleção atual. Todas as submissões foram validadas.
+            </p>
+        </div>
+        {% endif %}
+
+    </main>
+
+    <script>
+    function copiarLinkCenso(nomeIgreja) {
+        const url = window.location.origin + '/censo?igreja=' + encodeURIComponent(nomeIgreja);
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✓ LINK COPIADO!\\n\\n' + url + '\\n\\nPronto para colar no grupo da congregação "' + nomeIgreja + '"!');
+            }).catch(() => {
+                prompt('Copie o link abaixo:', url);
+            });
+        } else {
+            prompt('Copie o link abaixo:', url);
+        }
+    }
+    </script>
+</body>
+</html>
+"""
+
+with open('templates/censo_homologar.html', 'w', encoding='utf-8') as f:
+    f.write(template_homologar)
+
+print("✓ Template templates/censo_homologar.html atualizado com filtro e crachás de congregações!")
