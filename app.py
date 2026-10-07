@@ -96,6 +96,15 @@ class HybridCursor:
         self._conn = conn
 
     def execute(self, sql, params=None):
+        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
+        try:
+            if hasattr(self, '_conn'):
+                self._conn.rollback()
+            elif hasattr(self._cur, 'connection'):
+                self._cur.connection.rollback()
+        except:
+            pass
+
         import re
         if isinstance(sql, str):
             if 'AUTOINCREMENT' in sql.upper():
@@ -153,6 +162,15 @@ class HybridConn:
         return HybridCursor(self._conn.cursor(), self._conn)
 
     def execute(self, sql, params=None):
+        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
+        try:
+            if hasattr(self, '_conn'):
+                self._conn.rollback()
+            elif hasattr(self._cur, 'connection'):
+                self._cur.connection.rollback()
+        except:
+            pass
+
         c = self.cursor()
         c.execute(sql, params)
         return c
@@ -214,6 +232,15 @@ class CompatCursor:
         self._cur = cursor
         self._is_pg = is_pg
     def execute(self, sql, params=None):
+        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
+        try:
+            if hasattr(self, '_conn'):
+                self._conn.rollback()
+            elif hasattr(self._cur, 'connection'):
+                self._cur.connection.rollback()
+        except:
+            pass
+
         if self._is_pg and sql:
             # Converte ? para %s para PostgreSQL
             sql = sql.replace('?', '%s')
@@ -239,6 +266,15 @@ class CompatConn:
     def cursor(self):
         return CompatCursor(self._conn.cursor(), self._is_pg)
     def execute(self, sql, params=None):
+        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
+        try:
+            if hasattr(self, '_conn'):
+                self._conn.rollback()
+            elif hasattr(self._cur, 'connection'):
+                self._cur.connection.rollback()
+        except:
+            pass
+
         cur = self.cursor()
         cur.execute(sql, params)
         return cur
