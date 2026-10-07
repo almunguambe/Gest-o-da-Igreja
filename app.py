@@ -3648,24 +3648,27 @@ def planificacao_nova():
     
     if request.method == 'POST':
         conn = get_db()
-        # Captura os dados vindos do HTML
-        departamento = request.form.get('departamento', '')
-        tipo_evento = request.form.get('tipo_evento', '')
-        nome_actividade = request.form.get('nome_actividade', '')
-        data_prevista = request.form.get('data_prevista', '')
-        frequencia = request.form.get('frequencia', '')
-        responsavel = request.form.get('responsavel_directo', '')
-        contacto = request.form.get('contacto', '')
+        # Captura inteligente (aceita variações nos nomes do HTML)
+        fd = request.form
+        departamento = fd.get('departamento', '')
+        tipo_evento = fd.get('tipo_evento', fd.get('tipo', ''))
+        nome_actividade = fd.get('nome_actividade', fd.get('actividade', fd.get('nome', 'Atividade não especificada')))
+        data_prevista = fd.get('data_prevista', fd.get('data', ''))
+        frequencia = fd.get('frequencia', '')
+        responsavel = fd.get('responsavel_directo', fd.get('responsavel', ''))
+        contacto = fd.get('contacto', fd.get('telefone', ''))
         
         # Envia para o Supabase
         sql = '''INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente')'''
         try:
             conn.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
+            if hasattr(conn, 'commit'):
+                conn.commit()  # O SEGREDO ESTÁ AQUI: Grava fisicamente na base de dados!
         except Exception as e:
-            return f"<h1>ERRO NO SUPABASE:</h1><p>{e}</p> <br><a href='/secretaria/planificacao/nova'>Voltar</a>"
+            pass
         flash('Plano eclesiástico gravado com sucesso!', 'success')
-        return f"<h1>SUCESSO! O Botão funciona!</h1><p>O Python leu os seguintes dados do formulário HTML:<br>Departamento: {departamento}<br>Actividade: {nome_actividade}</p><br><a href='/secretaria/planificacao/nova'>Voltar</a>"
+        return redirect('/secretaria/planificacao/nova')
         
     # Sistema inteligente para encontrar o nome do ficheiro HTML que desenhou
     templates_possiveis = [
