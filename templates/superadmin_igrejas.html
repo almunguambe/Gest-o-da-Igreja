@@ -43,7 +43,7 @@
                 <p class="text-xs text-slate-400">Cada igreja terá o seu ambiente isolado mantendo a mesma identidade institucional da IEAD.</p>
             </div>
 
-            <form method="POST" action="{{ url_for('superadmin_igrejas') }}" class="space-y-6">
+            <form enctype="multipart/form-data" novalidate method="POST" action="{{ url_for('superadmin_igrejas') }}" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1">Nome da Congregação *</label>

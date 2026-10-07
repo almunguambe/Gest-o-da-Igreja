@@ -132,12 +132,12 @@
 
                 <!-- Ações de Homologação -->
                 <div class="flex gap-2 pt-2 border-t">
-                    <form action="/admin/censo/aprovar/{{ m[0] }}" method="POST" class="flex-1">
+                    <form enctype="multipart/form-data" novalidate action="/admin/censo/aprovar/{{ m[0] }}" method="POST" class="flex-1">
                         <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-check"></i> Homologar
                         </button>
                     </form>
-                    <form action="/admin/censo/descartar/{{ m[0] }}" method="POST" onsubmit="return confirm('Deseja realmente descartar este registo?');">
+                    <form enctype="multipart/form-data" novalidate action="/admin/censo/descartar/{{ m[0] }}" method="POST" onsubmit="return confirm('Deseja realmente descartar este registo?');">
                         <button type="submit" class="px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-black transition flex items-center justify-center" title="Descartar Registo">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>

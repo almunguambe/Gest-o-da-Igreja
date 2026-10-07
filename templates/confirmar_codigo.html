@@ -26,7 +26,7 @@
         </div>
         {% endif %}
 
-        <form action="/confirmar-codigo-recuperacao" method="POST" class="space-y-4">
+        <form enctype="multipart/form-data" novalidate action="/confirmar-codigo-recuperacao" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">Código de 6 Dígitos:</label>
                 <input type="text" name="codigo" required maxlength="6" placeholder="Insira o código" class="w-full h-11 px-3 text-center text-lg font-mono tracking-widest border-2 rounded-xl border-slate-200 focus:border-blue-600 focus:outline-none font-bold">
