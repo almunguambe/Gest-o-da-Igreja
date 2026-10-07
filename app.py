@@ -51,6 +51,22 @@ json.dumps = _custom_dumps
 
 app = Flask(__name__)
 
+def can_cadastro():
+    from flask import session
+    cargo = str(session.get('cargo', '')).lower()
+    return cargo in ['pastor', 'admin', 'secretário', 'secretaria', 'secretario', 'tesoureiro', 'tesouraria', 'superadmin']
+
+def can_financeiro():
+    from flask import session
+    cargo = str(session.get('cargo', '')).lower()
+    return cargo in ['pastor', 'admin', 'tesoureiro', 'tesouraria', 'superadmin']
+
+def can_admin():
+    from flask import session
+    cargo = str(session.get('cargo', '')).lower()
+    return cargo in ['pastor', 'admin', 'superadmin']
+
+
 import os
 import sqlite3
 try:
