@@ -3671,6 +3671,19 @@ def planificacao_nova():
         return redirect(request.referrer or '/')
         
     # Sistema inteligente para encontrar o nome do ficheiro HTML que desenhou
+    
+    # Buscar os dados para a tabela lateral
+    planos = []
+    try:
+        conn = get_db()
+        if hasattr(conn, 'cursor'):
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM planificacoes ORDER BY id DESC LIMIT 10")
+            cols = [desc[0] for desc in cur.description]
+            planos = [dict(zip(cols, row)) for row in cur.fetchall()]
+    except Exception as e:
+        print("Erro ao buscar planos:", e)
+        
     templates_possiveis = [
         'nova_planificacao.html', 
         'planificacao_nova.html', 
@@ -3681,7 +3694,7 @@ def planificacao_nova():
     
     for html in templates_possiveis:
         if os.path.exists(os.path.join('templates', html)):
-            return render_template(html)
+            return render_template(html, planificacoes=planos)
             
     # Se não encontrar nenhum dos nomes comuns, tenta abrir o padrão
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', planificacoes=planos)
