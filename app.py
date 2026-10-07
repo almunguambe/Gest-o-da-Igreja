@@ -3647,7 +3647,23 @@ def planificacao_nova():
     import os
     
     if request.method == 'POST':
-        # Aqui ficará o código de gravação do plano futuramente
+        conn = get_db()
+        # Captura os dados vindos do HTML
+        departamento = request.form.get('departamento', '')
+        tipo_evento = request.form.get('tipo_evento', '')
+        nome_actividade = request.form.get('nome_actividade', '')
+        data_prevista = request.form.get('data_prevista', '')
+        frequencia = request.form.get('frequencia', '')
+        responsavel = request.form.get('responsavel_directo', '')
+        contacto = request.form.get('contacto', '')
+        
+        # Envia para o Supabase
+        sql = '''INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente')'''
+        try:
+            conn.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
+        except Exception as e:
+            print("Erro ao gravar planificacao:", e)
         flash('Plano eclesiástico gravado com sucesso!', 'success')
         return redirect(url_for('dashboard'))
         
