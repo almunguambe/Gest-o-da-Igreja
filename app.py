@@ -246,431 +246,48 @@ def sync_puxar_nuvem():
 def init_db():
     conn = get_db()
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS igrejas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL UNIQUE,
-        cidade TEXT,
-        distrito TEXT,
-        pastor TEXT,
-        telefone TEXT,
-        ativa INTEGER DEFAULT 1,
-        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )''')
-    c.execute("SELECT id FROM igrejas WHERE id = 1")
-    if not c.fetchone():
-        c.execute("INSERT INTO igrejas (id, nome, cidade, distrito, pastor, telefone, ativa) VALUES (1, 'Congregação de Chicuque', 'Maxixe', 'Maxixe', 'Pastor Local', '+258 84 000 0000', 1)")
-    c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario TEXT UNIQUE NOT NULL,
-        senha TEXT NOT NULL,
-        cargo TEXT NOT NULL
-    )''')
     
-    try:
-        c.execute("ALTER TABLE membros ADD COLUMN estado_civil TEXT DEFAULT 'Solteiro(a)'")
-    except: pass
+    # Detectar se é PostgreSQL real
+    is_real_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
 
-    
-    # Novas tabelas de configuração eclesiástica
-    try:
-        c.execute('''CREATE TABLE IF NOT EXISTS config_cargos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS config_cultos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS config_contas (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS config_atividades (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS igrejas_distritos (id INTEGER PRIMARY KEY AUTOINCREMENT, provincia TEXT, distrito TEXT, nome TEXT)''')
-    except:
-        pass
-
-    
-    try:
-        c.execute('''CREATE TABLE IF NOT EXISTS config_eventos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-    except: pass
-
-    c.execute('''CREATE TABLE IF NOT EXISTS membros (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        telefone TEXT,
-        genero TEXT,
-        data_nascimento TEXT,
-        faixa_etaria TEXT,
-        naturalidade TEXT,
-        bairro TEXT,
-        filiacao TEXT,
-        tipo_documento TEXT,
-        numero_documento TEXT,
-        ano_conversao INTEGER,
-        data_batismo TEXT,
-        posicao_atual TEXT,
-        progressoes TEXT,
-        departamento TEXT,
-        foto_path TEXT,
-        observacoes TEXT,
-        data_registo TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS financeiro (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tipo TEXT,
-        local_movimento TEXT DEFAULT 'Caixa',
-        departamento TEXT DEFAULT 'Geral',
-        categoria TEXT NOT NULL,
-        valor REAL NOT NULL,
-        data_movimento TEXT NOT NULL,
-        dia INTEGER,
-        mes INTEGER,
-        ano INTEGER,
-        data_registo TEXT NOT NULL,
-        membro_id INTEGER,
-        descricao TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS transferencias (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        data_movimento TEXT NOT NULL,
-        origem_local TEXT NOT NULL,
-        origem_depto TEXT NOT NULL,
-        destino_local TEXT NOT NULL,
-        destino_depto TEXT NOT NULL,
-        valor REAL NOT NULL,
-        motivo TEXT NOT NULL,
-        data_registo TEXT NOT NULL
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS casamentos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        noivo TEXT NOT NULL,
-        noiva TEXT NOT NULL,
-        data_casamento TEXT NOT NULL,
-        pastor_oficiante TEXT,
-        data_registo TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS mortes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome_falecido TEXT NOT NULL,
-        data_falecimento TEXT NOT NULL,
-        observacoes TEXT,
-        data_registo TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS departamentos_lista (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT UNIQUE NOT NULL
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS categorias_financeiras (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tipo TEXT NOT NULL,
-        nome TEXT NOT NULL
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS zonas_lista (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT UNIQUE NOT NULL
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS cultos_frequencia (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        data_culto TEXT NOT NULL,
-        tipo_culto TEXT NOT NULL,
-        homens INTEGER DEFAULT 0,
-        mulheres INTEGER DEFAULT 0,
-        jovens INTEGER DEFAULT 0,
-        criancas INTEGER DEFAULT 0,
-        visitantes INTEGER DEFAULT 0,
-        novos_convertidos INTEGER DEFAULT 0,
-        total_presentes INTEGER DEFAULT 0,
-        pregador TEXT,
-        tema_mensagem TEXT,
-        data_registo TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS novos_convertidos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        telefone TEXT,
-        bairro TEXT,
-        data_decisao TEXT NOT NULL,
-        culto_origem TEXT,
-        quem_convidou TEXT,
-        status_discipulado TEXT DEFAULT 'Decisão Inicial',
-        observacoes TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS patrimonio (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        item TEXT NOT NULL,
-        departamento TEXT DEFAULT 'Geral',
-        quantidade INTEGER DEFAULT 1,
-        estado_conservacao TEXT DEFAULT 'Bom',
-        localizacao TEXT,
-        observacoes TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS escalas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        data_escala TEXT NOT NULL,
-        tipo_culto TEXT NOT NULL,
-        dirigente TEXT,
-        pregador TEXT,
-        leitura_palavra TEXT,
-        louvor_grupo TEXT,
-        diaconos_servico TEXT,
-        observacoes TEXT
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS campanhas_metas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome_campanha TEXT NOT NULL,
-        departamento TEXT DEFAULT 'Construção',
-        valor_meta REAL NOT NULL,
-        status TEXT DEFAULT 'Ativa'
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario TEXT NOT NULL,
-        licao TEXT NOT NULL,
-        nota INTEGER NOT NULL,
-        total INTEGER NOT NULL,
-        data_resposta TEXT NOT NULL
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS duvidas_estudantes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario TEXT NOT NULL,
-        licao TEXT NOT NULL,
-        duvida TEXT NOT NULL,
-        resposta TEXT,
-        data_envio TEXT NOT NULL
-    )''')
-
-    # Contas fixas e permanentes garantidas
-    contas = [
-        ('admin', 'chicuque123', 'Pastor Presidente'),
-        ('secretaria', '12345', 'Secretário'),
-        ('tesouraria', 'senha12345', 'Tesoureiro'),
-        ('doutrina', 'senha12345', 'Aluno')
-    ]
-    for usr, pwd, crg in contas:
-        c.execute("INSERT OR IGNORE INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)", (usr, pwd, crg))
-
-    deptos = ['Activista', 'Juventude', 'Mulher (Senhoras)', 'Boa Esperança (Crianças)', 'Homens / Obreiros', 'Louvor / Música', 'Ação Social', 'Construção']
-    for d in deptos:
-        c.execute("INSERT OR IGNORE INTO departamentos_lista (nome) VALUES (?)", (d,))
-
-    c.execute("SELECT COUNT(*) FROM categorias_financeiras")
-    if c.fetchone()[0] == 0:
-        padroes = [
-            ('Entrada', 'Dízimo'), ('Entrada', 'Oferta'), ('Entrada', 'Doação / Voto'), ('Entrada', 'Campanha de Construção'),
-            ('Saída', 'Manutenção do Templo'), ('Saída', 'Ação Social / Ajudas'), ('Saída', 'Combustível / Transporte'),
-            ('Saída', 'Água e Eletricidade'), ('Saída', 'Material de Culto')
-        ]
-        c.executemany("INSERT INTO categorias_financeiras (tipo, nome) VALUES (?, ?)", padroes)
-
-    zonas = ['Chicuque Sede', 'Maxixe Cidade', 'Nhacoongo', 'Conguiana', 'Bairro 1']
-    for z in zonas:
-        c.execute("INSERT OR IGNORE INTO zonas_lista (nome) VALUES (?)", (z,))
-
-    c.execute("SELECT COUNT(*) FROM campanhas_metas")
-    if c.fetchone()[0] == 0:
-        c.execute("INSERT INTO campanhas_metas (nome_campanha, departamento, valor_meta, status) VALUES (?, ?, ?, ?)",
-                  ('Campanha de Obras e Ampliação do Templo', 'Construção', 100000.0, 'Ativa'))
-
-    conn.commit()
-    conn.close()
-
-init_db()
-
-def is_admin():
-    cargo = session.get('cargo', '')
-    return session.get('usuario') == 'admin' or 'Pastor' in cargo
-
-def can_cadastro():
-    cargo = session.get('cargo', '')
-    return is_admin() or 'Secretário' in cargo or 'Líder' in cargo
-
-def can_tesouraria():
-    cargo = session.get('cargo', '')
-    return is_admin() or 'Tesoureiro' in cargo
-
-
-def extrair_dados_membro(membro):
-    """Extrai os dados de forma infalível usando o esquema real da base de dados."""
-    def obter(chave, idx_padrao=None):
-        if hasattr(membro, 'keys') and chave in membro.keys():
-            return membro[chave]
-        elif isinstance(membro, dict) and chave in membro:
-            return membro[chave]
-        elif idx_padrao is not None and not isinstance(membro, dict):
-            try:
-                return membro[idx_padrao]
-            except:
-                return None
-        return None
-
-    # Mapeamento estrito com base no PRAGMA table_info(membros)
-    m_id = obter('id', 0) or 1
-    nome = obter('nome', 1) or "Membro"
-    telefone = str(obter('telefone', 2) or "").strip()
-    faixa_etaria = obter('faixa_etaria', 5) or "Adulto"
-    bairro = obter('bairro', 7) or "Chicuque Sede"
-    tipo_doc = obter('tipo_documento', 9) or "BI"
-    num_doc = obter('numero_documento', 10) or "---"
-    ano_conv = obter('ano_conversao', 11) or "---"
-    data_bat = obter('data_batismo', 12)
-    posicao = obter('posicao_atual', 13) or "Membro em Comunhão"
-    departamento = obter('departamento', 15) or "Geral"
-    foto_path = obter('foto_path', 16) or ""
-
-    # Formatar telefone moçambicano (+258 8x xxx xxxx)
-    tel_limpo = "".join([c for c in telefone if c.isdigit()])
-    if len(tel_limpo) == 9 and tel_limpo.startswith('8'):
-        tel_fmt = f"(+258) {tel_limpo[:2]} {tel_limpo[2:5]} {tel_limpo[5:]}"
-    elif len(tel_limpo) == 12 and tel_limpo.startswith('258'):
-        tel_fmt = f"(+258) {tel_limpo[3:5]} {tel_limpo[5:8]} {tel_limpo[8:]}"
-    else:
-        tel_fmt = telefone if telefone else "Sem contacto"
-
-    # Formatar data de batismo se válida
-    data_bat_str = str(data_bat).strip() if data_bat else ""
-    if data_bat_str.lower() in ['none', 'null', 'adulto', '']:
-        data_bat_final = None
-    else:
-        partes = data_bat_str.split("-")
-        if len(partes) == 3:
-            data_bat_final = f"{partes[2]}/{partes[1]}/{partes[0]}"
-        else:
-            data_bat_final = data_bat_str
-
-    return {
-        "id": int(m_id) if str(m_id).isdigit() else 1,
-        "nome": str(nome).strip(),
-        "telefone": tel_fmt,
-        "faixa_etaria": faixa_etaria,
-        "bairro": str(bairro).strip(),
-        "tipo_doc": str(tipo_doc).strip(),
-        "num_doc": str(num_doc).strip(),
-        "ano_conv": str(ano_conv).strip(),
-        "data_batismo": data_bat_final,
-        "posicao": str(posicao).strip(),
-        "departamento": str(departamento).strip(),
-        "foto_path": str(foto_path).strip()
-    }
-
-
-def inicializar_tabela_discipulado():
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        if DATABASE_URL and psycopg2:
+    if is_real_pg:
+        # Se for PostgreSQL (Supabase), as tabelas já foram criadas ou usam sintaxe SERIAL
+        try:
             c.execute("""
-                CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                CREATE TABLE IF NOT EXISTS igrejas (
                     id SERIAL PRIMARY KEY,
-                    membro_id INTEGER NOT NULL,
-                    classe_id VARCHAR(10) NOT NULL,
-                    nota NUMERIC(4,2) DEFAULT 0,
-                    status VARCHAR(20) DEFAULT 'Pendente',
-                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    nome TEXT NOT NULL UNIQUE,
+                    localizacao TEXT,
+                    responsavel TEXT,
+                    contacto TEXT
                 );
             """)
-        else:
-            c.execute("""
-                CREATE TABLE IF NOT EXISTS progresso_discipulado (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    membro_id INTEGER NOT NULL,
-                    classe_id TEXT NOT NULL,
-                    nota REAL DEFAULT 0,
-                    status TEXT DEFAULT 'Pendente',
-                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"Aviso ao inicializar tabela discipulado: {e}")
+            conn.commit()
+            print("✓ Banco PostgreSQL sincronizado com sucesso!")
+        except Exception as e:
+            conn.rollback()
+            print(f"[ALERTA INIT_DB PG] {e}")
+        finally:
+            c.close()
+            conn.close()
+        return
 
-try:
-    inicializar_tabela_discipulado()
-except Exception:
-    pass
-
-
-def assegurar_coluna_obito():
+    # Caso seja SQLite local (fallback de desenvolvimento)
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        if DATABASE_URL and psycopg2:
-            c.execute("""
-                CREATE TABLE IF NOT EXISTS obitos (
-                    id SERIAL PRIMARY KEY,
-                    membro_id INTEGER REFERENCES membros(id),
-                    nome VARCHAR(150),
-                    data_morte DATE,
-                    causa TEXT,
-                    observacoes TEXT,
-                    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            c.execute("""
-                DO $$
-                BEGIN
-                    BEGIN
-                        ALTER TABLE obitos ADD COLUMN membro_id INTEGER;
-                    EXCEPTION
-                        WHEN duplicate_column THEN RAISE NOTICE 'membro_id ja existe';
-                    END;
-                END $$;
-            """)
-        else:
-            c.execute("""
-                CREATE TABLE IF NOT EXISTS obitos (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    membro_id INTEGER,
-                    nome TEXT,
-                    data_morte DATE,
-                    causa TEXT,
-                    observacoes TEXT,
-                    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            try:
-                c.execute("ALTER TABLE obitos ADD COLUMN membro_id INTEGER")
-            except Exception:
-                pass
+        c.execute('''CREATE TABLE IF NOT EXISTS igrejas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL UNIQUE,
+            localizacao TEXT,
+            responsavel TEXT,
+            contacto TEXT
+        )''')
         conn.commit()
-        conn.close()
     except Exception as e:
-        print(f"Aviso tabela obitos: {e}")
-
-try:
-    assegurar_coluna_obito()
-except Exception:
-    pass
-
-
-def assegurar_colunas_geograficas():
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        colunas = [
-            ("zona", "VARCHAR(100)"),
-            ("celula", "VARCHAR(100)"),
-            ("bairro", "VARCHAR(100)"),
-            ("distrito", "VARCHAR(100)")
-        ]
-        for col, tipo in colunas:
-            if DATABASE_URL and psycopg2:
-                c.execute(f"""
-                    DO $$ 
-                    BEGIN 
-                        BEGIN
-                            ALTER TABLE membros ADD COLUMN {col} {tipo};
-                        EXCEPTION
-                            WHEN duplicate_column THEN NULL;
-                        END;
-                    END $$;
-                """)
-            else:
-                try:
-                    c.execute(f"ALTER TABLE membros ADD COLUMN {col} TEXT;")
-                except Exception:
-                    pass
-        conn.commit()
+        print(f"[ALERTA INIT_DB SQLITE] {e}")
+    finally:
+        c.close()
         conn.close()
-    except Exception as e:
-        print(f"Aviso migracao geografica: {e}")
 
-try:
-    assegurar_colunas_geograficas()
-except Exception:
-    pass
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
