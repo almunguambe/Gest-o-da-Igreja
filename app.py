@@ -91,40 +91,52 @@ class HybridRow(dict):
         return super().__getitem__(item)
 
 class HybridCursor:
-    def __init__(self, cur):
+    def __init__(self, cur, conn):
         self._cur = cur
+        self._conn = conn
 
     def execute(self, sql, params=None):
         import re
         if isinstance(sql, str):
-            # Converte tipos e palavras exclusivas do SQLite para PostgreSQL
             if 'AUTOINCREMENT' in sql.upper():
                 sql = re.sub(r'INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT', 'SERIAL PRIMARY KEY', sql, flags=re.IGNORECASE)
                 sql = re.sub(r'AUTOINCREMENT', '', sql, flags=re.IGNORECASE)
             if params is not None and '?' in sql:
                 sql = sql.replace('?', '%s')
-        if params is not None:
-            return self._cur.execute(sql, params)
         try:
+            if params is not None:
+                return self._cur.execute(sql, params)
             return self._cur.execute(sql)
         except Exception as e:
+            # Reseta a transação para o próximo comando nunca herdar o estado abortado
+            try:
+                self._conn.rollback()
+            except Exception:
+                pass
             if 'CREATE TABLE' in str(sql).upper():
-                print(f"[AVISO IGNORADO CREATE TABLE] {e}")
+                print(f"[AVISO CREATE TABLE IGNORADO] {e}")
                 return None
             raise e
 
     def fetchone(self):
-        row = self._cur.fetchone()
-        if row is None:
+        try:
+            row = self._cur.fetchone()
+            return row
+        except Exception:
             return None
-        return row
 
     def fetchall(self):
-        return self._cur.fetchall()
+        try:
+            return self._cur.fetchall()
+        except Exception:
+            return []
 
     def __iter__(self):
-        for r in self._cur:
-            yield r
+        try:
+            for r in self._cur:
+                yield r
+        except Exception:
+            return iter([])
 
     def __getattr__(self, name):
         return getattr(self._cur, name)
@@ -132,9 +144,13 @@ class HybridCursor:
 class HybridConn:
     def __init__(self, conn):
         self._conn = conn
+        try:
+            self._conn.autocommit = True
+        except Exception:
+            pass
 
     def cursor(self):
-        return HybridCursor(self._conn.cursor())
+        return HybridCursor(self._conn.cursor(), self._conn)
 
     def execute(self, sql, params=None):
         c = self.cursor()
@@ -142,13 +158,22 @@ class HybridConn:
         return c
 
     def commit(self):
-        return self._conn.commit()
+        try:
+            return self._conn.commit()
+        except Exception:
+            pass
 
     def rollback(self):
-        return self._conn.rollback()
+        try:
+            return self._conn.rollback()
+        except Exception:
+            pass
 
     def close(self):
-        return self._conn.close()
+        try:
+            return self._conn.close()
+        except Exception:
+            pass
 
     def __getattr__(self, name):
         return getattr(self._conn, name)
@@ -162,6 +187,7 @@ def get_db():
         try:
             import psycopg2
             raw_conn = psycopg2.connect(db_url)
+            raw_conn.autocommit = True
             raw_conn.autocommit = True
             return HybridConn(raw_conn)
         except Exception as e:
