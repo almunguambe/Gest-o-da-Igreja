@@ -269,7 +269,7 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Data Nascimento</label>
-                                    <input type="date" name="data_prevista" name="data_nascimento" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white">
+                                    <input type="date" name="data_prevista" name="data_prevista" name="data_nascimento" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Segmento *</label>
@@ -337,7 +337,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Data Batismo</label>
-                                    <input type="date" name="data_prevista" name="data_batismo" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white">
+                                    <input type="date" name="data_prevista" name="data_prevista" name="data_batismo" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white">
                                 </div>
                             </div>
 
@@ -507,12 +507,12 @@
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold text-slate-600 block mb-1">Nome da Actividade</label>
-                                <input type="text" name="actividade"  name="nome_actividade" placeholder="Ex: Seminário de Liderança Juvenil" class="w-full h-10 px-3 text-xs border-2 rounded-xl">
+                                <input type="text" name="actividade"  name="nome_actividade" name="nome_actividade" placeholder="Ex: Seminário de Liderança Juvenil" class="w-full h-10 px-3 text-xs border-2 rounded-xl">
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="text-[11px] font-bold text-slate-600 block mb-1">Data Prevista</label>
-                                    <input type="date" name="data_prevista"  class="w-full h-10 px-2 text-xs border-2 rounded-xl">
+                                    <input type="date" name="data_prevista" name="data_prevista"  class="w-full h-10 px-2 text-xs border-2 rounded-xl">
                                 </div>
                                 <div>
                                     <label class="text-[11px] font-bold text-slate-600 block mb-1">Frequência</label>
@@ -533,7 +533,7 @@
                                 <label class="text-[11px] font-bold text-slate-600 block mb-1">Contacto / WhatsApp (para Notificação)</label>
                                 <input type="text" name="contacto_responsavel" placeholder="Ex: 841234567" class="w-full h-10 px-3 text-xs border-2 rounded-xl">
                             </div>
-                            <button type="submit" class="w-full h-11 bg-indigo-900 hover:bg-indigo-800 text-white font-black text-xs rounded-xl shadow transition">Gravar Planificação</button>
+                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
                         </form>
                     </div>
 
@@ -617,7 +617,7 @@
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold text-slate-600 block mb-1">Data da Realização</label>
-                                <input type="date" name="data_prevista" name="data_realizacao" class="w-full h-10 px-2 text-xs border-2 rounded-xl">
+                                <input type="date" name="data_prevista" name="data_prevista" name="data_realizacao" class="w-full h-10 px-2 text-xs border-2 rounded-xl">
                             </div>
                         </div>
 
@@ -697,7 +697,7 @@
     <div class="grid grid-cols-2 gap-2">
         <div>
             <label class="text-[11px] font-bold text-slate-600 block mb-1">📅 Data do Culto</label>
-            <input type="date" name="data_prevista" name="data_culto"  class="w-full h-10 px-2 text-sm border-2 rounded-xl bg-white font-medium">
+            <input type="date" name="data_prevista" name="data_prevista" name="data_culto"  class="w-full h-10 px-2 text-sm border-2 rounded-xl bg-white font-medium">
         </div>
         <div>
             <label class="text-[11px] font-bold text-slate-600 block mb-1">⛪ Tipo de Culto</label>
@@ -776,29 +776,10 @@
         <input type="text" name="tema_mensagem" placeholder="Tema da Mensagem" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
     </div>
 
-    <button type="submit" class="w-full h-12 bg-blue-900 hover:bg-blue-800 text-white font-black text-sm rounded-2xl shadow transition">Gravar Presença</button>
+    <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
 </form>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const inputsSoma = document.querySelectorAll(".campo-soma");
-    const totalDisplay = document.getElementById("total_geral_display");
 
-    function recalcularTotal() {
-        let total = 0;
-        inputsSoma.forEach(input => {
-            const val = parseInt(input.value) || 0;
-            total += val;
-        });
-        if(totalDisplay) totalDisplay.value = total;
-    }
-
-    inputsSoma.forEach(input => {
-        input.addEventListener("input", recalcularTotal);
-        input.addEventListener("change", recalcularTotal);
-    });
-});
-</script>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">Histórico de Cultos</h3>
@@ -829,7 +810,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <form action="/secretaria/planificacao/nova" method="POST">
                             <input type="text" name="nome"  placeholder="Nome Completo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="telefone" placeholder="Contacto Telefónico" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <input type="date" name="data_prevista" name="data_decisao"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-semibold">
+                            <input type="date" name="data_prevista" name="data_prevista" name="data_decisao"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-semibold">
                             <input type="text" name="bairro" placeholder="Bairro / Residência" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="quem_convidou" placeholder="Quem Convidou" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <button type="submit" class="w-full h-12 bg-emerald-700 text-white font-black text-sm rounded-2xl shadow">Registar para Discipulado</button>
@@ -870,7 +851,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">📋 Criar Escala de Culto</h3>
                         <form action="/secretaria/planificacao/nova" method="POST">
-                            <input type="date" name="data_prevista" name="data_escala"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
+                            <input type="date" name="data_prevista" name="data_prevista" name="data_escala"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="tipo_culto"  placeholder="Tipo de Culto *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <div>
@@ -894,7 +875,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             </div>
                             <input type="text" name="leitura_palavra" placeholder="Leitor da Palavra" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="louvor_grupo" placeholder="Grupo de Louvor" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" class="w-full h-12 bg-indigo-900 text-white font-black text-sm rounded-2xl shadow">Gravar Escala</button>
+                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -992,9 +973,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                         <form action="/secretaria/planificacao/nova" method="POST">
                             <input type="text" name="noivo"  placeholder="Noivo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="noiva"  placeholder="Noiva *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <input type="date" name="data_prevista" name="data_casamento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
+                            <input type="date" name="data_prevista" name="data_prevista" name="data_casamento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="pastor_oficiante" placeholder="Pastor Oficiante" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" class="w-full h-12 bg-purple-800 text-white font-black text-sm rounded-2xl shadow">Gravar Matrimónio</button>
+                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1015,9 +996,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                         <h3 class="text-base font-black text-slate-900 mb-3 pb-2 border-b">🕊️ Registo de Óbito</h3>
                         <form action="/secretaria/planificacao/nova" method="POST">
                             <input type="text" name="nome_falecido"  placeholder="Falecido *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <input type="date" name="data_prevista" name="data_falecimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
+                            <input type="date" name="data_prevista" name="data_prevista" name="data_falecimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="observacoes" placeholder="Notas..." class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" class="w-full h-12 bg-slate-900 text-white font-black text-sm rounded-2xl shadow">Gravar Óbito</button>
+                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1101,7 +1082,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">🔄 Transferir Fundos</h3>
                         <form action="/secretaria/planificacao/nova" method="POST">
-                            <input type="date" name="data_prevista" name="data_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
+                            <input type="date" name="data_prevista" name="data_prevista" name="data_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <div class="p-3 bg-rose-50 rounded-xl space-y-1.5 border">
                                 <span class="text-[10px] font-bold text-rose-800 uppercase">Origem</span>
                                 <select name="origem_local" class="w-full h-10 px-2 text-xs border rounded-lg bg-white"><option value="Caixa">Caixa Físico</option><option value="Banco">Conta Bancária</option></select>
@@ -1141,7 +1122,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">💰 Lançamento no Caixa</h3>
                         <form action="/secretaria/planificacao/nova" method="POST">
-                            <input type="date" name="data_prevista" name="data_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
+                            <input type="date" name="data_prevista" name="data_prevista" name="data_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <div class="grid grid-cols-2 gap-2">
                                 <select name="tipo" id="selectTipoTransacao" onchange="atualizarCategoriasPorTipo()" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold"><option value="Entrada">Entrada (+)</option><option value="Saída">Saída (-)</option></select>
                                 <select name="local_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold"><option value="Caixa">Caixa Físico</option><option value="Banco">Banco</option></select>
@@ -1161,7 +1142,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                                 </select>
                                 <input type="text" name="referencia_transacao" placeholder="Cód. Transação / Ref. (opcional)" class="w-full h-11 px-3 text-xs border-2 rounded-xl font-mono">
                             </div>
-                            <button type="submit" class="w-full h-12 bg-emerald-600 text-white font-black text-sm rounded-2xl shadow">Gravar Movimento</button>
+                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -2120,54 +2101,4 @@ function copiarLinkCensoGeral() {
 
 
 <!-- TECNOLOGIA AJAX FETCH -->
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Procura o botão (mesmo que tenha ficado com o nome 'A Enviar...')
-    let btn = Array.from(document.querySelectorAll("button, a")).find(b => b.innerText.includes("Enviar") || b.innerText.includes("Gravar Planifica"));
-    
-    if(btn) {
-        // Substitui o botão por um novo e limpo
-        let novoBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(novoBtn, btn);
-        novoBtn.innerText = "Gravar Planificação";
-        
-        novoBtn.addEventListener("click", async function(e) {
-            e.preventDefault();
-            novoBtn.innerText = "A ligar ao Supabase...";
-            novoBtn.style.backgroundColor = "#059669"; // Fica verde para sabermos que ativou
-            novoBtn.style.color = "white";
-            
-            // Cria o pacote de dados
-            let fd = new FormData();
-            
-            // Recolhe selects por ordem
-            let selects = document.querySelectorAll("select");
-            if(selects.length >= 3) {
-                fd.append("departamento", selects[0].value);
-                fd.append("tipo_evento", selects[1].value);
-                fd.append("frequencia", selects[2].value);
-            }
-            
-            // Recolhe a data
-            let dt = document.querySelector("input[type='date']");
-            if(dt) fd.append("data_prevista", dt.value);
-            
-            // Recolhe os textos pelo texto de ajuda (placeholder)
-            document.querySelectorAll("input").forEach(inp => {
-                let p = (inp.placeholder || "").toLowerCase();
-                if(p.includes("ex:") || p.includes("semin")) fd.append("nome_actividade", inp.value);
-                if(p.includes("odete")) fd.append("responsavel_directo", inp.value);
-                if(p.includes("825")) fd.append("contacto", inp.value);
-            });
-            
-            // Dispara pelos bastidores (Ignora o bloqueio do navegador)
-            try {
-                await fetch('/secretaria/planificacao/nova', { method: 'POST', body: fd });
-                window.location.reload(); // Força o recarregamento da página
-            } catch(error) {
-                novoBtn.innerText = "Erro de Ligação!";
-            }
-        });
-    }
-});
-</script>
+
