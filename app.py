@@ -691,77 +691,14 @@ def dashboard():
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
 
-    
-        # Carregar dúvidas bíblicas para o painel pastoral
-    # Carregar dúvidas bíblicas para o painel pastoral
-    duvidas_lista = []
-    candidatos_discipulado = []
-    try:
-        c.execute("SELECT * FROM duvidas_discipulado ORDER BY id DESC LIMIT 20")
-        duvidas_lista = c.fetchall()
-    except Exception:
-        pass
-
-    try:
-        # Buscar lista de Professores/Mentores disponiveis
-        professores_discipulado = []
-        for m in todos_membros:
-            f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '')
-            # Membros com ministerio ou em comunhao aptos para discipular
-            if any(term in f_val.lower() for term in ['pastor', 'presb', 'diacon', 'evang', 'obreir', 'lider', 'comunh']):
-                professores_discipulado.append(m)
-        if not professores_discipulado:
-            professores_discipulado = todos_membros
-
-        # Query de progresso trazendo professor_nome
-        query_prog = """
-            SELECT m.id, m.nome, m.foto_path, m.telefone,
-                   COALESCE(m.professor_nome, 'A designar') as prof_nome,
-                   COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
-                   COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
-                   COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
-                   COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
-            FROM membros m
-            LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
-            WHERE LOWER(COALESCE(m.funcao, '')) LIKE '%candidat%'
-               OR LOWER(COALESCE(m.funcao, '')) LIKE '%prova%'
-               OR LOWER(COALESCE(m.funcao, '')) LIKE '%convertid%'
-               OR LOWER(COALESCE(m.batizado, '')) IN ('nao', 'não', 'pendente', '')
-            GROUP BY m.id, m.nome, m.foto_path, m.telefone, m.professor_nome
-            ORDER BY m.id DESC
-        """
-        try:
-            c.execute(query_prog)
-            candidatos_discipulado = c.fetchall()
-        except Exception:
-            # Fallback caso a coluna ainda esteja a sincronizar
-            query_prog_fb = """
-                SELECT m.id, m.nome, m.foto_path, m.telefone,
-                       'A designar' as prof_nome,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
-                       COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
-                FROM membros m
-                LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
-                GROUP BY m.id, m.nome, m.foto_path, m.telefone
-                ORDER BY m.id DESC
-            """
-            c.execute(query_prog_fb)
-            candidatos_discipulado = c.fetchall()
-    except Exception:
-        pass
-
-    conn.close()
-
-    alerta_duplicado = session.pop('alerta_duplicado', None)
-    sucesso_cadastro = session.pop('sucesso_cadastro', None)
-    
-    try:
-        criar_tabela_planificacoes_se_faltar(conn)
     planos = []
     try:
         cur_pl = conn.cursor() if hasattr(conn, 'cursor') else conn
+        is_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
+        id_col = "SERIAL" if is_pg else "INTEGER"
+        cur_pl.execute(f"CREATE TABLE IF NOT EXISTS planificacoes (id {id_col} PRIMARY KEY, departamento TEXT, tipo_evento TEXT, nome_actividade TEXT, data_prevista TEXT, frequencia TEXT, responsavel_directo TEXT, contacto TEXT, status TEXT DEFAULT 'Pendente')")
+        if hasattr(conn, 'commit'):
+            conn.commit()
         cur_pl.execute("SELECT * FROM planificacoes ORDER BY id DESC")
         if cur_pl.description:
             cols_pl = [desc[0] for desc in cur_pl.description]
@@ -770,6 +707,7 @@ def dashboard():
             planos = cur_pl.fetchall()
     except Exception:
         planos = []
+
     # Filtrar Candidatos ao Batismo diretamente da lista oficial de membros em memoria
     candidatos_batismo = []
     for m in todos_membros:
