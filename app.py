@@ -687,10 +687,55 @@ def dashboard():
     categorias_json = json.dumps([{'tipo': c['tipo'], 'nome': c['nome']} for c in lista_categorias])
     membros_json = json.dumps([dict(m) for m in todos_membros], default=str)
 
-
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
 
+    # 1. Dúvidas do Discipulado
+    duvidas_lista = []
+    try:
+        cur_duv = conn.cursor() if hasattr(conn, 'cursor') else conn
+        cur_duv.execute("SELECT * FROM duvidas_discipulado ORDER BY id DESC LIMIT 20")
+        duvidas_lista = cur_duv.fetchall()
+    except Exception:
+        duvidas_lista = []
+
+    # 2. Professores do Discipulado (Evita NameError)
+    professores_discipulado = []
+    try:
+        for m in todos_membros:
+            f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
+            if any(term in f_val for term in ['pastor', 'presb', 'diacon', 'evang', 'obreir', 'lider', 'comunh']):
+                professores_discipulado.append(m)
+        if not professores_discipulado:
+            professores_discipulado = todos_membros
+    except Exception:
+        professores_discipulado = todos_membros if 'todos_membros' in locals() else []
+
+    # 3. Candidatos ao Discipulado
+    candidatos_discipulado = []
+    try:
+        cur_cd = conn.cursor() if hasattr(conn, 'cursor') else conn
+        cur_cd.execute("""
+            SELECT m.id, m.nome, m.foto_path, m.telefone,
+                   COALESCE(m.professor_nome, 'A designar') as prof_nome,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
+                   COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
+            FROM membros m
+            LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
+            WHERE LOWER(COALESCE(m.funcao, '')) LIKE '%candidat%'
+               OR LOWER(COALESCE(m.funcao, '')) LIKE '%prova%'
+               OR LOWER(COALESCE(m.funcao, '')) LIKE '%convertid%'
+               OR LOWER(COALESCE(m.batizado, '')) IN ('nao', 'não', 'pendente', '')
+            GROUP BY m.id, m.nome, m.foto_path, m.telefone, m.professor_nome
+            ORDER BY m.id DESC
+        """)
+        candidatos_discipulado = cur_cd.fetchall()
+    except Exception:
+        candidatos_discipulado = []
+
+    # 4. Planificações Eclesiásticas
     planos = []
     try:
         cur_pl = conn.cursor() if hasattr(conn, 'cursor') else conn
@@ -708,21 +753,20 @@ def dashboard():
     except Exception:
         planos = []
 
-    # Filtrar Candidatos ao Batismo diretamente da lista oficial de membros em memoria
+    # 5. Candidatos ao Batismo
     candidatos_batismo = []
-    for m in todos_membros:
-        # Suporta dicionario (PostgreSQL/DictCursor) e sqlite3.Row
-        f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
-        b_val = str(m.get('batizado', '') if hasattr(m, 'get') else m['batizado'] if 'batizado' in m.keys() else '').lower()
-        
-        # Considera candidatos ao batismo, membros em prova ou nao batizados
-        if ('candidat' in f_val) or ('prova' in f_val) or ('convertid' in f_val) or (b_val in ['nao', 'não', 'pendente', '']):
-            candidatos_batismo.append(m)
+    try:
+        for m in todos_membros:
+            f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
+            b_val = str(m.get('batizado', '') if hasattr(m, 'get') else m['batizado'] if 'batizado' in m.keys() else '').lower()
+            if ('candidat' in f_val) or ('prova' in f_val) or ('convertid' in f_val) or (b_val in ['nao', 'não', 'pendente', '']):
+                candidatos_batismo.append(m)
+        if not candidatos_batismo:
+            candidatos_batismo = todos_membros
+    except Exception:
+        candidatos_batismo = todos_membros if 'todos_membros' in locals() else []
 
-    # Se a lista filtrada estiver vazia, disponibiliza todos os membros para permitir selecao imediata
-    if not candidatos_batismo:
-        candidatos_batismo = todos_membros
-
+    
     return render_template('dashboard.html', professores_discipulado=professores_discipulado, candidatos_batismo=candidatos_batismo, planos=planos,
                            todos_membros=todos_membros,
                            lista_igrejas=lista_igrejas if 'lista_igrejas' in locals() else [],
