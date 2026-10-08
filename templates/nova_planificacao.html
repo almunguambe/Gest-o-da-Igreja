@@ -1,0 +1,101 @@
+<!-- COLUNA ESQUERDA: FORMULÁRIO (Motor de Envio Limpo) -->
+<div class="coluna-formulario">
+    <h3>📌 Planificar Nova Actividade</h3>
+    
+    <form action="/secretaria/planificacao/nova" method="POST">
+        
+        <label>Departamento</label>
+        <select name="departamento" class="form-control" required>
+            <option value="Activista Cristã">Activista Cristã</option>
+            <option value="Escola Dominical">Escola Dominical</option>
+            <option value="Juventude">Juventude</option>
+            <option value="Senhoras">Senhoras</option>
+        </select><br><br>
+        
+        <label>Tipo de Evento</label>
+        <select name="tipo_evento" class="form-control" required>
+            <option value="Seminário">Seminário</option>
+            <option value="Conferência">Conferência</option>
+            <option value="Culto Especial">Culto Especial</option>
+            <option value="Vigília">Vigília</option>
+        </select><br><br>
+        
+        <label>Nome da Actividade</label>
+        <input type="text" name="nome_actividade" class="form-control" placeholder="Ex: 1a Seminario" required><br><br>
+        
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label>Data Prevista</label>
+                <input type="date" name="data_prevista" class="form-control">
+            </div>
+            <div style="flex: 1;">
+                <label>Frequência</label>
+                <select name="frequencia" class="form-control">
+                    <option value="Pontual / Única">Pontual / Única</option>
+                    <option value="Semanal">Semanal</option>
+                    <option value="Mensal">Mensal</option>
+                </select>
+            </div>
+        </div><br><br>
+        
+        <label>Responsável Directo</label>
+        <input type="text" name="responsavel_directo" class="form-control" placeholder="Ex: Odete Aguiar"><br><br>
+        
+        <label>Contacto / WhatsApp</label>
+        <input type="text" name="contacto" class="form-control" placeholder="Ex: 825888006"><br><br>
+        
+        <!-- O type="submit" é OBRIGATÓRIO para disparar o form -->
+        <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            Gravar Planificação
+        </button>
+    </form>
+</div>
+
+<!-- COLUNA DIREITA: TABELA (Motor de Leitura Jinja2) -->
+<div class="coluna-tabela">
+    <h3>📊 Monitoramento do Cronograma Eclesiástico</h3>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="border-bottom: 2px solid #eee; text-align: left;">
+                <th style="padding: 10px;">Actividade / Depto</th>
+                <th style="padding: 10px;">Data Prevista</th>
+                <th style="padding: 10px;">Responsável & Contacto</th>
+                <th style="padding: 10px;">Status</th>
+                <th style="padding: 10px;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Lê a variável "planificacoes" enviada pelo Python -->
+            {% if planificacoes %}
+                {% for p in planificacoes %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px;">
+                        <strong>{{ p.nome_actividade }}</strong><br>
+                        <small style="color: gray;">{{ p.departamento }}</small>
+                    </td>
+                    <td style="padding: 10px;">{{ p.data_prevista }}</td>
+                    <td style="padding: 10px;">
+                        {{ p.responsavel_directo }}<br>
+                        <small style="color: gray;">{{ p.contacto }}</small>
+                    </td>
+                    <td style="padding: 10px;">
+                        <span style="background-color: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                            {{ p.status }}
+                        </span>
+                    </td>
+                    <td style="padding: 10px;">
+                        <span style="color: #0d8abc; cursor: pointer; font-size:12px; font-weight:bold;">Ver</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 30px; color: gray;">
+                        Nenhuma actividade planificada ainda. Cadastre a primeira ao lado.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
