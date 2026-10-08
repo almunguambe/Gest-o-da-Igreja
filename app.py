@@ -1,4 +1,16 @@
-import qrcode
+import os
+import json
+import sqlite3
+from datetime import datetime
+import io
+from flask import Flask, render_template, request, redirect, url_for, session, send_file, flash
+
+# A CHAVE DE IGNIÇÃO DO SISTEMA
+app = Flask(__name__)
+app.secret_key = "iead_chicuque_chave_super_segura_2026"
+app.config['UPLOAD_FOLDER'] = os.path.join("static", "uploads")
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 
 
 
