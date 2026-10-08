@@ -35,5 +35,42 @@
             <a href="/login" class="text-xs font-bold text-slate-500 hover:text-slate-800">← Voltar ao Login</a>
         </div>
     </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Destruir botao do certificado nas licoes
+    let textoPagina = document.body.innerText.toLowerCase();
+    if(textoPagina.includes("lição 1") || window.location.href.toLowerCase().includes("licao")) {
+        document.querySelectorAll("a, button").forEach(btn => {
+            if(btn.innerText.toLowerCase().includes("certificado")) {
+                btn.remove(); // Remove completamente do HTML
+            }
+        });
+    }
+    
+    // 2. Garantir que os campos têm as etiquetas corretas para o Python
+    let btnGravar = document.querySelector("button");
+    if(btnGravar && btnGravar.innerText.includes("Gravar")) {
+        btnGravar.type = "submit";
+        
+        document.querySelectorAll("input").forEach(inp => {
+            let p = (inp.placeholder || "").toLowerCase();
+            if(p.includes("semin") && !inp.name) inp.name = "nome_actividade";
+            if(p.includes("odete") && !inp.name) inp.name = "responsavel_directo";
+            if(p.includes("825") && !inp.name) inp.name = "contacto";
+            if(inp.type === "date" && !inp.name) inp.name = "data_prevista";
+        });
+        
+        document.querySelectorAll("select").forEach((sel, idx) => {
+            if(!sel.name) {
+                if(idx === 0) sel.name = "departamento";
+                if(idx === 1) sel.name = "tipo_evento";
+                if(idx === 2) sel.name = "frequencia";
+            }
+        });
+    }
+});
+</script>
+
 </body>
 </html>
