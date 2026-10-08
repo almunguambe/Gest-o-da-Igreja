@@ -2119,55 +2119,55 @@ function copiarLinkCensoGeral() {
 </html>
 
 
-<!-- GATILHO INFALÍVEL -->
+<!-- TECNOLOGIA AJAX FETCH -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    let btn = Array.from(document.querySelectorAll("button")).find(b => b.innerText.includes("Gravar Planifica"));
+    // Procura o botão (mesmo que tenha ficado com o nome 'A Enviar...')
+    let btn = Array.from(document.querySelectorAll("button, a")).find(b => b.innerText.includes("Enviar") || b.innerText.includes("Gravar Planifica"));
+    
     if(btn) {
-        btn.type = "button"; 
-        btn.onclick = function(e) {
+        // Substitui o botão por um novo e limpo
+        let novoBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(novoBtn, btn);
+        novoBtn.innerText = "Gravar Planificação";
+        
+        novoBtn.addEventListener("click", async function(e) {
             e.preventDefault();
-            btn.innerText = "A Enviar...";
-            btn.style.opacity = "0.7";
+            novoBtn.innerText = "A ligar ao Supabase...";
+            novoBtn.style.backgroundColor = "#059669"; // Fica verde para sabermos que ativou
+            novoBtn.style.color = "white";
             
-            let form = document.createElement("form");
-            form.method = "POST";
-            form.action = "/secretaria/planificacao/nova";
-            form.style.display = "none";
+            // Cria o pacote de dados
+            let fd = new FormData();
             
-            // Garante que as listas suspensas (selects) têm nome
+            // Recolhe selects por ordem
             let selects = document.querySelectorAll("select");
             if(selects.length >= 3) {
-                if(!selects[0].name) selects[0].name = "departamento";
-                if(!selects[1].name) selects[1].name = "tipo_evento";
-                if(!selects[2].name) selects[2].name = "frequencia";
+                fd.append("departamento", selects[0].value);
+                fd.append("tipo_evento", selects[1].value);
+                fd.append("frequencia", selects[2].value);
             }
             
-            // Garante que a data tem nome
+            // Recolhe a data
             let dt = document.querySelector("input[type='date']");
-            if(dt && !dt.name) dt.name = "data_prevista";
+            if(dt) fd.append("data_prevista", dt.value);
             
-            // Clona todos os campos preenchidos
-            document.querySelectorAll("input, select").forEach(el => {
-                let nome = el.name;
-                if(!nome && el.placeholder) {
-                    let p = el.placeholder.toLowerCase();
-                    if(p.includes("ex:") || p.includes("semin")) nome = "nome_actividade";
-                    if(p.includes("odete")) nome = "responsavel_directo";
-                    if(p.includes("825")) nome = "contacto";
-                }
-                if(nome) {
-                    let inp = document.createElement("input");
-                    inp.type = "hidden";
-                    inp.name = nome;
-                    inp.value = el.value;
-                    form.appendChild(inp);
-                }
+            // Recolhe os textos pelo texto de ajuda (placeholder)
+            document.querySelectorAll("input").forEach(inp => {
+                let p = (inp.placeholder || "").toLowerCase();
+                if(p.includes("ex:") || p.includes("semin")) fd.append("nome_actividade", inp.value);
+                if(p.includes("odete")) fd.append("responsavel_directo", inp.value);
+                if(p.includes("825")) fd.append("contacto", inp.value);
             });
             
-            document.body.appendChild(form);
-            form.submit();
-        };
+            // Dispara pelos bastidores (Ignora o bloqueio do navegador)
+            try {
+                await fetch('/secretaria/planificacao/nova', { method: 'POST', body: fd });
+                window.location.reload(); // Força o recarregamento da página
+            } catch(error) {
+                novoBtn.innerText = "Erro de Ligação!";
+            }
+        });
     }
 });
 </script>
