@@ -3698,3 +3698,26 @@ def planificacao_nova():
             
     # Se não encontrar nenhum dos nomes comuns, tenta abrir o padrão
     return render_template('dashboard.html', planificacoes=planos)
+
+
+# MOTOR DE EXTRAÇÃO PARA CERTIFICADOS EM PDF
+def extrair_dados_membro(membro_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        
+        # Tenta extrair o membro da base de dados do Supabase
+        try:
+            cur.execute("SELECT * FROM membros WHERE id = %s", (membro_id,))
+        except:
+            # Fallback de segurança
+            cur.execute("SELECT * FROM membros WHERE id = ?", (membro_id,))
+            
+        row = cur.fetchone()
+        if row:
+            # Junta os nomes das colunas com os valores
+            cols = [desc[0] for desc in cur.description]
+            return dict(zip(cols, row))
+    except Exception as e:
+        print("Erro ao extrair membro para certificado:", e)
+    return None
