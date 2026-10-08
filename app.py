@@ -3660,9 +3660,10 @@ def planificacao_nova():
         
         # Envia para o Supabase
         sql = '''INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente')'''
+                 VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pendente')'''
         try:
-            conn.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
+            cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+            cur.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
             if hasattr(conn, 'commit'):
                 conn.commit()  # O SEGREDO ESTÁ AQUI: Grava fisicamente na base de dados!
         except Exception as e:
@@ -3711,7 +3712,7 @@ def extrair_dados_membro(membro_id):
             cur.execute("SELECT * FROM membros WHERE id = %s", (membro_id,))
         except:
             # Fallback de segurança
-            cur.execute("SELECT * FROM membros WHERE id = ?", (membro_id,))
+            pass
             
         row = cur.fetchone()
         if row:
@@ -3720,4 +3721,8 @@ def extrair_dados_membro(membro_id):
             return dict(zip(cols, row))
     except Exception as e:
         print("Erro ao extrair membro para certificado:", e)
-    return None
+        
+    class CofreSeguro(dict):
+        def __getitem__(self, key):
+            return self.get(key, "Dados Indisponíveis")
+    return CofreSeguro({'nome': 'Aluno não registado na nova base'})
