@@ -3742,7 +3742,7 @@ def planificacao_nova():
 
         return redirect(request.referrer or '/')
 
-    # Leitura
+    # Leitura como dicionários para o Jinja2 renderizar sem falhas
     planos = []
     try:
         cur.execute("SELECT * FROM planificacoes ORDER BY id DESC")

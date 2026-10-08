@@ -314,6 +314,38 @@ def get_db():
         except Exception as e:
             print(f"[ERRO POSTGRES get_db] {e}")
 
+def criar_tabela_planificacoes_garantida():
+    try:
+        conn = get_db()
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS planificacoes (
+                id {id_tipo},
+                departamento TEXT,
+                tipo_evento TEXT,
+                nome_actividade TEXT,
+                data_prevista TEXT,
+                frequencia TEXT,
+                responsavel_directo TEXT,
+                contacto TEXT,
+                status TEXT DEFAULT 'Pendente'
+            );
+        """)
+        if hasattr(conn, 'commit'):
+            conn.commit()
+        if hasattr(conn, 'close'):
+            conn.close()
+    except Exception as e:
+        print("[AVISO CRIACAO TABELA PLANIFICACOES]:", e)
+
+try:
+    criar_tabela_planificacoes_garantida()
+except Exception:
+    pass
+
+
     import sqlite3
     conn = sqlite3.connect("gestao_chicuque.db")
     conn.row_factory = sqlite3.Row
@@ -3694,10 +3726,29 @@ def erro_interno_500(e):
 
 @app.route('/secretaria/planificacao/nova', methods=['GET', 'POST'])
 def planificacao_nova():
-    from flask import jsonify
     conn = get_db()
-    assegurar_tabela_planificacoes(conn)
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+    id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+    
+    try:
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS planificacoes (
+                id {id_tipo},
+                departamento TEXT,
+                tipo_evento TEXT,
+                nome_actividade TEXT,
+                data_prevista TEXT,
+                frequencia TEXT,
+                responsavel_directo TEXT,
+                contacto TEXT,
+                status TEXT DEFAULT 'Pendente'
+            );
+        """)
+        if hasattr(conn, 'commit'):
+            conn.commit()
+    except Exception:
+        pass
 
     if request.method == 'POST':
         fd = request.form
@@ -3709,40 +3760,27 @@ def planificacao_nova():
         responsavel = (fd.get('responsavel_directo') or fd.get('responsavel') or '').strip()
         contacto = (fd.get('contacto') or fd.get('telefone') or '').strip()
 
-        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
         marcador = "%s" if is_pg else "?"
-
         sql = f"""INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
                  VALUES ({marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, 'Pendente')"""
-        gravou = False
         try:
             cur.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
             if hasattr(conn, 'commit'):
                 conn.commit()
-            gravou = True
-        except Exception as e:
-            print("[ERRO AO GRAVAR PLANO]:", e)
-            try:
-                if hasattr(conn, 'rollback'): conn.rollback()
-            except Exception: pass
+        except Exception as err:
+            print("[ERRO GRAVACAO PLANIFICACAO]:", err)
+            if hasattr(conn, 'rollback'):
+                conn.rollback()
+        finally:
+            if hasattr(conn, 'close'):
+                conn.close()
 
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
-            return jsonify({
-                "sucesso": gravou,
-                "dados": {
-                    "nome_actividade": nome_actividade,
-                    "departamento": departamento,
-                    "tipo_evento": tipo_evento,
-                    "data_prevista": data_prevista,
-                    "responsavel_directo": responsavel,
-                    "contacto": contacto,
-                    "status": "Pendente"
-                }
-            })
+        ref = request.referrer
+        if ref and '/secretaria/planificacao/nova' in ref:
+            return redirect('/secretaria/planificacao/nova')
+        return redirect(ref or '/secretaria/planificacao/nova')
 
-        return redirect(request.referrer or '/')
-
-    # Leitura como dicionários para o Jinja2 renderizar sem falhas
+    # GET: Leitura das planificações
     planos = []
     try:
         cur.execute("SELECT * FROM planificacoes ORDER BY id DESC")
@@ -3751,12 +3789,15 @@ def planificacao_nova():
             planos = [dict(zip(cols, r)) for r in cur.fetchall()]
         else:
             planos = cur.fetchall()
-    except Exception:
-        planos = []
+    except Exception as err:
+        print("[ERRO LEITURA PLANOS]:", err)
+    finally:
+        if hasattr(conn, 'close'):
+            conn.close()
 
     for tpl in ['nova_planificacao.html', 'planificacao_nova.html', 'secretaria_planos.html']:
         if os.path.exists(os.path.join('templates', tpl)):
             return render_template(tpl, planificacoes=planos, planos=planos)
-
+            
     return render_template('dashboard.html', planificacoes=planos, planos=planos)
 
