@@ -45,7 +45,7 @@
         <input type="text" name="contacto" class="form-control" placeholder="Ex: 825888006"><br><br>
         
         <!-- O type="submit" é OBRIGATÓRIO para disparar o form -->
-       <button type="submit" onclick="this.innerHTML='A Gravar...'; this.form.submit();" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+       <button type="submit" onclick="" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
     Gravar Planificação
 </button>
     </form>
@@ -67,8 +67,8 @@
         </thead>
         <tbody>
             <!-- Lê a variável "planificacoes" enviada pelo Python -->
-            {% if planificacoes %}
-                {% for p in planificacoes %}
+            {% if planificacoes or planos %}
+                {% for p in (planificacoes or planos) %}
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="padding: 10px;">
                         <strong>{{ p.nome_actividade }}</strong><br>

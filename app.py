@@ -49,6 +49,45 @@ def _custom_dumps(*args, **kwargs):
     return _original_dumps(*args, **kwargs)
 json.dumps = _custom_dumps
 
+
+def criar_tabela_planificacoes_se_faltar(conn):
+    try:
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        is_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
+        if is_pg:
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS planificacoes (
+                    id SERIAL PRIMARY KEY,
+                    departamento VARCHAR(150),
+                    tipo_evento VARCHAR(150),
+                    nome_actividade VARCHAR(255),
+                    data_prevista VARCHAR(50),
+                    frequencia VARCHAR(100),
+                    responsavel_directo VARCHAR(150),
+                    contacto VARCHAR(100),
+                    status VARCHAR(50) DEFAULT 'Pendente'
+                );
+            ''')
+        else:
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS planificacoes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    departamento TEXT,
+                    tipo_evento TEXT,
+                    nome_actividade TEXT,
+                    data_prevista TEXT,
+                    frequencia TEXT,
+                    responsavel_directo TEXT,
+                    contacto TEXT,
+                    status TEXT DEFAULT 'Pendente'
+                );
+            ''')
+        if hasattr(conn, 'commit'):
+            conn.commit()
+    except Exception as e:
+        if hasattr(conn, 'rollback'):
+            conn.rollback()
+
 app = Flask(__name__)
 
 def is_admin():
@@ -719,7 +758,16 @@ def dashboard():
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
     
     try:
-        planos = conn.execute("SELECT * FROM actividades_planeamento ORDER BY id DESC").fetchall()
+        criar_tabela_planificacoes_se_faltar(conn)
+    planos = []
+    try:
+        cur_pl = conn.cursor() if hasattr(conn, 'cursor') else conn
+        cur_pl.execute("SELECT * FROM planificacoes ORDER BY id DESC")
+        if cur_pl.description:
+            cols_pl = [desc[0] for desc in cur_pl.description]
+            planos = [dict(zip(cols_pl, r)) for r in cur_pl.fetchall()]
+        else:
+            planos = cur_pl.fetchall()
     except Exception:
         planos = []
     # Filtrar Candidatos ao Batismo diretamente da lista oficial de membros em memoria
@@ -3643,58 +3691,49 @@ def erro_interno_500(e):
 
 @app.route('/secretaria/planificacao/nova', methods=['GET', 'POST'])
 def planificacao_nova():
-    from flask import render_template, request, redirect, url_for, flash
-    import os
-    
+    conn = get_db()
+    criar_tabela_planificacoes_se_faltar(conn)
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+
     if request.method == 'POST':
-        conn = get_db()
-        # Captura inteligente (aceita variações nos nomes do HTML)
         fd = request.form
-        departamento = fd.get('departamento', '')
-        tipo_evento = fd.get('tipo_evento', fd.get('tipo', ''))
-        nome_actividade = fd.get('nome_actividade', fd.get('actividade', fd.get('nome', 'Atividade não especificada')))
+        departamento = fd.get('departamento', 'Geral')
+        tipo_evento = fd.get('tipo_evento', fd.get('tipo', 'Geral'))
+        nome_actividade = fd.get('nome_actividade', fd.get('actividade', fd.get('nome', 'Atividade')))
         data_prevista = fd.get('data_prevista', fd.get('data', ''))
-        frequencia = fd.get('frequencia', '')
+        frequencia = fd.get('frequencia', 'Pontual')
         responsavel = fd.get('responsavel_directo', fd.get('responsavel', ''))
         contacto = fd.get('contacto', fd.get('telefone', ''))
+
+        data_bd = data_prevista if data_prevista and data_prevista.strip() != '' else None
+
+        is_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
+        marcador = "%s" if is_pg else "?"
         
-        # Envia para o Supabase
-        sql = '''INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendente')'''
+        sql = f'''INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
+                 VALUES ({marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, 'Pendente')'''
         try:
-            conn.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
+            cur.execute(sql, (departamento, tipo_evento, nome_actividade, data_bd, frequencia, responsavel, contacto))
             if hasattr(conn, 'commit'):
-                conn.commit()  # O SEGREDO ESTÁ AQUI: Grava fisicamente na base de dados!
+                conn.commit()
         except Exception as e:
-            pass
-        flash('Plano eclesiástico gravado com sucesso!', 'success')
+            print("Erro ao gravar:", e)
+            if hasattr(conn, 'rollback'):
+                conn.rollback()
+
         return redirect(request.referrer or '/')
-        
-    # Sistema inteligente para encontrar o nome do ficheiro HTML que desenhou
-    
-    # Buscar os dados para a tabela lateral
+
+    # Leitura
     planos = []
     try:
-        conn = get_db()
-        if hasattr(conn, 'cursor'):
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM planificacoes ORDER BY id DESC LIMIT 10")
+        cur.execute("SELECT * FROM planificacoes ORDER BY id DESC")
+        if cur.description:
             cols = [desc[0] for desc in cur.description]
-            planos = [dict(zip(cols, row)) for row in cur.fetchall()]
-    except Exception as e:
-        print("Erro ao buscar planos:", e)
-        
-    templates_possiveis = [
-        'nova_planificacao.html', 
-        'planificacao_nova.html', 
-        'secretaria_planos.html', 
-        'planos.html',
-        'planificacao.html'
-    ]
-    
-    for html in templates_possiveis:
-        if os.path.exists(os.path.join('templates', html)):
-            return render_template(html, planificacoes=planos)
-            
-    # Se não encontrar nenhum dos nomes comuns, tenta abrir o padrão
-    return render_template('dashboard.html', planificacoes=planos)
+            planos = [dict(zip(cols, r)) for r in cur.fetchall()]
+        else:
+            planos = cur.fetchall()
+    except Exception:
+        pass
+
+    return render_template('dashboard.html', planos=planos, planificacoes=planos)
+
