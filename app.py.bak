@@ -1,3 +1,28 @@
+def assegurar_tabela_planificacoes(conn):
+    try:
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+        id_col = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS planificacoes (
+                id {id_col},
+                departamento TEXT,
+                tipo_evento TEXT,
+                nome_actividade TEXT,
+                data_prevista TEXT,
+                frequencia TEXT,
+                responsavel_directo TEXT,
+                contacto TEXT,
+                status TEXT DEFAULT 'Pendente'
+            );
+        """)
+        if hasattr(conn, 'commit'):
+            conn.commit()
+    except Exception:
+        try:
+            if hasattr(conn, 'rollback'): conn.rollback()
+        except Exception: pass
+
 import qrcode
 from modulo_escola_biblica import CURRICULO_CLASSES, gerar_pdf_conclusao_discipulado
 import os
@@ -735,15 +760,11 @@ def dashboard():
     except Exception:
         candidatos_discipulado = []
 
-    # 4. Planificações Eclesiásticas
+    # 4. Planificações Eclesiásticas Sincronizadas
+    assegurar_tabela_planificacoes(conn)
     planos = []
     try:
         cur_pl = conn.cursor() if hasattr(conn, 'cursor') else conn
-        is_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
-        id_col = "SERIAL" if is_pg else "INTEGER"
-        cur_pl.execute(f"CREATE TABLE IF NOT EXISTS planificacoes (id {id_col} PRIMARY KEY, departamento TEXT, tipo_evento TEXT, nome_actividade TEXT, data_prevista TEXT, frequencia TEXT, responsavel_directo TEXT, contacto TEXT, status TEXT DEFAULT 'Pendente')")
-        if hasattr(conn, 'commit'):
-            conn.commit()
         cur_pl.execute("SELECT * FROM planificacoes ORDER BY id DESC")
         if cur_pl.description:
             cols_pl = [desc[0] for desc in cur_pl.description]
@@ -3673,35 +3694,51 @@ def erro_interno_500(e):
 
 @app.route('/secretaria/planificacao/nova', methods=['GET', 'POST'])
 def planificacao_nova():
+    from flask import jsonify
     conn = get_db()
-    criar_tabela_planificacoes_se_faltar(conn)
+    assegurar_tabela_planificacoes(conn)
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
     if request.method == 'POST':
         fd = request.form
-        departamento = fd.get('departamento', 'Geral')
-        tipo_evento = fd.get('tipo_evento', fd.get('tipo', 'Geral'))
-        nome_actividade = fd.get('nome_actividade', fd.get('actividade', fd.get('nome', 'Atividade')))
-        data_prevista = fd.get('data_prevista', fd.get('data', ''))
-        frequencia = fd.get('frequencia', 'Pontual')
-        responsavel = fd.get('responsavel_directo', fd.get('responsavel', ''))
-        contacto = fd.get('contacto', fd.get('telefone', ''))
+        departamento = (fd.get('departamento') or 'Geral').strip()
+        tipo_evento = (fd.get('tipo_evento') or fd.get('tipo') or 'Geral').strip()
+        nome_actividade = (fd.get('nome_actividade') or fd.get('actividade') or fd.get('nome') or 'Actividade').strip()
+        data_prevista = (fd.get('data_prevista') or fd.get('data') or '').strip()
+        frequencia = (fd.get('frequencia') or 'Pontual / Única').strip()
+        responsavel = (fd.get('responsavel_directo') or fd.get('responsavel') or '').strip()
+        contacto = (fd.get('contacto') or fd.get('telefone') or '').strip()
 
-        data_bd = data_prevista if data_prevista and data_prevista.strip() != '' else None
-
-        is_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
+        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
         marcador = "%s" if is_pg else "?"
-        
-        sql = f'''INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
-                 VALUES ({marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, 'Pendente')'''
+
+        sql = f"""INSERT INTO planificacoes (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
+                 VALUES ({marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, 'Pendente')"""
+        gravou = False
         try:
-            cur.execute(sql, (departamento, tipo_evento, nome_actividade, data_bd, frequencia, responsavel, contacto))
+            cur.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
             if hasattr(conn, 'commit'):
                 conn.commit()
+            gravou = True
         except Exception as e:
-            print("Erro ao gravar:", e)
-            if hasattr(conn, 'rollback'):
-                conn.rollback()
+            print("[ERRO AO GRAVAR PLANO]:", e)
+            try:
+                if hasattr(conn, 'rollback'): conn.rollback()
+            except Exception: pass
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({
+                "sucesso": gravou,
+                "dados": {
+                    "nome_actividade": nome_actividade,
+                    "departamento": departamento,
+                    "tipo_evento": tipo_evento,
+                    "data_prevista": data_prevista,
+                    "responsavel_directo": responsavel,
+                    "contacto": contacto,
+                    "status": "Pendente"
+                }
+            })
 
         return redirect(request.referrer or '/')
 
@@ -3715,7 +3752,11 @@ def planificacao_nova():
         else:
             planos = cur.fetchall()
     except Exception:
-        pass
+        planos = []
 
-    return render_template('dashboard.html', planos=planos, planificacoes=planos)
+    for tpl in ['nova_planificacao.html', 'planificacao_nova.html', 'secretaria_planos.html']:
+        if os.path.exists(os.path.join('templates', tpl)):
+            return render_template(tpl, planificacoes=planos, planos=planos)
+
+    return render_template('dashboard.html', planificacoes=planos, planos=planos)
 
