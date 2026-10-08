@@ -2,7 +2,7 @@
 <div class="coluna-formulario">
     <h3>📌 Planificar Nova Actividade</h3>
     
-    <form action="/secretaria/planificacao/nova" method="POST">
+  <form action="/secretaria/planificacao/nova" method="POST" novalidate>
         
         <label>Departamento</label>
         <select name="departamento" class="form-control" required>
@@ -45,9 +45,9 @@
         <input type="text" name="contacto" class="form-control" placeholder="Ex: 825888006"><br><br>
         
         <!-- O type="submit" é OBRIGATÓRIO para disparar o form -->
-        <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-            Gravar Planificação
-        </button>
+       <button type="submit" onclick="this.innerHTML='A Gravar...'; this.form.submit();" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+    Gravar Planificação
+</button>
     </form>
 </div>
 
