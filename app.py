@@ -880,6 +880,40 @@ def dashboard():
     except Exception as e_clt:
         print("[AVISO LEITURA CULTOS]:", e_clt)
         cultos = []
+    # Leitura Universal de Cultos para o Dashboard
+    cultos = []
+    try:
+        assegurar_tabela_cultos(conn)
+        cur_c = conn.cursor() if hasattr(conn, 'cursor') else conn
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+        cur_c.execute("SELECT id, data_culto, tipo_culto, pregador, tema_mensagem, total_presentes, apelos FROM cultos ORDER BY id DESC LIMIT 50")
+        linhas_c = cur_c.fetchall()
+        for l in linhas_c:
+            if hasattr(l, 'get'):
+                cultos.append({
+                    'id': l.get('id'),
+                    'data_culto': l.get('data_culto') or '---',
+                    'tipo_culto': l.get('tipo_culto') or 'Culto',
+                    'pregador': l.get('pregador') or '---',
+                    'tema_mensagem': l.get('tema_mensagem') or '',
+                    'total_presentes': l.get('total_presentes') if l.get('total_presentes') is not None else 0,
+                    'apelos': l.get('apelos') if l.get('apelos') is not None else 0
+                })
+            else:
+                cultos.append({
+                    'id': l[0],
+                    'data_culto': l[1] or '---',
+                    'tipo_culto': l[2] or 'Culto',
+                    'pregador': l[3] or '---',
+                    'tema_mensagem': l[4] or '',
+                    'total_presentes': l[5] if l[5] is not None else 0,
+                    'apelos': l[6] if l[6] is not None else 0
+                })
+    except Exception as e_c:
+        print("[ERRO LEITURA CULTOS]:", e_c)
+        cultos = []
     return render_template('dashboard.html', professores_discipulado=professores_discipulado, candidatos_batismo=candidatos_batismo, planos=planos,
                            todos_membros=todos_membros,
                            lista_igrejas=lista_igrejas if 'lista_igrejas' in locals() else [],
@@ -1062,6 +1096,62 @@ def novo_membro():
     return redirect('/')
 
 @app.route('/cultos/novo', methods=['POST'])
+def cultos_novo():
+    conn = get_db()
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    assegurar_tabela_cultos(conn)
+
+    fd = request.form
+    data_culto = (fd.get('data_culto') or fd.get('data') or '---').strip()
+    tipo_culto = (fd.get('tipo_culto') or fd.get('tipo') or 'Domingo Manhã').strip()
+
+    def get_num(campo):
+        val = fd.get(campo)
+        if val not in (None, ''):
+            try: return int(val)
+            except: pass
+        return 0
+
+    ha = get_num('homens_adultos')
+    ma = get_num('mulheres_adultas')
+    jr = get_num('jovens_rapazes')
+    jm = get_num('jovens_mocas')
+    cm = get_num('criancas_meninos')
+    cf = get_num('criancas_meninas')
+    vh = get_num('visitantes_homens')
+    vm = get_num('visitantes_mulheres')
+    apelos = get_num('apelos')
+
+    soma_calculada = ha + ma + jr + jm + cm + cf + vh + vm
+    tot_form = get_num('total_presentes')
+    total = tot_form if tot_form > 0 else soma_calculada
+
+    pregador = (fd.get('pregador') or '---').strip()
+    tema = (fd.get('tema_mensagem') or '').strip()
+
+    is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+    m = "%s" if is_pg else "?"
+
+    sql = f"""INSERT INTO cultos 
+             (data_culto, tipo_culto, homens_adultos, mulheres_adultas, jovens_rapazes, jovens_mocas, 
+              criancas_meninos, criancas_meninas, visitantes_homens, visitantes_mulheres, 
+              apelos, total_presentes, pregador, tema_mensagem)
+             VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m})"""
+    try:
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+        cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, cm, cf, vh, vm, apelos, total, pregador, tema))
+        if hasattr(conn, 'commit'):
+            conn.commit()
+    except Exception as e:
+        print("[ERRO GRAVAR CULTO]:", e)
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+
+    return redirect('/?aba=cultos')
+
 @app.route('/cultos/registar', methods=['POST'])
 @app.route('/culto/novo', methods=['POST'])
 def cultos_novo_seguro():

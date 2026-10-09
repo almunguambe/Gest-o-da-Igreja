@@ -38,753 +38,117 @@
 
     <!-- SIDEBAR RETRÁTIL ELEGANTE (DESKTOP FIXA / MOBILE MODAL) -->
     <aside id="sidebarMenu" class="fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-blue-950 via-slate-950 to-indigo-950 text-white shadow-2xl border-r border-indigo-500/20 transform -translate-x-full md:translate-x-0 md:static md:inset-auto transition-transform duration-300 ease-in-out flex flex-col justify-between">
-        <div>
-            <!-- Cabeçalho da Sidebar -->
-            <div class="p-5 border-b border-indigo-900/60 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-11 h-11 rounded-2xl bg-white p-1.5 shadow-lg flex items-center justify-center ring-2 ring-amber-400/40">
-                        <img src="{{ url_for('static', filename='logo.png') }}" alt="IEAD" class="w-full h-full object-contain">
-                    </div>
-                    <div>
-                        <h1 class="text-xs sm:text-sm font-extrabold uppercase leading-tight tracking-wider text-white">Assembleia de Deus</h1>
-                        <p class="text-[11px] text-indigo-300 font-semibold">{{ session.get('igreja_nome', 'IEAD Sede') }} • Gestão 360°</p>
-                    </div>
-                </div>
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white text-xl font-black">&times;</button>
-            </div>
-
-            <!-- Navegação com Agrupamentos Eclesiásticos -->
-            <nav class="p-4 space-y-5 overflow-y-auto max-h-[calc(100vh-160px)] no-scrollbar text-xs">
-                
-                <!-- Secção Geral / Pastoral -->
-                {% if pode_cadastro %}
-                <div>
-                    <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400/80 px-3 block mb-1.5">Geral & Frequência</span>
-                    <div class="space-y-1">
-                    {% if session.get('is_superadmin') %}
-                    <a href="/superadmin/igrejas" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/90 text-white font-bold text-xs shadow-md hover:bg-indigo-600 transition">
-                        <span class="text-base">🏛️</span>
-                        <span>Gestão de Congregações</span>
-                    </a>
-                    {% endif %}
-
-                        <button onclick="trocarAba('membros')" id="nav-membros" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if pode_cadastro %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}">
-                            <span class="text-base">👤</span> <span>Membros ({{ total_membros }})</span>
-                        </button>
-
-                         <a href="/secretaria/dashboard_membros" target="_blank" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-black text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition">
-                             <span class="text-base">📊</span> <span>Raio-X da Membrezia</span>
-                         </a>
-                        
-                         <button onclick="trocarAba('secretaria')" id="nav-secretaria" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                             <span class="text-base">📋</span> <span>Secretaria & Planos</span>
-                         </button>
-                         <button onclick="trocarAba('cultos')" id="nav-cultos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">⛪</span> <span>Cultos & Presenças</span>
-                        </button>
-                        <button onclick="trocarAba('convertidos')" id="nav-convertidos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">🌱</span> <span>Novos Convertidos</span>
-                        </button>
-                        <button onclick="trocarAba('escalas')" id="nav-escalas" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">📋</span> <span>Escala de Púlpito</span>
-                        </button>
-                        <button onclick="trocarAba('casamentos')" id="nav-casamentos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">💍</span> <span>Livro de Casamentos</span>
-                        </button>
-                        <button onclick="trocarAba('mortes')" id="nav-mortes" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">🕊️</span> <span>Livro de Óbitos</span>
-                        </button>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Secção Tesouraria & Finanças -->
-                {% if pode_tesouraria %}
-                <div>
-                    <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400/80 px-3 block mb-1.5">Finanças & Tesouraria</span>
-                    <div class="space-y-1">
-                        <button onclick="trocarAba('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if not pode_cadastro and pode_tesouraria %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}">
-                            <span class="text-base">📊</span> <span>Painel Geral & Metas</span>
-                        </button>
-                        <button onclick="trocarAba('financeiro')" id="nav-financeiro" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">💰</span> <span>Movimentos de Caixa</span>
-                        </button>
-                        <button onclick="trocarAba('transferencias')" id="nav-transferencias" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">🔄</span> <span>Transferir Fundos</span>
-                        </button>
-                        <a href="/financeiro/balancete_pdf" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-emerald-300 hover:bg-emerald-950/50 transition">
-                            <span class="text-base">📑</span> <span>Balancete Oficial (PDF)</span>
-                        </a>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Secção Educação & Discipulado -->
-                <div>
-                    <span class="text-[10px] font-black uppercase tracking-wider text-amber-400/80 px-3 block mb-1.5">Doutrina & Batismo</span>
-                    <div class="space-y-1">
-                        <a href="/estudos" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-amber-300 hover:bg-amber-950/40 transition">
-                            <span class="text-base">📖</span> <span>Manual de Candidatos</span>
-                        </a>
-                        {% if e_admin or pode_cadastro %}
-                        <button onclick="trocarAba('notas_alunos')" id="nav-notas_alunos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">🎓</span> <span>Notas dos Alunos</span>
-                        </button>
-                        <button onclick="trocarAba('duvidas_alunos')" id="nav-duvidas_alunos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">💬</span> <span>Dúvidas dos Alunos</span>
-                        </button>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Secção Administração -->
-                {% if e_admin %}
-                <div>
-                    <span class="text-[10px] font-black uppercase tracking-wider text-purple-400/80 px-3 block mb-1.5">Administração</span>
-                    <div class="space-y-1">
-                        <button onclick="trocarAba('patrimonio')" id="nav-patrimonio" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">📦</span> <span>Património & Bens</span>
-                        </button>
-                        <button onclick="trocarAba('usuarios')" id="nav-usuarios" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">👥</span> <span>Gestão de Utilizadores</span>
-                        </button>
-                        <button onclick="trocarAba('configuracoes')" id="nav-configuracoes" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
-                            <span class="text-base">⚙️</span> <span>Configurações</span>
-                        </button>
-                        <a href="/sistema/backup" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-amber-400 hover:bg-amber-950/40 transition">
-                            <span class="text-base">💾</span> <span>Backup Completo (.ZIP)</span>
-                        </a>
-                    </div>
-                </div>
-                {% endif %}
-
-            </nav>
-        </div>
-
-        <!-- Rodapé do Utilizador na Sidebar -->
-        <div class="p-4 border-t border-indigo-900/60 bg-black/20 flex items-center justify-between">
-            <div>
-                <span class="text-xs font-black text-white block">{{ session['usuario'] }}</span>
-                <span class="text-[11px] text-amber-300 font-bold">{{ session['cargo'] }}</span>
-            </div>
-            <a href="/logout" title="Terminar Sessão" class="w-8 h-8 rounded-xl bg-rose-600 hover:bg-rose-700 flex items-center justify-center text-white text-xs font-black shadow transition">
-                ✕
-            </a>
-        </div>
-    </aside>
-
-    <!-- Fundo desfocado para mobile ao abrir a sidebar -->
-    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
-
-    <!-- CONTEÚDO PRINCIPAL EXPANDIDO -->
-    <div class="flex-1 flex flex-col min-w-0">
         
-        <!-- Topbar Móvel com Botão Hambúrguer -->
-        <div class="bg-gradient-to-r from-blue-950 via-slate-950 to-indigo-950 text-white p-3.5 px-4 flex md:hidden justify-between items-center shadow-md sticky top-0 z-30">
-            <button onclick="toggleSidebar()" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl font-bold focus:outline-none">
-                ☰
-            </button>
-            <div class="text-center">
-                <h2 class="text-xs font-black uppercase tracking-wider">Assembleia de Deus</h2>
-                <p class="text-[10px] text-indigo-200">Chicuque</p>
-            </div>
-            <a href="/logout" class="text-xs bg-rose-600 px-3 py-1.5 rounded-xl font-bold shadow">Sair</a>
-        </div>
+<div id="secao-cultos-completa" style="margin-top: 15px;">
+    <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px;">
+        
+        <!-- COLUNA ESQUERDA: FORMULÁRIO DE REGISTO DE CULTO -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+            <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>⛪</span> Registo Rápido de Culto
+            </h3>
 
-        <main class="p-3.5 sm:p-5 lg:p-7 space-y-6 max-w-7xl mx-auto w-full">
-
-            {% if alerta_duplicado %}
-            <div class="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex items-center gap-3 text-amber-900 font-bold text-sm shadow-md">
-                <span class="text-2xl">⚠️</span><span>{{ alerta_duplicado }}</span>
-            </div>
-            {% endif %}
-
-            {% if sucesso_cadastro %}
-            <div class="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-center gap-3 text-emerald-900 font-bold text-sm shadow-md">
-                <span class="text-2xl">✅</span><span>{{ sucesso_cadastro }}</span>
-            </div>
-            {% endif %}
-
-            <!-- BANNER ANIVERSARIANTES DO DIA -->
-            {% if aniversariantes_dia %}
-            <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white p-4 sm:p-5 rounded-3xl shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                    <span class="bg-white/20 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">Felicitações Pastorais</span>
-                    <h3 class="text-base sm:text-lg font-black mt-1">🎂 Aniversariante(s) de Hoje na IEAD Chicuque!</h3>
-                    <p class="text-xs text-amber-100 font-medium">Parabenize publicamente ou envie mensagem pastoral de bênção.</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    {% for a in aniversariantes_dia %}
-                    <a href="https://wa.me/258{{ a['telefone']|replace(' ', '')|replace('+', '')|replace('-', '') }}?text=Paz%20do%20Senhor%20Irm%C3%A3o(a)%20{{ a['nome'] }},%20a%20IEAD%20Chicuque%20deseja-lhe%20um%20feliz%20anivers%C3%A1rio%20e%20muitas%20b%C3%AAn%C3%A7%C3%A3os%20de%20Deus!" 
-                       target="_blank" class="bg-white text-slate-900 hover:bg-amber-50 text-xs font-black px-3.5 py-2 rounded-xl shadow transition flex items-center gap-1.5">
-                        <span>💬</span> <span>Felicitar {{ a['nome'].split()[0] }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            {% if pode_cadastro %}
-            <!-- ================= ABA 1: MEMBROS ================= -->
-            <section id="aba-membros" class="tab-content {% if pode_cadastro %}active{% endif %} space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    
-                    <!-- Formulário -->
-                    <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5 sm:p-6">
-                        <div class="flex items-center justify-between pb-4 mb-5 border-b border-indigo-50">
-                            <div>
-                                <h2 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                    <span class="text-blue-600">📝</span> Ficha de Membro
-                                </h2>
-                                <p class="text-xs text-slate-500 font-medium">Registo completo oficial</p>
-                            </div>
-                            <span class="bg-blue-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-sm">Oficial IEAD</span>
-                        </div>
-
-                        <form action="/secretaria/planificacao/nova" method="POST">
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border-2 border-dashed border-indigo-200 rounded-3xl">
-                                <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition flex items-center gap-1.5">
-                                    <span>Tirar Foto / Carregar</span>
-                                    <input type="file" name="foto" accept="image/*" capture="environment" class="hidden">
-                                </label>
-                                <p class="text-[11px] text-slate-400 font-semibold mt-1">Fotografia do membro</p>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
-                                <input type="text" name="nome"  placeholder="Nome oficial..." class="w-full h-11 px-3 text-sm border-2 rounded-xl outline-none focus:border-blue-600 font-medium">
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Contacto Telefónico</label>
-                                    <input type="text" name="telefone" placeholder="+258 8..." class="w-full h-11 px-3 text-sm border-2 rounded-xl outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Género</label>
-                                    <select name="genero" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option></select>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Data Nascimento</label>
-                                    <input type="date" name="data_prevista" name="data_prevista" name="data_nascimento" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Segmento *</label>
-                                    <select name="faixa_etaria"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold text-blue-900">
-                                        <option value="Adulto">Adulto</option>
-                                        <option value="Jovem">Jovem</option>
-                                        <option value="Adolescente">Adolescente</option>
-                                        <option value="Criança">Criança (Boa Esperança)</option>
-                                        <option value="Terceira Idade">Terceira Idade</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Zona Eclesiástica</label>
-                                    <select name="zona" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white focus:border-indigo-600">
-                                        <option value="">-- Selecione a Zona --</option>
-                                        {% for z in lista_zonas %}<option value="{{ z['nome'] }}">{{ z['nome'] }}</option>{% endfor %}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Bairro / Residência</label>
-                                    <input type="text" name="bairro" placeholder="Ex: Chicuque Sede, Maxixe..." class="w-full h-11 px-3 text-sm border-2 rounded-xl focus:border-indigo-600">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Naturalidade</label>
-                                    <input type="text" name="naturalidade" placeholder="Cidade / Província" class="w-full h-11 px-3 text-sm border-2 rounded-xl focus:border-indigo-600">
-                                </div>
-                            </div>
-
-                            
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">💍 Estado Civil</label>
-                                <select name="estado_civil" class="w-full h-11 px-3 text-sm border-2 rounded-xl bg-white font-semibold focus:border-indigo-600">
-                                    <option value="Solteiro(a)">Solteiro(a)</option>
-                                    <option value="Casado(a) no Religioso">Casado(a) no Religioso</option>
-                                    <option value="Casado(a) no Civil">Casado(a) no Civil</option>
-                                    <option value="Casado(a) Religioso & Civil">Casado(a) Religioso & Civil</option>
-                                    <option value="Viúvo(a)">Viúvo(a)</option>
-                                    <option value="Divorciado(a)">Divorciado(a)</option>
-                                    <option value="Criança / Menor">Criança / Menor</option>
-                                </select>
-                            </div>
-<div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Filiação (Pai & Mãe)</label>
-                                <input type="text" name="filiacao" placeholder="Nome dos pais..." class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Tipo Doc.</label>
-                                    <select name="tipo_documento" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white"><option value="BI">BI</option><option value="Cédula">Cédula</option><option value="Cartão de Eleitor">C. Eleitor</option></select>
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Nº Documento</label>
-                                    <input type="text" name="numero_documento" placeholder="Número..." class="w-full h-11 px-3 text-sm border-2 rounded-xl font-mono">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Ano Conversão</label>
-                                    <input type="number" name="ano_conversao" placeholder="Ex: 2018" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Data Batismo</label>
-                                    <input type="date" name="data_prevista" name="data_prevista" name="data_batismo" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-blue-950 mb-1">Cargo *</label>
-                                    <select name="posicao_atual"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold text-blue-900">
-                                        <option value="Membro em Comunhão">Membro em Comunhão</option>
-                                        <option value="Pastor">Pastor</option>
-                                        <option value="Presbítero">Presbítero</option>
-                                        <option value="Diácono / Diaconisa">Diácono / Diaconisa</option>
-                                        <option value="Evangelista">Evangelista</option>
-                                        <option value="Obreiro(a)">Obreiro(a)</option>
-                                        <option value="Líder de Célula">Líder de Célula</option>
-                                        <option value="Candidato ao Batismo">Candidato ao Batismo</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-indigo-950 mb-1">Departamento *</label>
-                                    <select name="departamento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold text-indigo-900">
-                                        <option value="Activista">Activista</option>
-                                        <option value="Juventude">Juventude</option>
-                                        <option value="Mulher (Senhoras)">Mulher (Senhoras)</option>
-                                        <option value="Boa Esperança (Crianças)">Boa Esperança (Crianças)</option>
-                                        <option value="Homens / Obreiros">Homens / Obreiros</option>
-                                        <option value="Louvor / Música">Louvor / Música</option>
-                                        <option value="Ação Social">Ação Social</option>
-                                        <option value="Geral">Geral</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm rounded-2xl shadow-lg transition">
-                                Gravar Ficha de Membro
-                            </button>
-                        </form>
+            <form action="/cultos/novo" method="POST" id="form-cultos-oficial" style="margin-top: 15px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">📅 Data do Culto</label>
+                        <input type="date" name="data_culto" required style="width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                     </div>
-
-                    <!-- Cards dos Membros -->
-                    <div class="lg:col-span-7 space-y-4">
-                        <div class="bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5 flex justify-between items-center">
-                            <div>
-                                <h3 class="text-base font-black text-slate-900">Membros Registados ({{ total_membros }})</h3>
-                                <p class="text-xs text-slate-500">Cartões em PDF, WhatsApp e Certificados</p>
-                            </div>
-                            <!-- BOTÕES OFICIAIS DO CENSO -->
-                            <a href="/admin/censo/homologar" class="h-10 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5" title="Aprovar e homologar fichas do censo">
-                                <span>📋 Homologar Censo</span>
-                            </a>
-                            <button type="button" onclick="copiarLinkCensoGeral()" class="h-10 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5" title="Copiar link para WhatsApp">
-                                <span>📱 Link Censo (WhatsApp)</span>
-                            </button>
-                            <a href="/exportar/membros"
-                            <a href="/exportar/membros" class="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5">
-                                <span>📥 Baixar Excel</span>
-                            </a>
-
-                        <a href="/secretaria/dashboard_membros" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
-                            <span>📊</span> Raio-X Estatístico
-                        </a>
-                        </div>
-
-                        <div class="space-y-4 max-h-[750px] overflow-y-auto pr-1">
-                            {% for m in todos_membros %}
-                            <div class="bg-white/95 rounded-3xl p-5 border border-indigo-100 shadow-md space-y-3">
-                                <div class="flex items-start justify-between pb-3 border-b">
-                                    <div class="flex items-center space-x-3">
-                                        {% if m['foto_path'] %}
-                                        <img src="{{ m['foto_path'] }}" class="w-12 h-12 object-cover rounded-2xl border-2 border-blue-600 shadow"  >
-                                        {% else %}
-                                        <div class="w-12 h-12 rounded-2xl bg-blue-700 text-white flex items-center justify-center font-black text-base shadow">
-                                            {{ m['nome'][:2].upper() }}
-                                        </div>
-                                        {% endif %}
-                                        <div>
-                                            <h4 class="font-extrabold text-sm sm:text-base text-slate-900">{{ m['nome'] }}</h4>
-                                            <div class="flex items-center gap-1 text-xs mt-0.5">
-                                                <span class="bg-blue-50 text-blue-900 font-bold px-2 py-0.5 rounded">{{ m['posicao_atual'] }}</span>
-                                                <span class="bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded">{{ m['departamento'] }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% if e_admin %}
-                                    <a href="/apagar/membro/{{ m['id'] }}" onclick="return confirm('Eliminar?');" class="text-rose-600 font-bold text-xs p-1">✕</a>
-                                    {% endif %}
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border">
-                                    <div><strong>Doc:</strong> {{ m['tipo_documento'] or 'BI' }}: {{ m['numero_documento'] or '-' }}</div>
-                                    <div><strong>Contacto:</strong> {{ m['telefone'] or 'Sem telefone' }}</div>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <a href="/membro/cartao_pdf/{{ m['id'] }}" class="h-10 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition">
-                                        <span>🪪</span> <span>Baixar Cartão (PDF)</span>
-                                    </a>
-                                    {% if m['telefone'] %}
-                                    <a href="https://wa.me/258{{ m['telefone']|replace(' ', '')|replace('+', '')|replace('-', '') }}" target="_blank" class="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition">
-                                        <span>💬</span> <span>WhatsApp</span>
-                                    </a>
-                                    {% else %}
-                                    <span class="h-10 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl flex items-center justify-center">Sem Contacto</span>
-                                    {% endif %}
-                                </div>
-
-                                <div class="p-2 bg-indigo-50/60 rounded-xl border border-indigo-100">
-                                    <span class="text-[10px] font-black text-indigo-950 uppercase tracking-wider block mb-1">Emitir Certificados Pastorais (PDF):</span>
-                                    <div class="grid grid-cols-3 gap-1">
-                                        <a href="/membro/certificado_pdf/{{ m['id'] }}/batismo" class="py-1.5 bg-white border border-blue-200 text-blue-900 text-center font-bold text-xs rounded-lg hover:bg-blue-50">Batismo</a>
-                                        <a href="/membro/certificado_pdf/{{ m['id'] }}/apresentacao" class="py-1.5 bg-white border border-emerald-200 text-emerald-900 text-center font-bold text-xs rounded-lg hover:bg-emerald-50">Apresentação</a>
-                                        <a href="/membro/certificado_pdf/{{ m['id'] }}/recomendacao" class="py-1.5 bg-white border border-purple-200 text-purple-900 text-center font-bold text-xs rounded-lg hover:bg-purple-50">Recomendação</a>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            
-            <!-- ================= ABA SECRETARIA & PLANIFICAÇÃO ================= -->
-            <section id="aba-secretaria" class="tab-content hidden space-y-6">
-                <!-- Cabeçalho com Acesso ao Relatório Oficial -->
-                <div class="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 class="text-xl font-black">📋 Secretaria Geral & Planificação de Actividades</h2>
-                        <p class="text-xs text-blue-200 mt-1">Conforme o Modelo Oficial de Relatório da Assembleia de Deus (Ministério Thavane)</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="/secretaria/relatorio_oficial" target="_blank" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow transition flex items-center gap-2">
-                            <span>📄</span> Visualizar / Imprimir Relatório Oficial
-                        </a>
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">⛪ Tipo de Culto</label>
+                        <select name="tipo_culto" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                            <option value="Domingo Manhã">Domingo Manhã</option>
+                            <option value="Domingo Tarde/Noite">Domingo Tarde/Noite</option>
+                            <option value="Quarta-Feira / Doutrina">Quarta-Feira / Doutrina</option>
+                            <option value="Sexta-Feira / Oração">Sexta-Feira / Oração</option>
+                            <option value="Vigília">Vigília</option>
+                            <option value="Culto Especial">Culto Especial</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- Formulário de Planificação -->
-                    <div class="lg:col-span-4 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
-                        <h3 class="text-base font-black text-slate-900 mb-3 pb-2 border-b">📌 Planificar Nova Actividade</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Departamento</label>
-                                <select name="departamento"  class="w-full h-10 px-2 text-xs border-2 rounded-xl bg-white font-bold">
-                                    <option value="Activista Cristã">Activista Cristã</option>
-                                    <option value="Juventude Cristã">Juventude Cristã</option>
-                                    <option value="Boa Esperança (Adolescentes e Crianças)">Boa Esperança</option>
-                                    <option value="Depart. dos Pais">Depart. dos Pais</option>
-                                    <option value="Depart. das Mães">Depart. das Mães</option>
-                                    <option value="Escola Dominical">Escola Dominical</option>
-                                    <option value="Evangelismo & Missões">Evangelismo & Missões</option>
-                                    <option value="Conselho Pastoral / Obreiros">Conselho Pastoral / Obreiros</option>
-                                    <option value="Geral da Igreja">Geral da Igreja</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Tipo de Evento</label>
-                                <select name="tipo_evento" class="w-full h-10 px-2 text-xs border-2 rounded-xl bg-white">
-                                    <option value="Seminário">Seminário</option>
-                                    <option value="Conferência">Conferência</option>
-                                    <option value="Evangelização / Cruzada">Evangelização / Cruzada</option>
-                                    <option value="Retiro Espiritual">Retiro Espiritual</option>
-                                    <option value="Aniversário de Departamento">Aniversário de Departamento</option>
-                                    <option value="Reunião Geral">Reunião Geral</option>
-                                    <option value="Outro">Outro</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nome da Actividade</label>
-                                <input type="text" name="actividade"  name="nome_actividade" name="nome_actividade" placeholder="Ex: Seminário de Liderança Juvenil" class="w-full h-10 px-3 text-xs border-2 rounded-xl">
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Data Prevista</label>
-                                    <input type="date" name="data_prevista" name="data_prevista"  class="w-full h-10 px-2 text-xs border-2 rounded-xl">
-                                </div>
-                                <div>
-                                    <label class="text-[11px] font-bold text-slate-600 block mb-1">Frequência</label>
-                                    <select name="frequencia" class="w-full h-10 px-2 text-xs border-2 rounded-xl bg-white">
-                                        <option value="Pontual">Pontual / Única</option>
-                                        <option value="Semanal">Semanal</option>
-                                        <option value="Mensal">Mensal</option>
-                                        <option value="Trimestral">Trimestral</option>
-                                        <option value="Anual">Anual</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Responsável Directo</label>
-                                <input type="text" name="responsavel"  placeholder="Nome do Irmão/Obreiro" class="w-full h-10 px-3 text-xs border-2 rounded-xl">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Contacto / WhatsApp (para Notificação)</label>
-                                <input type="text" name="contacto_responsavel" placeholder="Ex: 841234567" class="w-full h-10 px-3 text-xs border-2 rounded-xl">
-                            </div>
-                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
-                        </form>
-                    </div>
-
-                    <!-- Lista de Monitoramento das Actividades -->
-                    <div class="lg:col-span-8 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5 space-y-4">
-                        <h3 class="text-base font-black text-slate-900 pb-2 border-b">📊 Monitoramento do Cronograma Eclesiástico</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 border-b text-slate-600 font-bold">
-                                    <tr>
-                                        <th class="p-2.5">Actividade / Depto</th>
-                                        <th class="p-2.5">Data Prevista</th>
-                                        <th class="p-2.5">Responsável & Contacto</th>
-                                        <th class="p-2.5 text-center">Status</th>
-                                        <th class="p-2.5 text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    {% for p in planos %}
-                                    <tr class="hover:bg-slate-50/60">
-                                        <td class="p-2.5 font-semibold text-slate-800">
-                                            <div class="font-bold text-slate-900">{{ p['actividade'] }}</div>
-                                            <div class="text-[10px] text-indigo-700 font-semibold">{{ p['departamento'] }} • {{ p['tipo_evento'] }}</div>
-                                        </td>
-                                        <td class="p-2.5 whitespace-nowrap">{{ p['data_prevista'] }}</td>
-                                        <td class="p-2.5">
-                                            <div>{{ p['responsavel'] }}</div>
-                                            {% if p['contacto_responsavel'] %}
-                                            <a href="https://wa.me/258{{ p['contacto_responsavel']|replace(' ', '')|replace('+', '') }}?text=Paz%20do%20Senhor%20Irmão(a)%20{{ p['responsavel'] }},%20lembrete%20sobre%20a%20actividade:%20{{ p['actividade'] }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold hover:underline">
-                                                <span>📲 WhatsApp</span>
-                                            </a>
-                                            {% endif %}
-                                        </td>
-                                        <td class="p-2.5 text-center">
-                                            {% if p['status'] == 'Realizado' %}
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">✓ Realizado</span>
-                                            {% elif p['status'] == 'Em Andamento' %}
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">⏳ Em Andamento</span>
-                                            {% elif p['status'] == 'Cancelado' %}
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800">✕ Cancelado</span>
-                                            {% else %}
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800">📅 Planeado</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="p-2.5 text-center">
-                                            <button onclick="abrirModalRelatar({{ p['id'] }}, '{{ p['actividade'] }}', '{{ p['tipo_evento'] }}')" class="px-3 py-1 bg-slate-900 hover:bg-indigo-900 text-white font-bold text-[10px] rounded-lg shadow">
-                                                📝 Relatar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="5" class="p-6 text-center text-slate-400">Nenhuma actividade planificada ainda. Cadastre a primeira ao lado.</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- MODAL DINÂMICO PARA RELATAR ACTIVIDADE -->
-            <div id="modal-relatar" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-                <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-                    <div class="flex justify-between items-center border-b pb-3">
-                        <h3 class="font-black text-slate-900 text-base" id="modal-titulo-actividade">Relatório de Execução</h3>
-                        <button onclick="fecharModalRelatar()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
-                    </div>
-
-                    <form action="/secretaria/planificacao/nova" method="POST">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Status Actual</label>
-                                <select name="status" class="w-full h-10 px-2 text-xs border-2 rounded-xl bg-white font-bold">
-                                    <option value="Realizado">Realizado</option>
-                                    <option value="Em Andamento">Em Andamento</option>
-                                    <option value="Cancelado">Cancelado</option>
-                                    <option value="Adiado">Adiado</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">Data da Realização</label>
-                                <input type="date" name="data_prevista" name="data_prevista" name="data_realizacao" class="w-full h-10 px-2 text-xs border-2 rounded-xl">
-                            </div>
-                        </div>
-
-                        <!-- Participação Discriminada -->
-                        <div class="p-3 bg-slate-50 border rounded-2xl space-y-2">
-                            <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 block">👥 Participantes no Evento (Discriminado)</span>
-                            <div class="grid grid-cols-4 gap-2">
-                                <div>
-                                    <label class="text-[10px] font-semibold text-slate-600 block">Homens</label>
-                                    <input type="number" min="0" name="homens_participantes" value="0" class="w-full h-9 px-1 text-xs border-2 rounded-lg text-center font-bold">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold text-slate-600 block">Mulheres</label>
-                                    <input type="number" min="0" name="mulheres_participantes" value="0" class="w-full h-9 px-1 text-xs border-2 rounded-lg text-center font-bold">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold text-slate-600 block">Jovens</label>
-                                    <input type="number" min="0" name="jovens_participantes" value="0" class="w-full h-9 px-1 text-xs border-2 rounded-lg text-center font-bold">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-semibold text-slate-600 block">Crianças</label>
-                                    <input type="number" min="0" name="criancas_participantes" value="0" class="w-full h-9 px-1 text-xs border-2 rounded-lg text-center font-bold">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Para Seminários e Retiros: Temas Abordados -->
+                <!-- FAIXA ETÁRIA: MEMBROS -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">👥 MEMBROS POR FAIXA & SEXO</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
-                            <label class="text-[11px] font-bold text-slate-600 block mb-1">📖 Temas Abordados / Ministrações (Crucial para Relatório Thavane)</label>
-                            <textarea name="temas_abordados" rows="2" placeholder="Ex: Tema: Fidelidade no Lar; Preletor: Ev. Romão..." class="w-full p-2.5 text-xs border-2 rounded-xl"></textarea>
+                            <label style="font-size: 11px; color: #64748b;">👨 Homens Adultos</label>
+                            <input type="number" name="homens_adultos" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                         </div>
-
-                        <!-- Para Evangelismo: Pessoas Alcançadas & Decisões -->
-                        <div class="grid grid-cols-2 gap-2 p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl">
-                            <div>
-                                <label class="text-[10px] font-black text-emerald-950 block">📢 Pessoas Alcançadas</label>
-                                <input type="number" min="0" name="pessoas_alcancadas" value="0" class="w-full h-9 px-2 text-xs border-2 border-emerald-300 rounded-lg text-center font-bold bg-white">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-black text-emerald-950 block">✝️ Tomaram Decisão / Conversões</label>
-                                <input type="number" min="0" name="decisoes_convertidos" value="0" class="w-full h-9 px-2 text-xs border-2 border-emerald-300 rounded-lg text-center font-bold bg-white">
-                            </div>
-                        </div>
-
                         <div>
-                            <label class="text-[11px] font-bold text-slate-600 block mb-1">Notas / Dificuldades / Observações</label>
-                            <textarea name="relatorio_observacoes" rows="2" placeholder="Dificuldades enfrentadas, constrangimentos..." class="w-full p-2.5 text-xs border-2 rounded-xl"></textarea>
+                            <label style="font-size: 11px; color: #64748b;">👩 Mulheres Adultas</label>
+                            <input type="number" name="mulheres_adultas" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                         </div>
-
-                        <div class="flex justify-end gap-2 pt-2">
-                            <button type="button" onclick="fecharModalRelatar()" class="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-                            <button type="submit" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-black shadow">Salvar Relatório da Actividade</button>
+                        <div>
+                            <label style="font-size: 11px; color: #64748b;">👦 Jovens Rapazes</label>
+                            <input type="number" name="jovens_rapazes" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
                         </div>
-                    </form>
-                </div>
-            </div>
-
-            <script>
-            function abrirModalRelatar(id, actividade, tipo) {
-                document.getElementById('modal-titulo-actividade').innerText = 'Relatar Actividade: ' + actividade + ' (' + tipo + ')';
-                document.getElementById('form-modal-relatar').action = '/secretaria/planificacao/relatar/' + id;
-                document.getElementById('modal-relatar').classList.remove('hidden');
-            }
-            function fecharModalRelatar() {
-                document.getElementById('modal-relatar').classList.add('hidden');
-            }
-            </script>
-
-
-            <!-- ================= ABA 2: CULTOS ================= -->
-            <section id="aba-cultos" class="tab-content space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
-                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">⛪ Registo Rápido de Culto</h3>
-                        <form action="/cultos/novo" method="POST">
-    <!-- Linha 1: Data e Tipo de Culto -->
-    <div class="grid grid-cols-2 gap-2">
-        <div>
-            <label class="text-[11px] font-bold text-slate-600 block mb-1">📅 Data do Culto</label>
-            <input type="date" name="data_prevista" name="data_prevista" name="data_culto"  class="w-full h-10 px-2 text-sm border-2 rounded-xl bg-white font-medium">
-        </div>
-        <div>
-            <label class="text-[11px] font-bold text-slate-600 block mb-1">⛪ Tipo de Culto</label>
-            <select name="tipo_culto" class="w-full h-10 px-2 text-sm border-2 rounded-xl bg-white font-bold text-slate-800">
-                <option value="Domingo Manhã">Domingo Manhã</option>
-                <option value="Domingo Noite">Domingo Noite</option>
-                <option value="Quarta-feira">Quarta-feira</option>
-                <option value="Sexta-feira (Vigília)">Sexta-feira (Vigília)</option>
-                <option value="Culto de Obreiros">Culto de Obreiros</option>
-                <option value="Culto Especial">Culto Especial</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Bloco 1: Membros Adultos & Jovens -->
-    <div class="p-3 bg-slate-50 border rounded-2xl space-y-2">
-        <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 block">👥 Membros por Faixa & Sexo</span>
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👨 Homens Adultos</label>
-                <input type="number" min="0" name="homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👩 Mulheres Adultas</label>
-                <input type="number" min="0" name="mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-blue-700 block mb-0.5">👦 Jovens Rapazes</label>
-                <input type="number" min="0" name="jovens_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-blue-200 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-pink-700 block mb-0.5">👧 Jovens Moças</label>
-                <input type="number" min="0" name="jovens_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-pink-200 rounded-xl text-center">
-            </div>
-        </div>
-    </div>
-
-    <!-- Bloco 2: Crianças & Visitantes -->
-    <div class="p-3 bg-slate-50 border rounded-2xl space-y-2">
-        <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 block">🧒 Crianças & 🤝 Visitantes</span>
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">🧒 Crianças (Meninos)</label>
-                <input type="number" min="0" name="criancas_meninos" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👧 Crianças (Meninas)</label>
-                <input type="number" min="0" name="criancas_meninas" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Homens)</label>
-                <input type="number" min="0" name="visitantes_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Mulheres)</label>
-                <input type="number" min="0" name="visitantes_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
-            </div>
-        </div>
-    </div>
-
-    <!-- Bloco 3: Decisões & Total Geral -->
-    <div class="grid grid-cols-2 gap-2 p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl">
-        <div>
-            <label class="text-[11px] font-black text-emerald-900 block mb-0.5">✝️ Apelos / Decisões</label>
-            <input type="number" min="0" name="novos_convertidos" value="0" class="w-full h-10 px-2 text-sm font-black text-emerald-800 border-2 border-emerald-300 rounded-xl text-center bg-white">
-        </div>
-        <div>
-            <label class="text-[11px] font-black text-indigo-900 block mb-0.5">📊 Total de Presentes</label>
-            <input type="text" id="total_geral_display" readonly value="0" class="w-full h-10 px-2 text-sm font-black text-indigo-950 border-2 border-indigo-400 bg-indigo-100/60 rounded-xl text-center cursor-not-allowed">
-        </div>
-    </div>
-
-    <!-- Mensageiro e Tema -->
-    <div class="space-y-2">
-        <input type="text" name="pregador" placeholder="Pregador (Palavra)" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
-        <input type="text" name="tema_mensagem" placeholder="Tema da Mensagem" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
-    </div>
-
-    <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Registar Presenças do Culto</button>
-</form>
-
-
+                        <div>
+                            <label style="font-size: 11px; color: #64748b;">👧 Jovens Moças</label>
+                            <input type="number" name="jovens_mocas" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
                     </div>
-                    <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
-                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">Histórico de Cultos</h3>
-                        <div class="overflow-x-auto">
-                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                </div>
+
+                <!-- CRIANÇAS E VISITANTES -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+                    <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">🧒 CRIANÇAS & 💛 VISITANTES</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label style="font-size: 11px; color: #64748b;">👦 Crianças (Meninos)</label>
+                            <input type="number" name="criancas_meninos" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; color: #64748b;">👧 Crianças (Meninas)</label>
+                            <input type="number" name="criancas_meninas" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; color: #64748b;">💛 Visitantes (Homens)</label>
+                            <input type="number" name="visitantes_homens" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; color: #64748b;">💛 Visitantes (Mulheres)</label>
+                            <input type="number" name="visitantes_mulheres" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOXES DE APELOS E TOTAL DE PRESENTES -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 10px; text-align: center;">
+                        <label style="display: block; font-size: 12px; font-weight: bold; color: #166534; margin-bottom: 4px;">✝ Apelos / Decisões</label>
+                        <input type="number" name="apelos" id="input-apelos-oficial" min="0" value="0" style="width: 80%; padding: 6px; font-size: 18px; font-weight: bold; text-align: center; border: 1px solid #bbf7d0; border-radius: 6px; color: #166534; background: white;">
+                    </div>
+                    <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 8px; padding: 10px; text-align: center;">
+                        <label style="display: block; font-size: 12px; font-weight: bold; color: #1e40af; margin-bottom: 4px;">📊 Total de Presentes</label>
+                        <div id="box-total-display" style="font-size: 22px; font-weight: bold; color: #1e40af; padding: 4px 0;">0</div>
+                        <input type="hidden" name="total_presentes" id="input-total-hidden" value="0">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Pregador (Palavra)</label>
+                    <input type="text" name="pregador" placeholder="Ex: Pastor / Obreiro" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Tema da Mensagem</label>
+                    <input type="text" name="tema_mensagem" placeholder="Ex: Salvação, Fé..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                </div>
+
+                <button type="submit" style="width: 100%; padding: 13px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: background 0.2s;">
+                    Registar Presenças do Culto
+                </button>
+            </form>
+        </div>
+
+        <!-- COLUNA DIREITA: HISTÓRICO DE CULTOS -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow-x: auto;">
+            <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>📊</span> Histórico de Cultos
+            </h3>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
                 <thead>
                     <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; color: #475569;">
                         <th style="padding: 10px 8px;">Data/Culto</th>
@@ -826,9 +190,10 @@
                     {% endif %}
                 </tbody>
             </table>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </div>
+</div>
+
             </section>
 
             <!-- ================= ABA 3: DISCIPULADO ================= -->
@@ -2082,77 +1447,37 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 </style>
 
-<!-- script-calculo-automatico-cultos -->
+
+
+<!-- script-soma-exata -->
 
 <script>
-function sincronizarCalculoCulto() {
-    var form = document.querySelector('form[action*="culto"]') || document.querySelector('form#form-culto');
-    if (!form) {
-        var btnCulto = document.querySelector('button[type="submit"]');
-        if (btnCulto) form = btnCulto.closest('form');
-    }
-    if (!form) return;
-
-    // Garante action correta
-    form.action = '/cultos/novo';
-    form.method = 'POST';
-
-    // Lista de inputs numéricos
-    var inputsNumero = form.querySelectorAll('input[type="number"], input[name*="homens"], input[name*="mulheres"], input[name*="jovens"], input[name*="criancas"], input[name*="visitantes"]');
-    
-    function recalcular() {
-        var total = 0;
-        inputsNumero.forEach(function(inp) {
-            var n = parseInt(inp.value, 10);
-            if (!isNaN(n) && n > 0) {
-                total += n;
-            }
-        });
-
-        // Atualizar input oculto ou visível de total_presentes
-        var campoTotal = form.querySelector('input[name="total_presentes"]') || form.querySelector('input#total_presentes');
-        if (!campoTotal) {
-            campoTotal = document.createElement('input');
-            campoTotal.type = 'hidden';
-            campoTotal.name = 'total_presentes';
-            campoTotal.id = 'total_presentes';
-            form.appendChild(campoTotal);
+function calcularSomaCulto() {
+    var campos = document.querySelectorAll('.campo-soma-culto');
+    var soma = 0;
+    campos.forEach(function(inp) {
+        var n = parseInt(inp.value, 10);
+        if (!isNaN(n) && n > 0) {
+            soma += n;
         }
-        campoTotal.value = total;
-
-        // Atualizar visualização do Total no ecrã (caixa azul)
-        var displaysTotal = document.querySelectorAll('.total-presentes-valor, #display-total, [data-total]');
-        displaysTotal.forEach(function(el) {
-            if (el.tagName === 'INPUT') el.value = total;
-            else el.innerText = total;
-        });
-
-        // Caso a caixa seja um elemento simples próximo de 'Total de Presentes'
-        var caixas = document.querySelectorAll('div, span, p');
-        caixas.forEach(function(c) {
-            if (c.innerText && c.innerText.includes('Total de Presentes')) {
-                var irmao = c.parentElement.querySelector('input, span, strong, div');
-                if (irmao && irmao !== c && !irmao.querySelector('div')) {
-                    if (irmao.tagName === 'INPUT') irmao.value = total;
-                    else irmao.innerText = total;
-                }
-            }
-        });
-    }
-
-    inputsNumero.forEach(function(inp) {
-        inp.addEventListener('input', recalcular);
-        inp.addEventListener('change', recalcular);
-        inp.addEventListener('keyup', recalcular);
     });
 
-    recalcular();
+    var boxDisplay = document.getElementById('box-total-display');
+    var inputHidden = document.getElementById('input-total-hidden');
+
+    if (boxDisplay) boxDisplay.innerText = soma;
+    if (inputHidden) inputHidden.value = soma;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    sincronizarCalculoCulto();
+    var campos = document.querySelectorAll('.campo-soma-culto');
+    campos.forEach(function(inp) {
+        inp.addEventListener('input', calcularSomaCulto);
+        inp.addEventListener('change', calcularSomaCulto);
+    });
+    calcularSomaCulto();
 
-    // Se a URL tiver ?aba=cultos, seleciona a aba de cultos
+    // Se o URL trouxer ?aba=cultos, seleciona a aba Cultos & Presenças
     var params = new URLSearchParams(window.location.search);
     if (params.get('aba') === 'cultos') {
         var botoes = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="culto"]');

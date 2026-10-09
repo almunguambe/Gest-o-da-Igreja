@@ -2081,3 +2081,88 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 }
 </style>
+
+<!-- script-calculo-automatico-cultos -->
+
+<script>
+function sincronizarCalculoCulto() {
+    var form = document.querySelector('form[action*="culto"]') || document.querySelector('form#form-culto');
+    if (!form) {
+        var btnCulto = document.querySelector('button[type="submit"]');
+        if (btnCulto) form = btnCulto.closest('form');
+    }
+    if (!form) return;
+
+    // Garante action correta
+    form.action = '/cultos/novo';
+    form.method = 'POST';
+
+    // Lista de inputs numéricos
+    var inputsNumero = form.querySelectorAll('input[type="number"], input[name*="homens"], input[name*="mulheres"], input[name*="jovens"], input[name*="criancas"], input[name*="visitantes"]');
+    
+    function recalcular() {
+        var total = 0;
+        inputsNumero.forEach(function(inp) {
+            var n = parseInt(inp.value, 10);
+            if (!isNaN(n) && n > 0) {
+                total += n;
+            }
+        });
+
+        // Atualizar input oculto ou visível de total_presentes
+        var campoTotal = form.querySelector('input[name="total_presentes"]') || form.querySelector('input#total_presentes');
+        if (!campoTotal) {
+            campoTotal = document.createElement('input');
+            campoTotal.type = 'hidden';
+            campoTotal.name = 'total_presentes';
+            campoTotal.id = 'total_presentes';
+            form.appendChild(campoTotal);
+        }
+        campoTotal.value = total;
+
+        // Atualizar visualização do Total no ecrã (caixa azul)
+        var displaysTotal = document.querySelectorAll('.total-presentes-valor, #display-total, [data-total]');
+        displaysTotal.forEach(function(el) {
+            if (el.tagName === 'INPUT') el.value = total;
+            else el.innerText = total;
+        });
+
+        // Caso a caixa seja um elemento simples próximo de 'Total de Presentes'
+        var caixas = document.querySelectorAll('div, span, p');
+        caixas.forEach(function(c) {
+            if (c.innerText && c.innerText.includes('Total de Presentes')) {
+                var irmao = c.parentElement.querySelector('input, span, strong, div');
+                if (irmao && irmao !== c && !irmao.querySelector('div')) {
+                    if (irmao.tagName === 'INPUT') irmao.value = total;
+                    else irmao.innerText = total;
+                }
+            }
+        });
+    }
+
+    inputsNumero.forEach(function(inp) {
+        inp.addEventListener('input', recalcular);
+        inp.addEventListener('change', recalcular);
+        inp.addEventListener('keyup', recalcular);
+    });
+
+    recalcular();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    sincronizarCalculoCulto();
+
+    // Se a URL tiver ?aba=cultos, seleciona a aba de cultos
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('aba') === 'cultos') {
+        var botoes = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="culto"]');
+        for (var i = 0; i < botoes.length; i++) {
+            var t = botoes[i].innerText ? botoes[i].innerText.toLowerCase() : '';
+            if (t.includes('culto') || t.includes('presença')) {
+                botoes[i].click();
+                break;
+            }
+        }
+    }
+});
+</script>

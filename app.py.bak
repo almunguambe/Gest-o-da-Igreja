@@ -1062,6 +1062,97 @@ def novo_membro():
     return redirect('/')
 
 @app.route('/cultos/novo', methods=['POST'])
+@app.route('/cultos/registar', methods=['POST'])
+@app.route('/culto/novo', methods=['POST'])
+def cultos_novo_seguro():
+    conn = get_db()
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+
+    # 1. Garantir que a tabela existe
+    try:
+        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS cultos (
+                id {id_tipo},
+                data_culto TEXT,
+                tipo_culto TEXT,
+                homens_adultos INTEGER DEFAULT 0,
+                mulheres_adultas INTEGER DEFAULT 0,
+                jovens_rapazes INTEGER DEFAULT 0,
+                jovens_mocas INTEGER DEFAULT 0,
+                criancas_meninos INTEGER DEFAULT 0,
+                criancas_meninas INTEGER DEFAULT 0,
+                visitantes_homens INTEGER DEFAULT 0,
+                visitantes_mulheres INTEGER DEFAULT 0,
+                apelos INTEGER DEFAULT 0,
+                total_presentes INTEGER DEFAULT 0,
+                pregador TEXT,
+                tema_mensagem TEXT,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        if hasattr(conn, 'commit'): conn.commit()
+    except Exception:
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+
+    # 2. Extração segura (NUNCA usa [], sempre usa .get())
+    fd = request.form
+
+    def extrair_int(chaves):
+        for k in chaves:
+            v = fd.get(k)
+            if v not in (None, ''):
+                try: return int(v)
+                except: pass
+        return 0
+
+    data_culto = (fd.get('data_culto') or fd.get('data') or '---').strip()
+    tipo_culto = (fd.get('tipo_culto') or fd.get('tipo') or 'Domingo Manhã').strip()
+
+    ha = extrair_int(['homens_adultos', 'homens'])
+    ma = extrair_int(['mulheres_adultas', 'mulheres'])
+    jr = extrair_int(['jovens_rapazes', 'rapazes'])
+    jm = extrair_int(['jovens_mocas', 'mocas'])
+    c_meninos = extrair_int(['criancas_meninos', 'meninos'])
+    c_meninas = extrair_int(['criancas_meninas', 'meninas'])
+    v_homens = extrair_int(['visitantes_homens', 'v_homens'])
+    v_mulheres = extrair_int(['visitantes_mulheres', 'v_mulheres'])
+    apelos = extrair_int(['apelos', 'decisoes'])
+
+    # Soma de segurança calculada no backend
+    soma_calculada = ha + ma + jr + jm + c_meninos + c_meninas + v_homens + v_mulheres
+    total_form = extrair_int(['total_presentes', 'total'])
+    total = total_form if total_form > 0 else soma_calculada
+
+    pregador = (fd.get('pregador') or fd.get('pregador_palavra') or '---').strip()
+    tema = (fd.get('tema_mensagem') or fd.get('tema') or '').strip()
+
+    is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+    m = "%s" if is_pg else "?"
+
+    sql = f"""INSERT INTO cultos 
+             (data_culto, tipo_culto, homens_adultos, mulheres_adultas, jovens_rapazes, jovens_mocas, 
+              criancas_meninos, criancas_meninas, visitantes_homens, visitantes_mulheres, 
+              apelos, total_presentes, pregador, tema_mensagem)
+             VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m})"""
+    try:
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+        cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, c_meninos, c_meninas, v_homens, v_mulheres, apelos, total, pregador, tema))
+        if hasattr(conn, 'commit'):
+            conn.commit()
+    except Exception as e_cult:
+        print("[ERRO AO GRAVAR CULTO]:", e_cult)
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+
+    return redirect('/?aba=cultos')
+
 def novo_culto():
     if not can_cadastro(): return redirect('/')
     h = int(request.form.get('homens') or 0)
