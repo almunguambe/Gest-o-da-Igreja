@@ -406,7 +406,7 @@
                                 <div class="flex items-start justify-between pb-3 border-b">
                                     <div class="flex items-center space-x-3">
                                         {% if m['foto_path'] %}
-                                        <img src="{{ m['foto_path'] }}" class="w-12 h-12 object-cover rounded-2xl border-2 border-blue-600 shadow" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent(this.alt || 'Membro') + '&background=3730a3&color=fff&size=128';" >
+                                        <img src="{{ m['foto_path'] }}" class="w-12 h-12 object-cover rounded-2xl border-2 border-blue-600 shadow"  >
                                         {% else %}
                                         <div class="w-12 h-12 rounded-2xl bg-blue-700 text-white flex items-center justify-center font-black text-base shadow">
                                             {{ m['nome'][:2].upper() }}
@@ -1349,7 +1349,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                         <td class="p-3.5">
                             <div class="flex items-center gap-3">
                                 {% if ca['foto_path'] %}
-                                <img src="{{ ca['foto_path'] }}" class="w-8 h-8 rounded-full object-cover border border-slate-300" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent(this.alt || 'Membro') + '&background=3730a3&color=fff&size=128';" >
+                                <img src="{{ ca['foto_path'] }}" class="w-8 h-8 rounded-full object-cover border border-slate-300"  >
                                 {% else %}
                                 <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-900 font-black flex items-center justify-center text-xs">
                                     {{ ca['nome'][:1] }}
@@ -2302,5 +2302,83 @@ document.addEventListener("DOMContentLoaded", function() {
             form.submit();
         });
     });
+});
+</script>
+
+<!-- controlador-navegacao-sidebar -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. MAPEAMENTO SEGURO DOS ITENS DA SIDEBAR PARA OS SEUS CONTEÚDOS
+    var itensSidebar = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="mostrar"], [onclick*="abrir"], [onclick*="tab"]');
+    var secoesConteudo = document.querySelectorAll('main > div, .conteudo-secao, .tab-pane, .secao-painel, [id^="secao-"], [id^="aba-"]');
+
+    function ativarAbaPorNome(nomeAba) {
+        if (!nomeAba) return;
+        nomeAba = nomeAba.toLowerCase().trim();
+
+        // Alterna os cartões de conteúdo
+        var encontrouSecao = false;
+        secoesConteudo.forEach(function(sec) {
+            var secId = (sec.id || '').toLowerCase();
+            var secClasse = (sec.className || '').toLowerCase();
+            if (secId.includes(nomeAba) || secClasse.includes(nomeAba)) {
+                sec.style.display = 'block';
+                encontrouSecao = true;
+            } else if (secId.length > 0 || secClasse.includes('secao')) {
+                sec.style.display = 'none';
+            }
+        });
+
+        // Atualiza o destaque visual na sidebar
+        itensSidebar.forEach(function(item) {
+            var texto = item.innerText.toLowerCase();
+            if (texto.includes(nomeAba)) {
+                item.style.backgroundColor = '#2e1065';
+                item.style.borderRadius = '8px';
+            } else {
+                item.style.backgroundColor = 'transparent';
+            }
+        });
+    }
+
+    // 2. LIGAR CLIQUES DA SIDEBAR DIRETAMENTE (SEM TELA PARALELA)
+    itensSidebar.forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            var texto = this.innerText.toLowerCase();
+            if (texto.includes('secretaria') || texto.includes('planos')) {
+                e.preventDefault();
+                ativarAbaPorNome('secretaria');
+                window.history.replaceState(null, null, '?aba=secretaria');
+            } else if (texto.includes('culto')) {
+                ativarAbaPorNome('culto');
+            } else if (texto.includes('convertido')) {
+                ativarAbaPorNome('convertido');
+            } else if (texto.includes('escala') || texto.includes('púlpito')) {
+                ativarAbaPorNome('escala');
+            } else if (texto.includes('casamento')) {
+                ativarAbaPorNome('casamento');
+            } else if (texto.includes('óbito') || texto.includes('obito')) {
+                ativarAbaPorNome('obito');
+            } else if (texto.includes('caixa') || texto.includes('finança') || texto.includes('meta')) {
+                ativarAbaPorNome('financa');
+            }
+        });
+    });
+
+    // 3. SE O LINK FORNECER ?aba=secretaria, ABRE DIRETAMENTE A SECRETARIA
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('aba') === 'secretaria') {
+        ativarAbaPorNome('secretaria');
+    }
+
+    // 4. PROTEÇÃO GLOBAL CONTRA FOTOS QUEBRADAS (SEM AFETAR O JAVASCRIPT)
+    document.addEventListener('error', function(ev) {
+        if (ev.target && ev.target.tagName === 'IMG') {
+            ev.target.onerror = null;
+            var nome = ev.target.alt || 'Membro';
+            ev.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nome) + '&background=3730a3&color=fff&size=128';
+        }
+    }, true);
 });
 </script>

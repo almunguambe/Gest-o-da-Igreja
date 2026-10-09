@@ -3723,7 +3723,7 @@ def planificacao_nova():
                 try: conn.rollback()
                 except: pass
 
-        return redirect('/secretaria/planificacao/nova')
+        return redirect('/?aba=secretaria')
 
     # GET: LEITURA COMPROVADA DO SUPABASE (Sem erros de tipo)
     planos = []
