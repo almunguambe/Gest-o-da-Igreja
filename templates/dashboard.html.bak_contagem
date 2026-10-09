@@ -692,7 +692,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">⛪ Registo Rápido de Culto</h3>
-                        <form action="/cultos/novo" method="POST" id="form-cultos-oficial">
+                        <form action="/cultos/novo" method="POST" id="form-culto-real">
     <!-- Linha 1: Data e Tipo de Culto -->
     <div class="grid grid-cols-2 gap-2">
         <div>
@@ -718,19 +718,19 @@
         <div class="grid grid-cols-2 gap-2">
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👨 Homens Adultos</label>
-                <input type="number" min="0" name="homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👩 Mulheres Adultas</label>
-                <input type="number" min="0" name="mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-blue-700 block mb-0.5">👦 Jovens Rapazes</label>
-                <input type="number" min="0" name="jovens_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-blue-200 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="jovens_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-blue-200 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-pink-700 block mb-0.5">👧 Jovens Moças</label>
-                <input type="number" min="0" name="jovens_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-pink-200 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="jovens_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-pink-200 rounded-xl text-center">
             </div>
         </div>
     </div>
@@ -741,19 +741,19 @@
         <div class="grid grid-cols-2 gap-2">
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">🧒 Crianças (Meninos)</label>
-                <input type="number" min="0" name="criancas_meninos" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="criancas_meninos" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👧 Crianças (Meninas)</label>
-                <input type="number" min="0" name="criancas_meninas" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="criancas_meninas" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Homens)</label>
-                <input type="number" min="0" name="visitantes_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="visitantes_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Mulheres)</label>
-                <input type="number" min="0" name="visitantes_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center" class="campo-presenca-culto" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';">
+                <input type="number" min="0" name="visitantes_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
             </div>
         </div>
     </div>
@@ -770,8 +770,7 @@
         </div>
     </div>
 
-    <!-- Mensageiro e Te
-<div id="display-total-presentes" style="display:none;">0</div>ma -->
+    <!-- Mensageiro e Tema -->
     <div class="space-y-2">
         <input type="text" name="pregador" placeholder="Pregador (Palavra)" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
         <input type="text" name="tema_mensagem" placeholder="Tema da Mensagem" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
@@ -783,9 +782,7 @@
 
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
-                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">
-<input type="hidden" name="total_presentes" id="hidden-total-presentes" value="0">
-Histórico de Cultos</h3>
+                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">Histórico de Cultos</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
                                 <thead class="bg-slate-50 border-b"><tr><th class="p-2.5">Data/Culto</th><th class="p-2.5">Pregador</th><th class="p-2.5 text-center">Total</th><th class="p-2.5 text-center">Apelos</th></tr></thead>
@@ -2040,82 +2037,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Abertura automática da aba cultos caso haja ?aba=cultos na URL
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('aba') === 'cultos') {
-        var links = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item');
-        for (var i = 0; i < links.length; i++) {
-            var txt = links[i].innerText ? links[i].innerText.toLowerCase() : '';
-            if (txt.includes('culto') || txt.includes('presença')) {
-                links[i].click();
-                break;
-            }
-        }
-    }
-});
-</script>
-
-<!-- script-contagem-cultos-definitivo -->
-
-<script>
-function recalcularPresentesCulto() {
-    var campos = document.querySelectorAll('.campo-presenca-culto');
-    var total = 0;
-
-    campos.forEach(function(inp) {
-        var n = (inp.name || '').toLowerCase();
-        // Não soma o campo de apelos nem o campo de total
-        if (!n.includes('apelo') && !n.includes('total')) {
-            var val = parseInt(inp.value, 10);
-            if (!isNaN(val) && val > 0) {
-                total += val;
-            }
-        }
-    });
-
-    // 1. Atualiza a exibição na caixa azul
-    var display = document.getElementById('display-total-presentes');
-    if (display) {
-        display.innerText = total;
-    }
-
-    // 2. Atualiza qualquer texto '0' próximo a 'Total de Presentes'
-    var rotulos = document.querySelectorAll('label, span, div');
-    rotulos.forEach(function(el) {
-        if (el.innerText && el.innerText.includes('Total de Presentes')) {
-            var pai = el.parentElement;
-            if (pai) {
-                var elValor = pai.querySelector('#display-total-presentes') || pai.querySelector('span, div:not(:first-child)');
-                if (elValor && elValor !== el) {
-                    elValor.innerText = total;
-                }
-            }
-        }
-    });
-
-    // 3. Atualiza o input oculto para submissão ao Supabase
-    var hidden = document.getElementById('hidden-total-presentes') || document.querySelector('input[name="total_presentes"]');
-    if (hidden) {
-        hidden.value = total;
-    }
-}
-
-// Ouvinte global: deteta digitação em tempo real em qualquer input de presença
-document.addEventListener('input', function(e) {
-    if (e.target && (e.target.classList.contains('campo-presenca-culto') || (e.target.type === 'number' && !(e.target.name || '').includes('apelo')))) {
-        recalcularPresentesCulto();
-    }
-});
-
-document.addEventListener('keyup', function(e) {
-    if (e.target && (e.target.classList.contains('campo-presenca-culto') || (e.target.type === 'number' && !(e.target.name || '').includes('apelo')))) {
-        recalcularPresentesCulto();
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function() {
-    recalcularPresentesCulto();
-
-    // Se a URL contiver ?aba=cultos, mantém a aba ativa
     var params = new URLSearchParams(window.location.search);
     if (params.get('aba') === 'cultos') {
         var links = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item');
