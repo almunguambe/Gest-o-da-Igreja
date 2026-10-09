@@ -1,19 +1,3 @@
-
-<script>
-function somarPresentesCultoAgora() {
-    var total = 0;
-    var inputs = document.querySelectorAll('.campo-soma-culto');
-    for (var i = 0; i < inputs.length; i++) {
-        var v = parseInt(inputs[i].value, 10);
-        if (!isNaN(v) && v > 0) total += v;
-    }
-    var display = document.getElementById('display-total-culto-azul');
-    if (display) display.innerText = total;
-    var hidden = document.getElementById('input-total-culto-hidden');
-    if (hidden) hidden.value = total;
-}
-</script>
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -708,7 +692,7 @@ function somarPresentesCultoAgora() {
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">⛪ Registo Rápido de Culto</h3>
-                        <form action="/cultos/novo" method="POST" id="form-cultos-oficial">
+                        <form action="/cultos/novo" method="POST" id="form-culto-real">
     <!-- Linha 1: Data e Tipo de Culto -->
     <div class="grid grid-cols-2 gap-2">
         <div>
@@ -734,19 +718,19 @@ function somarPresentesCultoAgora() {
         <div class="grid grid-cols-2 gap-2">
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👨 Homens Adultos</label>
-                <input type="number" min="0" name="homens" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👩 Mulheres Adultas</label>
-                <input type="number" min="0" name="mulheres" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-blue-700 block mb-0.5">👦 Jovens Rapazes</label>
-                <input type="number" min="0" name="jovens_homens" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="jovens_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-blue-200 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-pink-700 block mb-0.5">👧 Jovens Moças</label>
-                <input type="number" min="0" name="jovens_mulheres" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="jovens_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-pink-200 rounded-xl text-center">
             </div>
         </div>
     </div>
@@ -757,19 +741,19 @@ function somarPresentesCultoAgora() {
         <div class="grid grid-cols-2 gap-2">
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">🧒 Crianças (Meninos)</label>
-                <input type="number" min="0" name="criancas_meninos" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="criancas_meninos" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👧 Crianças (Meninas)</label>
-                <input type="number" min="0" name="criancas_meninas" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="criancas_meninas" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Homens)</label>
-                <input type="number" min="0" name="visitantes_homens" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="visitantes_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
             </div>
             <div>
                 <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Mulheres)</label>
-                <input type="number" min="0" name="visitantes_mulheres" value="0"  class="campo-soma-culto" oninput="somarPresentesCultoAgora()" onchange="somarPresentesCultoAgora()">
+                <input type="number" min="0" name="visitantes_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
             </div>
         </div>
     </div>
@@ -792,53 +776,16 @@ function somarPresentesCultoAgora() {
         <input type="text" name="tema_mensagem" placeholder="Tema da Mensagem" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
     </div>
 
-    <button type="submit" style="width: 100%; padding: 14px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">Registar Presenças do Culto</button>
-</form>
+    <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" type="submit">Registar Presenças do Culto</button>
 </form>
 
 
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
-                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">
-<input type="hidden" name="total_presentes" id="input-total-culto-hidden" value="0">
-Histórico de Cultos</h3>
+                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">Histórico de Cultos</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-2.5">Data/Culto</th><th class="p-2.5">Pregador</th><th class="p-2.5 text-center">Total</th><th class="p-2.5 text-center">Apelos</th></tr>
-<tbody>
-<!-- LINHAS DO HISTÓRICO DE CULTOS -->
-                    {% if cultos %}
-                        {% for c in cultos %}
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 12px 8px;">
-                                <strong style="color: #1e293b;">{{ c.data_culto }}</strong><br>
-                                <small style="color: #64748b;">{{ c.tipo_culto }}</small>
-                            </td>
-                            <td style="padding: 12px 8px;">
-                                <strong style="color: #1e293b;">{{ c.pregador }}</strong><br>
-                                <small style="color: #64748b;">{{ c.tema_mensagem }}</small>
-                            </td>
-                            <td style="padding: 12px 8px;">
-                                <span style="background-color: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px;">
-                                    {{ c.total_presentes }}
-                                </span>
-                            </td>
-                            <td style="padding: 12px 8px;">
-                                <span style="background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px;">
-                                    {{ c.apelos }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="4" style="text-align: center; padding: 35px; color: #94a3b8;">
-                                Nenhum culto registado ainda. Registe o primeiro ao lado.
-                            </td>
-                        </tr>
-                    {% endif %}
-</tbody>
-</thead>
+                                <thead class="bg-slate-50 border-b"><tr><th class="p-2.5">Data/Culto</th><th class="p-2.5">Pregador</th><th class="p-2.5 text-center">Total</th><th class="p-2.5 text-center">Apelos</th></tr></thead>
                                 <tbody class="divide-y">
                                     {% for cu in todos_cultos %}
                                     <tr>
@@ -2046,50 +1993,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    var formCulto = document.getElementById('form-culto-real') || document.querySelector('form[action*="cultos"]');
-    if (formCulto) {
-        var campos = formCulto.querySelectorAll('input[type="number"]');
-
-        function atualizarTotal() {
-            var soma = 0;
-            campos.forEach(function(inp) {
-                var n = (inp.name || '').toLowerCase();
-                if (!n.includes('apelo') && !n.includes('total')) {
-                    var val = parseInt(inp.value, 10);
-                    if (!isNaN(val) && val > 0) soma += val;
-                }
-            });
-
-            var hiddenTotal = formCulto.querySelector('input[name="total_presentes"]');
-            if (hiddenTotal) hiddenTotal.value = soma;
-
-            // Atualiza a visualização do total sem interferir nos campos de texto
-            var caixas = formCulto.querySelectorAll('div, span, strong');
-            caixas.forEach(function(el) {
-                if (el.id === 'box-total-display' || el.id === 'display-total') {
-                    el.innerText = soma;
-                } else if (el.innerText && el.innerText.includes('Total de Presentes')) {
-                    var pai = el.parentElement;
-                    if (pai) {
-                        var valorBox = pai.querySelector('div:not(:first-child), strong');
-                        if (valorBox && valorBox !== el) valorBox.innerText = soma;
-                    }
-                }
-            });
-        }
-
-        campos.forEach(function(inp) {
-            var n = (inp.name || '').toLowerCase();
-            if (!n.includes('apelo')) {
-                inp.addEventListener('input', atualizarTotal);
-                inp.addEventListener('keyup', atualizarTotal);
-                inp.addEventListener('change', atualizarTotal);
-            }
-        });
-        atualizarTotal();
-    }
-
-    // Abertura automática da aba cultos caso haja ?aba=cultos na URL
+    // Manter a aba Cultos ativa ao recarregar
     var params = new URLSearchParams(window.location.search);
     if (params.get('aba') === 'cultos') {
         var links = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item');
@@ -2102,86 +2006,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 });
-</script>
 
-
-<script>
-// SOMA EM TEMPO REAL DIRECIONADA EXCLUSIVAMENTE À CAIXA DO TOTAL
-function recalcularSomaCulto() {
-    var form = document.getElementById('form-cultos-oficial') || document.querySelector('form[action*="cultos"]');
-    if (!form) return;
-
-    var nomesCampos = [
-        'homens_adultos', 'mulheres_adultas', 
-        'jovens_rapazes', 'jovens_mocas', 
-        'criancas_meninos', 'criancas_meninas', 
-        'visitantes_homens', 'visitantes_mulheres'
-    ];
-
-    var total = 0;
-    nomesCampos.forEach(function(nome) {
-        var inp = form.querySelector('input[name*="' + nome + '"]') || form.querySelector('input[name="' + nome + '"]');
-        if (inp) {
-            var val = parseInt(inp.value, 10);
-            if (!isNaN(val) && val > 0) {
-                total += val;
-            }
-        }
-    });
-
-    // Se os inputs tiverem nomes ligeiramente diferentes, soma todos os inputs numéricos antes de 'apelos'
-    if (total === 0) {
-        var todosInputs = form.querySelectorAll('input[type="number"]');
-        todosInputs.forEach(function(inp) {
-            var n = (inp.name || '').toLowerCase();
-            if (!n.includes('apelo') && !n.includes('total')) {
-                var v = parseInt(inp.value, 10);
-                if (!isNaN(v) && v > 0) total += v;
-            }
-        });
-    }
-
-    // Atualiza apenas o display específico pelo ID
-    var display = document.getElementById('valor-total-culto-display');
-    if (display) {
-        display.innerText = total;
-    }
-    var inputHidden = document.getElementById('input-total-culto-hidden');
-    if (inputHidden) {
-        inputHidden.value = total;
-    }
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    var form = document.getElementById('form-cultos-oficial') || document.querySelector('form[action*="cultos"]');
-    if (form) {
-        var inputs = form.querySelectorAll('input[type="number"]');
-        inputs.forEach(function(inp) {
-            var n = (inp.name || '').toLowerCase();
-            if (!n.includes('apelo')) {
-                inp.addEventListener('input', recalcularSomaCulto);
-                inp.addEventListener('keyup', recalcularSomaCulto);
-                inp.addEventListener('change', recalcularSomaCulto);
-            }
-        });
-        recalcularSomaCulto();
-    }
-
-    // Abertura automática da aba Cultos & Presenças via URL (?aba=cultos)
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('aba') === 'cultos') {
-        var botoes = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item');
-        for (var i = 0; i < botoes.length; i++) {
-            var txt = botoes[i].innerText ? botoes[i].innerText.toLowerCase() : '';
-            if (txt.includes('culto') || txt.includes('presença')) {
-                botoes[i].click();
-                break;
-            }
-        }
-    }
-});
-
-// TRATAMENTO GLOBAL DE FOTOS QUEBRADAS (EVITA ERROS 404 VISUAIS)
+// Fallback de imagens quebradas para avatares elegantes
 window.addEventListener('error', function(e) {
     if (e.target && e.target.tagName === 'IMG' && (e.target.src.includes('uploads') || e.target.src.includes('membro'))) {
         e.target.onerror = null;

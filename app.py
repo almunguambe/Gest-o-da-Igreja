@@ -1100,6 +1100,7 @@ def cultos_novo():
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
+    # Garantir existência da tabela no Supabase
     try:
         is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
         id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -1149,9 +1150,10 @@ def cultos_novo():
     vm = n('visitantes_mulheres')
     apelos = n('apelos')
 
-    soma_calculada = ha + ma + jr + jm + cm + cf + vh + vm
-    tot_form = n('total_presentes')
-    total = tot_form if tot_form > 0 else soma_calculada
+    # CÁLCULO AUTOMÁTICO FEITO DIRETAMENTE NO PYTHON (NÃO FALHA)
+    soma_automatica = ha + ma + jr + jm + cm + cf + vh + vm
+    tot_digitado = n('total_presentes')
+    total = tot_digitado if tot_digitado > 0 else soma_automatica
 
     pregador = (fd.get('pregador') or '---').strip()
     tema = (fd.get('tema_mensagem') or '').strip()
