@@ -1100,7 +1100,7 @@ def cultos_novo():
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
-    # Garantir tabela cultos no Supabase
+    # Garantir existência da tabela no Supabase
     try:
         is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
         id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -1131,7 +1131,7 @@ def cultos_novo():
             except: pass
 
     fd = request.form
-    def num(campo):
+    def n(campo):
         v = fd.get(campo)
         if v not in (None, ''):
             try: return int(v)
@@ -1140,19 +1140,19 @@ def cultos_novo():
 
     data_culto = (fd.get('data_culto') or '---').strip()
     tipo_culto = (fd.get('tipo_culto') or 'Domingo Manhã').strip()
-    ha = num('homens_adultos')
-    ma = num('mulheres_adultas')
-    jr = num('jovens_rapazes')
-    jm = num('jovens_mocas')
-    cm = num('criancas_meninos')
-    cf = num('criancas_meninas')
-    vh = num('visitantes_homens')
-    vm = num('visitantes_mulheres')
-    apelos = num('apelos')
+    ha = n('homens_adultos')
+    ma = n('mulheres_adultas')
+    jr = n('jovens_rapazes')
+    jm = n('jovens_mocas')
+    cm = n('criancas_meninos')
+    cf = n('criancas_meninas')
+    vh = n('visitantes_homens')
+    vm = n('visitantes_mulheres')
+    apelos = n('apelos')
 
-    soma_backend = ha + ma + jr + jm + cm + cf + vh + vm
-    tot_form = num('total_presentes')
-    total = tot_form if tot_form > 0 else soma_backend
+    soma_calculada = ha + ma + jr + jm + cm + cf + vh + vm
+    tot_form = n('total_presentes')
+    total = tot_form if tot_form > 0 else soma_calculada
 
     pregador = (fd.get('pregador') or '---').strip()
     tema = (fd.get('tema_mensagem') or '').strip()
@@ -1172,7 +1172,7 @@ def cultos_novo():
         cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, cm, cf, vh, vm, apelos, total, pregador, tema))
         if hasattr(conn, 'commit'): conn.commit()
     except Exception as e_post:
-        print("[ERRO INSERT CULTOS]:", e_post)
+        print("[ERRO GRAVAR CULTO]:", e_post)
         if hasattr(conn, 'rollback'):
             try: conn.rollback()
             except: pass

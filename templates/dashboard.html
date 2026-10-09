@@ -40,17 +40,17 @@
     <aside id="sidebarMenu" class="fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-blue-950 via-slate-950 to-indigo-950 text-white shadow-2xl border-r border-indigo-500/20 transform -translate-x-full md:translate-x-0 md:static md:inset-auto transition-transform duration-300 ease-in-out flex flex-col justify-between">
         
 
-<!-- BLOCO PROFISSIONAL DE CULTOS & PRESENÇAS -->
-<div style="margin-top: 15px;">
-    <div style="display: grid; grid-template-columns: 1fr 1.35fr; gap: 24px; align-items: start;">
+<!-- BLOCO OFICIAL DE CULTOS & PRESENÇAS -->
+<div id="secao-cultos-container" style="margin-top: 15px; width: 100%;">
+    <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; align-items: start;">
         
-        <!-- COLUNA 1: FORMULÁRIO DE REGISTO DE CULTO -->
+        <!-- CARD 1: FORMULÁRIO DE REGISTO DE CULTO -->
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
             <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>⛪</span> Registo Rápido de Culto
             </h3>
 
-            <form action="/cultos/novo" method="POST" id="form-cultos-oficial" style="margin-top: 15px;">
+            <form action="/cultos/novo" method="POST" id="form-culto-real" style="margin-top: 15px;">
                 <div style="display: flex; gap: 12px; margin-bottom: 14px;">
                     <div style="flex: 1;">
                         <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">📅 Data do Culto</label>
@@ -74,20 +74,20 @@
                     <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">👥 MEMBROS POR FAIXA & SEXO</span>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">👨 Homens Adultos</label>
-                            <input type="number" name="homens_adultos" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">👨 Homens Adultos</label>
+                            <input type="number" name="homens_adultos" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">👩 Mulheres Adultas</label>
-                            <input type="number" name="mulheres_adultas" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">👩 Mulheres Adultas</label>
+                            <input type="number" name="mulheres_adultas" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">👦 Jovens Rapazes</label>
-                            <input type="number" name="jovens_rapazes" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">👦 Jovens Rapazes</label>
+                            <input type="number" name="jovens_rapazes" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">👧 Jovens Moças</label>
-                            <input type="number" name="jovens_mocas" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">👧 Jovens Moças</label>
+                            <input type="number" name="jovens_mocas" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                     </div>
                 </div>
@@ -97,37 +97,37 @@
                     <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">🧒 CRIANÇAS & 💛 VISITANTES</span>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">👦 Crianças (Meninos)</label>
-                            <input type="number" name="criancas_meninos" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">👦 Crianças (Meninos)</label>
+                            <input type="number" name="criancas_meninos" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">👧 Crianças (Meninas)</label>
-                            <input type="number" name="criancas_meninas" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">👧 Crianças (Meninas)</label>
+                            <input type="number" name="criancas_meninas" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">💛 Visitantes (Homens)</label>
-                            <input type="number" name="visitantes_homens" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">💛 Visitantes (Homens)</label>
+                            <input type="number" name="visitantes_homens" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                         <div>
-                            <label style="font-size: 11px; color: #64748b;">💛 Visitantes (Mulheres)</label>
-                            <input type="number" name="visitantes_mulheres" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
+                            <label style="font-size: 11px; color: #64748b; font-weight: 500;">💛 Visitantes (Mulheres)</label>
+                            <input type="number" name="visitantes_mulheres" min="0" value="0" class="input-presenca-soma" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                         </div>
                     </div>
                 </div>
 
-                <!-- BOXES: APELOS (MANUAL) E TOTAL (AUTOMÁTICO) -->
+                <!-- BOXES: APELOS (MANUAL) E TOTAL DE PRESENTES (AUTOMÁTICO) -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
                     <!-- APELOS: LIVRE PARA DIGITAR -->
                     <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 10px; text-align: center;">
                         <label style="display: block; font-size: 12px; font-weight: bold; color: #166534; margin-bottom: 4px;">✝ Apelos / Decisões</label>
-                        <input type="number" name="apelos" id="input-apelos-livre" min="0" value="0" style="width: 85%; padding: 6px; font-size: 18px; font-weight: bold; text-align: center; border: 1px solid #bbf7d0; border-radius: 6px; color: #166534; background: white;">
+                        <input type="number" name="apelos" min="0" value="0" onfocus="if(this.value=='0')this.value=''; this.select();" onblur="if(this.value=='')this.value='0';" style="width: 85%; padding: 6px; font-size: 18px; font-weight: bold; text-align: center; border: 1px solid #bbf7d0; border-radius: 6px; color: #166534; background: white;">
                     </div>
 
                     <!-- TOTAL: SOMA AUTOMÁTICA EM TEMPO REAL -->
                     <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 8px; padding: 10px; text-align: center;">
                         <label style="display: block; font-size: 12px; font-weight: bold; color: #1e40af; margin-bottom: 4px;">📊 Total de Presentes</label>
-                        <div id="display-total-presentes" style="font-size: 22px; font-weight: bold; color: #1e40af; padding: 4px 0;">0</div>
-                        <input type="hidden" name="total_presentes" id="input-total-presentes-hidden" value="0">
+                        <div id="display-total-azul" style="font-size: 22px; font-weight: bold; color: #1e40af; padding: 4px 0;">0</div>
+                        <input type="hidden" name="total_presentes" id="hidden-total-azul" value="0">
                     </div>
                 </div>
 
@@ -141,13 +141,13 @@
                     <input type="text" name="tema_mensagem" placeholder="Ex: A Fidelidade de Deus..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                 </div>
 
-                <button type="submit" style="width: 100%; padding: 13px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: background 0.2s;">
+                <button type="submit" style="width: 100%; padding: 14px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: background 0.2s;">
                     Registar Presenças do Culto
                 </button>
             </form>
         </div>
 
-        <!-- COLUNA 2: HISTÓRICO DE CULTOS -->
+        <!-- CARD 2: HISTÓRICO DE CULTOS -->
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow-x: auto;">
             <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>📊</span> Histórico de Cultos
@@ -198,8 +198,8 @@
         </div>
     </div>
 </div>
+<!-- FIM BLOCO OFICIAL DE CULTOS -->
 
-<!-- FIM BLOCO CULTOS -->
 
             </section>
 
@@ -1460,71 +1460,46 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-<!-- script-profissional-cultos -->
+<!-- script-oficial-cultos -->
 
 <script>
-// FUNÇÃO EXCLUSIVA DE SOMA DO TOTAL DE PRESENTES
-function recalcularTotalPresentes() {
-    var form = document.getElementById('form-cultos-oficial');
+// SOMA EM TEMPO REAL QUE AFETA ESTRITAMENTE O TOTAL DE PRESENTES
+function calcularSomaPresentesOficial() {
+    var form = document.getElementById('form-culto-real');
     if (!form) return;
 
-    var inputs = form.querySelectorAll('.campo-numero-culto');
+    var campos = form.querySelectorAll('.input-presenca-soma');
     var soma = 0;
-    inputs.forEach(function(inp) {
+    campos.forEach(function(inp) {
         var n = parseInt(inp.value, 10);
         if (!isNaN(n) && n > 0) {
             soma += n;
         }
     });
 
-    // Atualiza estritamente o Total de Presentes (Caixa Azul)
-    var display = document.getElementById('display-total-presentes');
-    var hidden = document.getElementById('input-total-presentes-hidden');
+    // 1. Atualiza exclusivamente a Caixa Azul do Total de Presentes
+    var display = document.getElementById('display-total-azul');
+    var hidden = document.getElementById('hidden-total-azul');
     if (display) display.innerText = soma;
     if (hidden) hidden.value = soma;
 
-    // NOTA: O campo de Apelos NÃO é tocado por esta função.
+    // NOTA: O campo de Apelos NÃO é tocado por esta soma!
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    var form = document.getElementById('form-cultos-oficial');
+    var form = document.getElementById('form-culto-real');
     if (!form) return;
 
-    // 1. DESBLOQUEAR A DIGITAÇÃO LIVRE PELO TECLADO
-    var inputsNumeros = form.querySelectorAll('input[type="number"], .campo-numero-culto');
-    inputsNumeros.forEach(function(inp) {
-        inp.removeAttribute('readonly');
-        inp.removeAttribute('disabled');
-        inp.style.pointerEvents = 'auto';
-
-        // Ao focar com clique ou Tab: se estiver '0', limpa para digitar logo o número pretendido
-        inp.addEventListener('focus', function() {
-            if (this.value === '0') {
-                this.value = '';
-            }
-        });
-
-        // Ao sair do campo: se ficou vazio, volta para '0'
-        inp.addEventListener('blur', function() {
-            if (this.value.trim() === '') {
-                this.value = '0';
-            }
-            if (this.classList.contains('campo-numero-culto')) {
-                recalcularTotalPresentes();
-            }
-        });
-
-        // Ao digitar com o teclado (evento input e keyup)
-        if (inp.classList.contains('campo-numero-culto')) {
-            inp.addEventListener('input', recalcularTotalPresentes);
-            inp.addEventListener('keyup', recalcularTotalPresentes);
-            inp.addEventListener('change', recalcularTotalPresentes);
-        }
+    // Liga eventos de digitação por teclado (input, keyup, change)
+    var campos = form.querySelectorAll('.input-presenca-soma');
+    campos.forEach(function(inp) {
+        inp.addEventListener('input', calcularSomaPresentesOficial);
+        inp.addEventListener('keyup', calcularSomaPresentesOficial);
+        inp.addEventListener('change', calcularSomaPresentesOficial);
     });
+    calcularSomaPresentesOficial();
 
-    recalcularTotalPresentes();
-
-    // 2. ATIVAÇÃO AUTOMÁTICA DA ABA CULTOS SE URL TIVER ?aba=cultos
+    // Se o URL contiver ?aba=cultos, abre automaticamente a aba de cultos
     var params = new URLSearchParams(window.location.search);
     if (params.get('aba') === 'cultos') {
         var links = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="culto"]');
