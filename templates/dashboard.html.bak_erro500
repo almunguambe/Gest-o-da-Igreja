@@ -406,7 +406,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                     </div>
                 </div>
             </section>
-            
+            {% endif %}
 
             {% if pode_tesouraria %}
             <!-- ================= ABA DASHBOARD ================= -->
@@ -1449,49 +1449,35 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-
-
-<!-- script-calculo-correto-cultos -->
+<!-- script-soma-exata -->
 
 <script>
-function atualizarSomaCulto() {
-    var formCulto = document.getElementById('form-cultos-oficial') || document.querySelector('form[action*="cultos"]');
-    if (!formCulto) return;
-
-    // Apenas os campos numéricos de membros, crianças e visitantes
-    var camposMembros = formCulto.querySelectorAll('input[name="homens_adultos"], input[name="mulheres_adultas"], input[name="jovens_rapazes"], input[name="jovens_mocas"], input[name="criancas_meninos"], input[name="criancas_meninas"], input[name="visitantes_homens"], input[name="visitantes_mulheres"]');
-    
-    var somaPresentes = 0;
-    camposMembros.forEach(function(inp) {
-        var val = parseInt(inp.value, 10);
-        if (!isNaN(val) && val > 0) {
-            somaPresentes += val;
+function calcularSomaCulto() {
+    var campos = document.querySelectorAll('.campo-soma-culto');
+    var soma = 0;
+    campos.forEach(function(inp) {
+        var n = parseInt(inp.value, 10);
+        if (!isNaN(n) && n > 0) {
+            soma += n;
         }
     });
 
-    // 1. Atualiza EXCLUSIVAMENTE o Total de Presentes (Caixa Azul)
-    var displayTotal = document.getElementById('box-total-display');
-    var inputTotalHidden = document.getElementById('input-total-hidden');
-    if (displayTotal) displayTotal.innerText = somaPresentes;
-    if (inputTotalHidden) inputTotalHidden.value = somaPresentes;
+    var boxDisplay = document.getElementById('box-total-display');
+    var inputHidden = document.getElementById('input-total-hidden');
 
-    // 2. O campo de Apelos (Caixa Verde) NÃO É TOCADO pela soma.
+    if (boxDisplay) boxDisplay.innerText = soma;
+    if (inputHidden) inputHidden.value = soma;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    var formCulto = document.getElementById('form-cultos-oficial') || document.querySelector('form[action*="cultos"]');
-    if (formCulto) {
-        var campos = formCulto.querySelectorAll('input[type="number"]');
-        campos.forEach(function(inp) {
-            if (inp.name !== 'apelos') {
-                inp.addEventListener('input', atualizarSomaCulto);
-                inp.addEventListener('change', atualizarSomaCulto);
-            }
-        });
-        atualizarSomaCulto();
-    }
+    var campos = document.querySelectorAll('.campo-soma-culto');
+    campos.forEach(function(inp) {
+        inp.addEventListener('input', calcularSomaCulto);
+        inp.addEventListener('change', calcularSomaCulto);
+    });
+    calcularSomaCulto();
 
-    // Se a URL tiver ?aba=cultos, seleciona a aba Cultos & Presenças
+    // Se o URL trouxer ?aba=cultos, seleciona a aba Cultos & Presenças
     var params = new URLSearchParams(window.location.search);
     if (params.get('aba') === 'cultos') {
         var botoes = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="culto"]');
