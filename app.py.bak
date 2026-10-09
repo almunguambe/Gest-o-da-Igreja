@@ -761,18 +761,43 @@ def dashboard():
     except Exception:
         candidatos_discipulado = []
 
-    # 4. Planificações Eclesiásticas Sincronizadas
-    assegurar_tabela_planificacoes(conn)
+    # 4. Leitura Direta de Planificacoes no Dashboard
     planos = []
     try:
-        cur_pl = conn.cursor() if hasattr(conn, 'cursor') else conn
-        cur_pl.execute("SELECT * FROM planificacoes ORDER BY id DESC")
-        if cur_pl.description:
-            cols_pl = [desc[0] for desc in cur_pl.description]
-            planos = [dict(zip(cols_pl, r)) for r in cur_pl.fetchall()]
-        else:
-            planos = cur_pl.fetchall()
-    except Exception:
+        cur_dash_pl = conn.cursor() if hasattr(conn, 'cursor') else conn
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+        cur_dash_pl.execute("SELECT id, departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status FROM planificacoes ORDER BY id DESC")
+        linhas_p = cur_dash_pl.fetchall()
+        for l in linhas_p:
+            if hasattr(l, 'get'):
+                item = {
+                    'id': l.get('id'),
+                    'departamento': l.get('departamento') or 'Geral',
+                    'tipo_evento': l.get('tipo_evento') or 'Geral',
+                    'nome_actividade': l.get('nome_actividade') or 'Actividade',
+                    'data_prevista': l.get('data_prevista') or '---',
+                    'frequencia': l.get('frequencia') or 'Pontual',
+                    'responsavel_directo': l.get('responsavel_directo') or '---',
+                    'contacto': l.get('contacto') or '',
+                    'status': l.get('status') or 'Pendente'
+                }
+            else:
+                item = {
+                    'id': l[0],
+                    'departamento': l[1] or 'Geral',
+                    'tipo_evento': l[2] or 'Geral',
+                    'nome_actividade': l[3] or 'Actividade',
+                    'data_prevista': l[4] or '---',
+                    'frequencia': l[5] or 'Pontual',
+                    'responsavel_directo': l[6] or '---',
+                    'contacto': l[7] or '',
+                    'status': l[8] or 'Pendente'
+                }
+            planos.append(item)
+    except Exception as e_p:
+        print("[ERRO DASHBOARD PLANIFICACAO]:", e_p)
         planos = []
 
     # 5. Candidatos ao Batismo
@@ -3692,12 +3717,6 @@ def planificacao_nova():
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
-    # Limpeza preventiva da transação no PostgreSQL
-    if hasattr(conn, 'rollback'):
-        try: conn.rollback()
-        except: pass
-
-    # POST: GRAVAÇÃO DOS DADOS
     if request.method == 'POST':
         fd = request.form
         dep = (fd.get('departamento') or 'Geral').strip()
@@ -3715,65 +3734,20 @@ def planificacao_nova():
                  (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
                  VALUES ({marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, 'Pendente')"""
         try:
+            if hasattr(conn, 'rollback'):
+                try: conn.rollback()
+                except: pass
             cur.execute(sql, (dep, tipo, nome, data, freq, resp, cont))
-            if hasattr(conn, 'commit'): conn.commit()
+            if hasattr(conn, 'commit'):
+                conn.commit()
         except Exception as e_post:
-            print("[ERRO AO GRAVAR PLANO]:", e_post)
+            print("[ERRO GRAVAR PLANIFICACAO]:", e_post)
             if hasattr(conn, 'rollback'):
                 try: conn.rollback()
                 except: pass
 
         return redirect('/?aba=secretaria')
 
-    # GET: LEITURA COMPROVADA DO SUPABASE (Sem erros de tipo)
-    planos = []
-    try:
-        cur.execute("SELECT id, departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status FROM planificacoes ORDER BY id DESC")
-        linhas = cur.fetchall()
-        for l in linhas:
-            if hasattr(l, 'get'):
-                item = {
-                    'id': l.get('id'),
-                    'departamento': l.get('departamento') or 'Geral',
-                    'tipo_evento': l.get('tipo_evento') or 'Geral',
-                    'nome_actividade': l.get('nome_actividade') or 'Actividade',
-                    'data_prevista': l.get('data_prevista') or '---',
-                    'frequencia': l.get('frequencia') or 'Pontual',
-                    'responsavel_directo': l.get('responsavel_directo') or '---',
-                    'contacto': l.get('contacto') or '',
-                    'status': l.get('status') or 'Pendente'
-                }
-            else:
-                item = {
-                    'id': l[0],
-                    'departamento': l[1] or 'Geral',
-                    'tipo_evento': l[2] or 'Geral',
-                    'nome_actividade': l[3] or 'Actividade',
-                    'data_prevista': l[4] or '---',
-                    'frequencia': l[5] or 'Pontual',
-                    'responsavel_directo': l[6] or '---',
-                    'contacto': l[7] or '',
-                    'status': l[8] or 'Pendente'
-                }
-            planos.append(item)
-        print(f"[DEBUG PLANIFICACOES] Registos encontrados no Supabase: {len(planos)}")
-    except Exception as e_get:
-        print("[ERRO AO LER PLANOS DO SUPABASE]:", e_get)
-
-    # Identificar o template correto com o monitoramento do cronograma
-    tpl_escolhido = 'nova_planificacao.html'
-    pasta_tpl = 'templates'
-    if os.path.exists(pasta_tpl):
-        for f in os.listdir(pasta_tpl):
-            if f.endswith('.html'):
-                caminho = os.path.join(pasta_tpl, f)
-                try:
-                    with open(caminho, 'r', encoding='utf-8', errors='ignore') as arq:
-                        if 'Monitoramento do Cronograma' in arq.read():
-                            tpl_escolhido = f
-                            break
-                except:
-                    pass
-
-    return render_template(tpl_escolhido, planificacoes=planos, planos=planos)
+    # GET: Se acedido diretamente, redireciona para a aba no painel principal
+    return redirect('/?aba=secretaria')
 

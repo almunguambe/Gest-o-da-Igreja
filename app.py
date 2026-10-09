@@ -1,3 +1,35 @@
+def assegurar_tabela_cultos(conn):
+    try:
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS cultos (
+                id {id_tipo},
+                data_culto TEXT,
+                tipo_culto TEXT,
+                homens_adultos INTEGER DEFAULT 0,
+                mulheres_adultas INTEGER DEFAULT 0,
+                jovens_rapazes INTEGER DEFAULT 0,
+                jovens_mocas INTEGER DEFAULT 0,
+                criancas_meninos INTEGER DEFAULT 0,
+                criancas_meninas INTEGER DEFAULT 0,
+                visitantes_homens INTEGER DEFAULT 0,
+                visitantes_mulheres INTEGER DEFAULT 0,
+                apelos INTEGER DEFAULT 0,
+                total_presentes INTEGER DEFAULT 0,
+                pregador TEXT,
+                tema_mensagem TEXT,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        if hasattr(conn, 'commit'):
+            conn.commit()
+    except Exception as e_c:
+        try:
+            if hasattr(conn, 'rollback'): conn.rollback()
+        except: pass
+
 def assegurar_tabela_planificacoes(conn):
     try:
         cur = conn.cursor() if hasattr(conn, 'cursor') else conn
@@ -814,6 +846,40 @@ def dashboard():
         candidatos_batismo = todos_membros if 'todos_membros' in locals() else []
 
     
+    # Leitura Universal de Cultos para o Dashboard
+    cultos = []
+    try:
+        assegurar_tabela_cultos(conn)
+        cur_clt = conn.cursor() if hasattr(conn, 'cursor') else conn
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+        cur_clt.execute("SELECT id, data_culto, tipo_culto, pregador, tema_mensagem, total_presentes, apelos FROM cultos ORDER BY id DESC LIMIT 50")
+        linhas_clt = cur_clt.fetchall()
+        for l in linhas_clt:
+            if hasattr(l, 'get'):
+                cultos.append({
+                    'id': l.get('id'),
+                    'data_culto': l.get('data_culto') or '---',
+                    'tipo_culto': l.get('tipo_culto') or 'Culto',
+                    'pregador': l.get('pregador') or '---',
+                    'tema_mensagem': l.get('tema_mensagem') or '',
+                    'total_presentes': l.get('total_presentes') or 0,
+                    'apelos': l.get('apelos') or 0
+                })
+            else:
+                cultos.append({
+                    'id': l[0],
+                    'data_culto': l[1] or '---',
+                    'tipo_culto': l[2] or 'Culto',
+                    'pregador': l[3] or '---',
+                    'tema_mensagem': l[4] or '',
+                    'total_presentes': l[5] or 0,
+                    'apelos': l[6] or 0
+                })
+    except Exception as e_clt:
+        print("[AVISO LEITURA CULTOS]:", e_clt)
+        cultos = []
     return render_template('dashboard.html', professores_discipulado=professores_discipulado, candidatos_batismo=candidatos_batismo, planos=planos,
                            todos_membros=todos_membros,
                            lista_igrejas=lista_igrejas if 'lista_igrejas' in locals() else [],
