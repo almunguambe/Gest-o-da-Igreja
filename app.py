@@ -3693,114 +3693,60 @@ def planificacao_nova():
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
     tipo_conn = str(type(conn)).lower()
-    is_pg = ('psycopg' in tipo_conn) or hasattr(conn, 'cursor_factory') or ('postgres' in tipo_conn)
+    is_pg = ('psycopg' in tipo_conn) or hasattr(conn, 'cursor_factory') or ('postgres' in tipo_conn) or bool(os.environ.get('DATABASE_URL'))
 
-    # Limpeza de qualquer transacção pendente no PostgreSQL
+    # Limpeza de qualquer transação pendente
     if hasattr(conn, 'rollback'):
         try: conn.rollback()
         except: pass
 
-    # Criação garantida da tabela
-    try:
-        if is_pg:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS planificacoes (
-                    id SERIAL PRIMARY KEY,
-                    departamento TEXT,
-                    tipo_evento TEXT,
-                    nome_actividade TEXT,
-                    data_prevista TEXT,
-                    frequencia TEXT,
-                    responsavel_directo TEXT,
-                    contacto TEXT,
-                    status TEXT DEFAULT 'Pendente'
-                );
-            """)
-        else:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS planificacoes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    departamento TEXT,
-                    tipo_evento TEXT,
-                    nome_actividade TEXT,
-                    data_prevista TEXT,
-                    frequencia TEXT,
-                    responsavel_directo TEXT,
-                    contacto TEXT,
-                    status TEXT DEFAULT 'Pendente'
-                );
-            """)
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception as e_tab:
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-        print("[AVISO CRIACAO TABELA]:", e_tab)
-
-    # 1. PROCESSAR O FORMULÁRIO (POST)
+    # POST: GRAVAÇÃO NO SUPABASE
     if request.method == 'POST':
         fd = request.form
         departamento = (fd.get('departamento') or 'Geral').strip()
         tipo_evento = (fd.get('tipo_evento') or fd.get('tipo') or 'Geral').strip()
         nome_actividade = (fd.get('nome_actividade') or fd.get('actividade') or fd.get('nome') or 'Actividade').strip()
-        data_prevista = (fd.get('data_prevista') or fd.get('data') or '').strip()
+        data_prevista = (fd.get('data_prevista') or fd.get('data') or '---').strip()
         frequencia = (fd.get('frequencia') or 'Pontual / Única').strip()
-        responsavel = (fd.get('responsavel_directo') or fd.get('responsavel') or '').strip()
+        responsavel = (fd.get('responsavel_directo') or fd.get('responsavel') or '---').strip()
         contacto = (fd.get('contacto') or fd.get('telefone') or '').strip()
-
-        data_final = data_prevista if data_prevista else '---'
 
         marcador = "%s" if is_pg else "?"
         sql = f"""INSERT INTO planificacoes 
                  (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
                  VALUES ({marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, 'Pendente')"""
-        
         try:
-            if hasattr(conn, 'rollback'):
-                try: conn.rollback()
-                except: pass
-            cur.execute(sql, (departamento, tipo_evento, nome_actividade, data_final, frequencia, responsavel, contacto))
+            cur.execute(sql, (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel, contacto))
             if hasattr(conn, 'commit'): conn.commit()
-            return redirect('/secretaria/planificacao/nova')
-        except Exception as e_post:
+        except Exception as e_ins:
+            print("[ERRO INSERT]:", e_ins)
             if hasattr(conn, 'rollback'):
                 try: conn.rollback()
                 except: pass
-            # SE HOUVER ERRO NO BANCO, EXIBE NA TELA
-            return f"""
-            <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 50px auto; padding: 25px; background: #fff1f2; border: 2px solid #e11d48; border-radius: 12px;">
-                <h2 style="color: #e11d48; margin-top: 0;">⚠️ O Supabase Rejeitou a Gravação</h2>
-                <p style="color: #334155;">Mensagem retornada pela Base de Dados:</p>
-                <pre style="background: white; border: 1px solid #fca5a5; padding: 15px; border-radius: 8px; color: #991b1b; white-space: pre-wrap;">{str(e_post)}</pre>
-                <div style="margin-top: 20px;">
-                    <a href="/secretaria/planificacao/nova" style="display: inline-block; padding: 10px 20px; background: #3730a3; color: white; border-radius: 6px; text-decoration: none; font-weight: bold;">
-                        ← Voltar e Tentar Novamente
-                    </a>
-                </div>
-            </div>
-            """, 500
+        finally:
+            if hasattr(conn, 'close'):
+                try: conn.close()
+                except: pass
 
-    # 2. LEITURA DOS DADOS (GET)
+        return redirect('/secretaria/planificacao/nova')
+
+    # GET: LEITURA COMPROVADA DO SUPABASE
     planos = []
     try:
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-        cur.execute("SELECT id, departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status FROM planificacoes ORDER BY id DESC")
+        cur.execute("SELECT * FROM planificacoes ORDER BY id DESC")
         registos = cur.fetchall()
         if cur.description:
             colunas = [d[0] for d in cur.description]
             for reg in registos:
-                if isinstance(reg, dict):
-                    planos.append(reg)
-                elif hasattr(reg, 'keys'):
-                    planos.append(dict(reg))
-                else:
-                    planos.append(dict(zip(colunas, reg)))
-    except Exception as e_get:
-        print("[ERRO LEITURA PLANOS]:", e_get)
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
+                item = {}
+                for idx, col in enumerate(colunas):
+                    item[col] = reg[idx]
+                planos.append(item)
+    except Exception as e_select:
+        print("[ERRO SELECT PLANOS]:", e_select)
+    finally:
+        if hasattr(conn, 'close'):
+            try: conn.close()
             except: pass
 
     tpl_nome = 'nova_planificacao.html'
