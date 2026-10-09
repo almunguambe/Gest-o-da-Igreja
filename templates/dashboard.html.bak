@@ -692,7 +692,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">⛪ Registo Rápido de Culto</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/cultos/novo" method="POST">
     <!-- Linha 1: Data e Tipo de Culto -->
     <div class="grid grid-cols-2 gap-2">
         <div>
@@ -776,7 +776,7 @@
         <input type="text" name="tema_mensagem" placeholder="Tema da Mensagem" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
     </div>
 
-    <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
+    <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Registar Presenças do Culto</button>
 </form>
 
 
@@ -784,19 +784,48 @@
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">Histórico de Cultos</h3>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-2.5">Data/Culto</th><th class="p-2.5">Pregador</th><th class="p-2.5 text-center">Total</th><th class="p-2.5 text-center">Apelos</th></tr></thead>
-                                <tbody class="divide-y">
-                                    {% for cu in todos_cultos %}
-                                    <tr>
-                                        <td class="p-2.5 font-bold">{{ cu['data_culto'] }}<br/><span class="text-slate-400 font-normal">{{ cu['tipo_culto'] }}</span></td>
-                                        <td class="p-2.5">{{ cu['pregador'] or '-' }}</td>
-                                        <td class="p-2.5 text-center font-black text-blue-900">{{ cu['total_presentes'] }}</td>
-                                        <td class="p-2.5 text-center font-black text-emerald-700">{{ cu['novos_convertidos'] }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; color: #475569;">
+                        <th style="padding: 10px 8px;">Data/Culto</th>
+                        <th style="padding: 10px 8px;">Pregador</th>
+                        <th style="padding: 10px 8px;">Total</th>
+                        <th style="padding: 10px 8px;">Apelos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if cultos %}
+                        {% for c in cultos %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 8px;">
+                                <strong style="color: #1e293b;">{{ c.data_culto }}</strong><br>
+                                <small style="color: #64748b;">{{ c.tipo_culto }}</small>
+                            </td>
+                            <td style="padding: 12px 8px;">
+                                <strong style="color: #1e293b;">{{ c.pregador }}</strong><br>
+                                <small style="color: #64748b;">{{ c.tema_mensagem }}</small>
+                            </td>
+                            <td style="padding: 12px 8px;">
+                                <span style="background-color: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px;">
+                                    {{ c.total_presentes }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 8px;">
+                                <span style="background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px;">
+                                    {{ c.apelos }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 35px; color: #94a3b8;">
+                                Nenhum culto registado ainda. Registe o primeiro ao lado.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
                         </div>
                     </div>
                 </div>
@@ -2006,3 +2035,49 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 </script>
+
+<!-- script-cultos-e-relatorio -->
+
+<script>
+function imprimirRelatorioOficial() {
+    window.print();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Abertura automática da aba se a URL trouxer ?aba=cultos
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('aba') === 'cultos') {
+        var links = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="culto"]');
+        for (var i = 0; i < links.length; i++) {
+            var txt = links[i].innerText ? links[i].innerText.toLowerCase() : '';
+            if (txt.includes('culto') || txt.includes('presença')) {
+                links[i].click();
+                break;
+            }
+        }
+    }
+});
+</script>
+
+<style>
+@media print {
+    .sidebar, .sidebar-item, nav, aside, .btn-relatorio, button, form {
+        display: none !important;
+    }
+    main, .container, body {
+        margin: 0 !important;
+        padding: 15px !important;
+        background: white !important;
+        color: black !important;
+        width: 100% !important;
+    }
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    th, td {
+        border: 1px solid #ddd !important;
+        padding: 8px !important;
+    }
+}
+</style>
