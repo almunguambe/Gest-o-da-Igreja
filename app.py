@@ -1099,32 +1099,60 @@ def novo_membro():
 def cultos_novo():
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    assegurar_tabela_cultos(conn)
+
+    # Garantir tabela cultos no Supabase
+    try:
+        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
+        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS cultos (
+                id {id_tipo},
+                data_culto TEXT,
+                tipo_culto TEXT,
+                homens_adultos INTEGER DEFAULT 0,
+                mulheres_adultas INTEGER DEFAULT 0,
+                jovens_rapazes INTEGER DEFAULT 0,
+                jovens_mocas INTEGER DEFAULT 0,
+                criancas_meninos INTEGER DEFAULT 0,
+                criancas_meninas INTEGER DEFAULT 0,
+                visitantes_homens INTEGER DEFAULT 0,
+                visitantes_mulheres INTEGER DEFAULT 0,
+                apelos INTEGER DEFAULT 0,
+                total_presentes INTEGER DEFAULT 0,
+                pregador TEXT,
+                tema_mensagem TEXT,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        if hasattr(conn, 'commit'): conn.commit()
+    except Exception:
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
 
     fd = request.form
-    data_culto = (fd.get('data_culto') or fd.get('data') or '---').strip()
-    tipo_culto = (fd.get('tipo_culto') or fd.get('tipo') or 'Domingo Manhã').strip()
-
-    def get_num(campo):
-        val = fd.get(campo)
-        if val not in (None, ''):
-            try: return int(val)
+    def num(campo):
+        v = fd.get(campo)
+        if v not in (None, ''):
+            try: return int(v)
             except: pass
         return 0
 
-    ha = get_num('homens_adultos')
-    ma = get_num('mulheres_adultas')
-    jr = get_num('jovens_rapazes')
-    jm = get_num('jovens_mocas')
-    cm = get_num('criancas_meninos')
-    cf = get_num('criancas_meninas')
-    vh = get_num('visitantes_homens')
-    vm = get_num('visitantes_mulheres')
-    apelos = get_num('apelos')
+    data_culto = (fd.get('data_culto') or '---').strip()
+    tipo_culto = (fd.get('tipo_culto') or 'Domingo Manhã').strip()
+    ha = num('homens_adultos')
+    ma = num('mulheres_adultas')
+    jr = num('jovens_rapazes')
+    jm = num('jovens_mocas')
+    cm = num('criancas_meninos')
+    cf = num('criancas_meninas')
+    vh = num('visitantes_homens')
+    vm = num('visitantes_mulheres')
+    apelos = num('apelos')
 
-    soma_calculada = ha + ma + jr + jm + cm + cf + vh + vm
-    tot_form = get_num('total_presentes')
-    total = tot_form if tot_form > 0 else soma_calculada
+    soma_backend = ha + ma + jr + jm + cm + cf + vh + vm
+    tot_form = num('total_presentes')
+    total = tot_form if tot_form > 0 else soma_backend
 
     pregador = (fd.get('pregador') or '---').strip()
     tema = (fd.get('tema_mensagem') or '').strip()
@@ -1142,10 +1170,9 @@ def cultos_novo():
             try: conn.rollback()
             except: pass
         cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, cm, cf, vh, vm, apelos, total, pregador, tema))
-        if hasattr(conn, 'commit'):
-            conn.commit()
-    except Exception as e:
-        print("[ERRO GRAVAR CULTO]:", e)
+        if hasattr(conn, 'commit'): conn.commit()
+    except Exception as e_post:
+        print("[ERRO INSERT CULTOS]:", e_post)
         if hasattr(conn, 'rollback'):
             try: conn.rollback()
             except: pass

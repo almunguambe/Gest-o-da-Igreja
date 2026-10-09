@@ -39,11 +39,13 @@
     <!-- SIDEBAR RETRÁTIL ELEGANTE (DESKTOP FIXA / MOBILE MODAL) -->
     <aside id="sidebarMenu" class="fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-blue-950 via-slate-950 to-indigo-950 text-white shadow-2xl border-r border-indigo-500/20 transform -translate-x-full md:translate-x-0 md:static md:inset-auto transition-transform duration-300 ease-in-out flex flex-col justify-between">
         
-<div id="secao-cultos-completa" style="margin-top: 15px;">
-    <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px;">
+
+<!-- BLOCO PROFISSIONAL DE CULTOS & PRESENÇAS -->
+<div style="margin-top: 15px;">
+    <div style="display: grid; grid-template-columns: 1fr 1.35fr; gap: 24px; align-items: start;">
         
-        <!-- COLUNA ESQUERDA: FORMULÁRIO DE REGISTO DE CULTO -->
-        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+        <!-- COLUNA 1: FORMULÁRIO DE REGISTO DE CULTO -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
             <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>⛪</span> Registo Rápido de Culto
             </h3>
@@ -67,62 +69,65 @@
                     </div>
                 </div>
 
-                <!-- FAIXA ETÁRIA: MEMBROS -->
+                <!-- GRUPO: MEMBROS POR FAIXA & SEXO -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
                     <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">👥 MEMBROS POR FAIXA & SEXO</span>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
                             <label style="font-size: 11px; color: #64748b;">👨 Homens Adultos</label>
-                            <input type="number" name="homens_adultos" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="homens_adultos" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                         <div>
                             <label style="font-size: 11px; color: #64748b;">👩 Mulheres Adultas</label>
-                            <input type="number" name="mulheres_adultas" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="mulheres_adultas" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                         <div>
                             <label style="font-size: 11px; color: #64748b;">👦 Jovens Rapazes</label>
-                            <input type="number" name="jovens_rapazes" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="jovens_rapazes" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                         <div>
                             <label style="font-size: 11px; color: #64748b;">👧 Jovens Moças</label>
-                            <input type="number" name="jovens_mocas" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="jovens_mocas" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                     </div>
                 </div>
 
-                <!-- CRIANÇAS E VISITANTES -->
+                <!-- GRUPO: CRIANÇAS & VISITANTES -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
                     <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">🧒 CRIANÇAS & 💛 VISITANTES</span>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div>
                             <label style="font-size: 11px; color: #64748b;">👦 Crianças (Meninos)</label>
-                            <input type="number" name="criancas_meninos" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="criancas_meninos" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                         <div>
                             <label style="font-size: 11px; color: #64748b;">👧 Crianças (Meninas)</label>
-                            <input type="number" name="criancas_meninas" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="criancas_meninas" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                         <div>
                             <label style="font-size: 11px; color: #64748b;">💛 Visitantes (Homens)</label>
-                            <input type="number" name="visitantes_homens" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="visitantes_homens" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                         <div>
                             <label style="font-size: 11px; color: #64748b;">💛 Visitantes (Mulheres)</label>
-                            <input type="number" name="visitantes_mulheres" min="0" value="0" class="campo-soma-culto" style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                            <input type="number" name="visitantes_mulheres" min="0" value="0" class="campo-numero-culto" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px;">
                         </div>
                     </div>
                 </div>
 
-                <!-- BOXES DE APELOS E TOTAL DE PRESENTES -->
+                <!-- BOXES: APELOS (MANUAL) E TOTAL (AUTOMÁTICO) -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <!-- APELOS: LIVRE PARA DIGITAR -->
                     <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 10px; text-align: center;">
                         <label style="display: block; font-size: 12px; font-weight: bold; color: #166534; margin-bottom: 4px;">✝ Apelos / Decisões</label>
-                        <input type="number" name="apelos" id="input-apelos-oficial" min="0" value="0" style="width: 80%; padding: 6px; font-size: 18px; font-weight: bold; text-align: center; border: 1px solid #bbf7d0; border-radius: 6px; color: #166534; background: white;">
+                        <input type="number" name="apelos" id="input-apelos-livre" min="0" value="0" style="width: 85%; padding: 6px; font-size: 18px; font-weight: bold; text-align: center; border: 1px solid #bbf7d0; border-radius: 6px; color: #166534; background: white;">
                     </div>
+
+                    <!-- TOTAL: SOMA AUTOMÁTICA EM TEMPO REAL -->
                     <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 8px; padding: 10px; text-align: center;">
                         <label style="display: block; font-size: 12px; font-weight: bold; color: #1e40af; margin-bottom: 4px;">📊 Total de Presentes</label>
-                        <div id="box-total-display" style="font-size: 22px; font-weight: bold; color: #1e40af; padding: 4px 0;">0</div>
-                        <input type="hidden" name="total_presentes" id="input-total-hidden" value="0">
+                        <div id="display-total-presentes" style="font-size: 22px; font-weight: bold; color: #1e40af; padding: 4px 0;">0</div>
+                        <input type="hidden" name="total_presentes" id="input-total-presentes-hidden" value="0">
                     </div>
                 </div>
 
@@ -133,7 +138,7 @@
 
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Tema da Mensagem</label>
-                    <input type="text" name="tema_mensagem" placeholder="Ex: Salvação, Fé..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                    <input type="text" name="tema_mensagem" placeholder="Ex: A Fidelidade de Deus..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
                 </div>
 
                 <button type="submit" style="width: 100%; padding: 13px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: background 0.2s;">
@@ -142,8 +147,8 @@
             </form>
         </div>
 
-        <!-- COLUNA DIREITA: HISTÓRICO DE CULTOS -->
-        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow-x: auto;">
+        <!-- COLUNA 2: HISTÓRICO DE CULTOS -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow-x: auto;">
             <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
                 <span>📊</span> Histórico de Cultos
             </h3>
@@ -193,6 +198,8 @@
         </div>
     </div>
 </div>
+
+<!-- FIM BLOCO CULTOS -->
 
             </section>
 
@@ -1451,54 +1458,80 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-<!-- script-calculo-correto-cultos -->
+
+
+<!-- script-profissional-cultos -->
 
 <script>
-function atualizarSomaCulto() {
-    var formCulto = document.getElementById('form-cultos-oficial') || document.querySelector('form[action*="cultos"]');
-    if (!formCulto) return;
+// FUNÇÃO EXCLUSIVA DE SOMA DO TOTAL DE PRESENTES
+function recalcularTotalPresentes() {
+    var form = document.getElementById('form-cultos-oficial');
+    if (!form) return;
 
-    // Apenas os campos numéricos de membros, crianças e visitantes
-    var camposMembros = formCulto.querySelectorAll('input[name="homens_adultos"], input[name="mulheres_adultas"], input[name="jovens_rapazes"], input[name="jovens_mocas"], input[name="criancas_meninos"], input[name="criancas_meninas"], input[name="visitantes_homens"], input[name="visitantes_mulheres"]');
-    
-    var somaPresentes = 0;
-    camposMembros.forEach(function(inp) {
-        var val = parseInt(inp.value, 10);
-        if (!isNaN(val) && val > 0) {
-            somaPresentes += val;
+    var inputs = form.querySelectorAll('.campo-numero-culto');
+    var soma = 0;
+    inputs.forEach(function(inp) {
+        var n = parseInt(inp.value, 10);
+        if (!isNaN(n) && n > 0) {
+            soma += n;
         }
     });
 
-    // 1. Atualiza EXCLUSIVAMENTE o Total de Presentes (Caixa Azul)
-    var displayTotal = document.getElementById('box-total-display');
-    var inputTotalHidden = document.getElementById('input-total-hidden');
-    if (displayTotal) displayTotal.innerText = somaPresentes;
-    if (inputTotalHidden) inputTotalHidden.value = somaPresentes;
+    // Atualiza estritamente o Total de Presentes (Caixa Azul)
+    var display = document.getElementById('display-total-presentes');
+    var hidden = document.getElementById('input-total-presentes-hidden');
+    if (display) display.innerText = soma;
+    if (hidden) hidden.value = soma;
 
-    // 2. O campo de Apelos (Caixa Verde) NÃO É TOCADO pela soma.
+    // NOTA: O campo de Apelos NÃO é tocado por esta função.
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    var formCulto = document.getElementById('form-cultos-oficial') || document.querySelector('form[action*="cultos"]');
-    if (formCulto) {
-        var campos = formCulto.querySelectorAll('input[type="number"]');
-        campos.forEach(function(inp) {
-            if (inp.name !== 'apelos') {
-                inp.addEventListener('input', atualizarSomaCulto);
-                inp.addEventListener('change', atualizarSomaCulto);
+    var form = document.getElementById('form-cultos-oficial');
+    if (!form) return;
+
+    // 1. DESBLOQUEAR A DIGITAÇÃO LIVRE PELO TECLADO
+    var inputsNumeros = form.querySelectorAll('input[type="number"], .campo-numero-culto');
+    inputsNumeros.forEach(function(inp) {
+        inp.removeAttribute('readonly');
+        inp.removeAttribute('disabled');
+        inp.style.pointerEvents = 'auto';
+
+        // Ao focar com clique ou Tab: se estiver '0', limpa para digitar logo o número pretendido
+        inp.addEventListener('focus', function() {
+            if (this.value === '0') {
+                this.value = '';
             }
         });
-        atualizarSomaCulto();
-    }
 
-    // Se a URL tiver ?aba=cultos, seleciona a aba Cultos & Presenças
+        // Ao sair do campo: se ficou vazio, volta para '0'
+        inp.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.value = '0';
+            }
+            if (this.classList.contains('campo-numero-culto')) {
+                recalcularTotalPresentes();
+            }
+        });
+
+        // Ao digitar com o teclado (evento input e keyup)
+        if (inp.classList.contains('campo-numero-culto')) {
+            inp.addEventListener('input', recalcularTotalPresentes);
+            inp.addEventListener('keyup', recalcularTotalPresentes);
+            inp.addEventListener('change', recalcularTotalPresentes);
+        }
+    });
+
+    recalcularTotalPresentes();
+
+    // 2. ATIVAÇÃO AUTOMÁTICA DA ABA CULTOS SE URL TIVER ?aba=cultos
     var params = new URLSearchParams(window.location.search);
     if (params.get('aba') === 'cultos') {
-        var botoes = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="culto"]');
-        for (var i = 0; i < botoes.length; i++) {
-            var t = botoes[i].innerText ? botoes[i].innerText.toLowerCase() : '';
-            if (t.includes('culto') || t.includes('presença')) {
-                botoes[i].click();
+        var links = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="culto"]');
+        for (var i = 0; i < links.length; i++) {
+            var txt = links[i].innerText ? links[i].innerText.toLowerCase() : '';
+            if (txt.includes('culto') || txt.includes('presença')) {
+                links[i].click();
                 break;
             }
         }
