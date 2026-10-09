@@ -1100,7 +1100,6 @@ def cultos_novo():
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
-    # Garantir existência da tabela no Supabase
     try:
         is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
         id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
