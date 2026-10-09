@@ -66,7 +66,7 @@ def planificacao_nova():
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
     is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
     id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-    
+
     try:
         cur.execute(f"""
             CREATE TABLE IF NOT EXISTS planificacoes (

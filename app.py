@@ -1877,7 +1877,7 @@ def emitir_certificado_batismo(id):
                     <h3 style="color: #c9302c; margin-bottom: 10px;">Data de Batismo Necessária</h3>
                     <p style="color: #666; font-size: 15px; line-height: 1.5;">O membro selecionado ainda não tem a <b>Data de Batismo</b> registada na ficha.</p>
                     <p style="color: #888; font-size: 13px;">Preencha a data do batismo no formulário antes de gerar o documento solene.</p>
-                    <a href="/" style="display: inline-block; margin-top: 15px; padding: 10px 24px; background-color: #0d3b66; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Voltar ao Painel</a>
+                    
                 </div>
             </div>
             """, 400
@@ -2168,21 +2168,19 @@ def ver_licao_individual(cid, lid):
     </head>
     <body class="py-4">
         <div class="container" style="max-width: 860px;">
-            <!-- Barra Superior -->
+            
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
-                    <a href="/" class="text-decoration-none text-muted fw-bold">← Início</a>
+                    
                     <span class="text-muted mx-2">/</span>
                     <span class="text-primary fw-semibold">{{ classe.nome }}</span>
                 </div>
                                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-white text-dark border px-3 py-2 fw-semibold">Lição {{ lid + 1 }} de {{ total_licoes }}</span>
                     {% if concluiu_todas %}
-                    <a href="/membro/{{ m_id }}/certificado_conclusao_discipulado" target="_blank" class="btn btn-sm btn-success fw-bold">🎓 Certificado</a>
+                    
                     {% endif %}
-                    <a href="/logout" class="btn btn-sm btn-outline-danger fw-bold px-3 py-1 shadow-sm d-flex align-items-center gap-1" title="Encerrar sessão e voltar ao login">
-                        <span>🚪</span> Sair da Sala
-                    </a>
+                    
                 </div>
             </div>
 
@@ -2191,10 +2189,10 @@ def ver_licao_individual(cid, lid):
                 <div style="font-size: 3rem;">🔒</div>
                 <h3 class="fw-bold mt-3 mb-2" style="color: #0d3b66;">Classe Bloqueada</h3>
                 <p class="text-secondary mx-auto" style="max-width: 500px;">Para estudar esta lição, conclua primeiro o questionário da classe anterior com aproveitamento mínimo de 70%.</p>
-                <a href="/discipulado/classe/c1" class="btn btn-primary px-4 py-2 mt-2 fw-bold">Ir para a Classe I</a>
+                
             </div>
             {% else %}
-            <!-- Card Principal da Lição Atual -->
+            
             <div class="card-estudo">
                 <div class="header-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
@@ -2210,22 +2208,22 @@ def ver_licao_individual(cid, lid):
                         {{ licao_atual.conteudo | safe }}
                     </div>
 
-                    <!-- Navegação Próxima / Anterior -->
+                    
                     <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top flex-wrap gap-2">
                         {% if tem_anterior %}
-                        <a href="{{ url_anterior }}" class="btn-prev">« Lição Anterior</a>
+                        
                         {% else %}
                         <div></div>
                         {% endif %}
 
                         {% if tem_proxima %}
-                        <a href="{{ url_proxima }}" class="btn-next">Próxima Lição »</a>
+                        
                         {% else %}
-                        <a href="/discipulado/classe/{{ cid }}/avaliacao" class="btn btn-success fw-bold px-4 py-3 rounded-3 shadow">Fazer Avaliação da Classe 📝</a>
+                        
                         {% endif %}
                     </div>
 
-                    <!-- Enviar Dúvida Vinculada a esta Lição Específica -->
+                    
                     <div class="card-duvida">
                         <h5 class="fw-bold mb-1" style="color: #0d3b66;">💬 Ficou com alguma dúvida nesta Lição?</h5>
                         <p class="text-muted small mb-3">A sua pergunta será direcionada ao professor associada à <b>Lição {{ licao_atual.numero }}: {{ licao_atual.titulo }}</b>.</p>
@@ -2312,9 +2310,7 @@ def ver_avaliacao_classe(cid):
                         <div class="text-light">{{ classe.nome }} • Questionário Oficial</div>
                     </div>
                     <div>
-                        <a href="/logout" class="btn btn-sm btn-outline-light fw-bold px-3 py-2 shadow-sm d-flex align-items-center gap-1">
-                            <span>🚪</span> Sair da Sala
-                        </a>
+                        
                     </div>
                 </div>
                 <div class="card-body p-4 p-md-5">
@@ -2340,7 +2336,7 @@ def ver_avaliacao_classe(cid):
                         {% endfor %}
 
                         <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="/discipulado/classe/{{ cid }}/licao/0" class="btn btn-outline-secondary">« Rever Lições</a>
+                            
                             <button type="submit" id="btnSubmeter" class="btn btn-primary fw-bold px-4 py-3 rounded-3 shadow">
                                 <span>Submeter Respostas e Concluir Classe »</span>
                             </button>
@@ -2509,9 +2505,9 @@ def processar_avaliacao_discipulado(cid):
     titulo = "Parabéns!" if status == "Aprovado" else "Quase lá!"
 
     if status == "Aprovado":
-        botao_acao = f'<a href="{proxima_url}" class="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-600/30 transition block">Avançar para a Próxima Classe ➔</a>'
+        botao_acao = f''
     else:
-        botao_acao = f'<a href="{repetir_url}" class="w-full py-3.5 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-sm shadow-lg shadow-amber-600/30 transition block">Rever Lições e Tentar Novamente ↺</a>'
+        botao_acao = f''
 
     html_resultado = f"""<!DOCTYPE html>
 <html lang="pt">
@@ -2543,9 +2539,7 @@ def processar_avaliacao_discipulado(cid):
 
         <div class="pt-2 flex flex-col gap-2.5">
             {botao_acao}
-            <a href="/discipulado/classe/{cid}" class="w-full py-2.5 px-6 rounded-2xl text-slate-500 hover:text-slate-800 text-xs font-bold transition block">
-                Voltar ao Índice da Classe
-            </a>
+            
         </div>
     </div>
 </body>
@@ -3230,7 +3224,7 @@ def redefinir_senha_urgente_admin():
             <p style="font-size: 18px;">Utilizador: <b>admin</b></p>
             <p style="font-size: 18px;">Nova Palavra-passe: <b style="background: #fef08a; padding: 4px 8px; border-radius: 4px;">admin123</b></p>
             <br><br>
-            <a href="/login" style="background: #0d3b66; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ir para o Login</a>
+            
         </div>
         '''
     except Exception as e:
