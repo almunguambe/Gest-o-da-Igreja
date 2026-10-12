@@ -1100,7 +1100,6 @@ def cultos_novo():
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
-    # Garantir existência da tabela no Supabase
     try:
         is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
         id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
@@ -1131,14 +1130,18 @@ def cultos_novo():
             except: pass
 
     fd = request.form
-    def n(campo):
-        v = fd.get(campo)
+    def n(k):
+        v = fd.get(k)
         if v not in (None, ''):
             try: return int(v)
             except: pass
         return 0
 
-    data_culto = (fd.get('data_culto') or '---').strip()
+    from datetime import datetime
+    data_culto = (fd.get('data_culto') or '').strip()
+    if not data_culto or data_culto in ('mm/dd/yyyy', '---'):
+        data_culto = datetime.now().strftime('%Y-%m-%d')
+
     tipo_culto = (fd.get('tipo_culto') or 'Domingo Manhã').strip()
     ha = n('homens_adultos')
     ma = n('mulheres_adultas')
@@ -1150,10 +1153,8 @@ def cultos_novo():
     vm = n('visitantes_mulheres')
     apelos = n('apelos')
 
-    # CÁLCULO AUTOMÁTICO FEITO DIRETAMENTE NO PYTHON (NÃO FALHA)
-    soma_automatica = ha + ma + jr + jm + cm + cf + vh + vm
-    tot_digitado = n('total_presentes')
-    total = tot_digitado if tot_digitado > 0 else soma_automatica
+    # CÁLCULO FEITO NO SERVIDOR
+    total = ha + ma + jr + jm + cm + cf + vh + vm
 
     pregador = (fd.get('pregador') or '---').strip()
     tema = (fd.get('tema_mensagem') or '').strip()
@@ -1167,13 +1168,10 @@ def cultos_novo():
               apelos, total_presentes, pregador, tema_mensagem)
              VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m})"""
     try:
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
         cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, cm, cf, vh, vm, apelos, total, pregador, tema))
         if hasattr(conn, 'commit'): conn.commit()
-    except Exception as e_post:
-        print("[ERRO GRAVAR CULTO]:", e_post)
+    except Exception as e:
+        print("[ERRO GRAVACAO CULTO]:", e)
         if hasattr(conn, 'rollback'):
             try: conn.rollback()
             except: pass

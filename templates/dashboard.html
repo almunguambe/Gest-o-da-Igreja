@@ -689,116 +689,159 @@
 
             <!-- ================= ABA 2: CULTOS ================= -->
             <section id="aba-cultos" class="tab-content space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
-                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">⛪ Registo Rápido de Culto</h3>
-                        <form action="/cultos/novo" method="POST" id="form-culto-real">
-    <!-- Linha 1: Data e Tipo de Culto -->
-    <div class="grid grid-cols-2 gap-2">
-        <div>
-            <label class="text-[11px] font-bold text-slate-600 block mb-1">📅 Data do Culto</label>
-            <input type="date" name="data_prevista" name="data_prevista" name="data_culto"  class="w-full h-10 px-2 text-sm border-2 rounded-xl bg-white font-medium">
-        </div>
-        <div>
-            <label class="text-[11px] font-bold text-slate-600 block mb-1">⛪ Tipo de Culto</label>
-            <select name="tipo_culto" class="w-full h-10 px-2 text-sm border-2 rounded-xl bg-white font-bold text-slate-800">
-                <option value="Domingo Manhã">Domingo Manhã</option>
-                <option value="Domingo Noite">Domingo Noite</option>
-                <option value="Quarta-feira">Quarta-feira</option>
-                <option value="Sexta-feira (Vigília)">Sexta-feira (Vigília)</option>
-                <option value="Culto de Obreiros">Culto de Obreiros</option>
-                <option value="Culto Especial">Culto Especial</option>
-            </select>
-        </div>
-    </div>
+                <!-- ================= MÓDULO CULTOS REFEITO DO ZERO ================= -->
+<div style="display: grid; grid-template-columns: 1fr 1.35fr; gap: 24px; align-items: start; margin-top: 15px; width: 100%;">
+    
+    <!-- CARD 1: FORMULÁRIO NATIVO DE REGISTO DE CULTO -->
+    <div style="background: white; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+        <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+            <span>⛪</span> Registo Rápido de Culto
+        </h3>
 
-    <!-- Bloco 1: Membros Adultos & Jovens -->
-    <div class="p-3 bg-slate-50 border rounded-2xl space-y-2">
-        <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 block">👥 Membros por Faixa & Sexo</span>
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👨 Homens Adultos</label>
-                <input type="number" min="0" name="homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
+        <form action="/cultos/novo" method="POST" style="margin-top: 15px;">
+            <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">📅 Data do Culto</label>
+                    <input type="date" name="data_culto" style="width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">⛪ Tipo de Culto</label>
+                    <select name="tipo_culto" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                        <option value="Domingo Manhã">Domingo Manhã</option>
+                        <option value="Domingo Tarde/Noite">Domingo Tarde/Noite</option>
+                        <option value="Quarta-Feira / Doutrina">Quarta-Feira / Doutrina</option>
+                        <option value="Sexta-Feira / Oração">Sexta-Feira / Oração</option>
+                        <option value="Vigília">Vigília</option>
+                        <option value="Culto Especial">Culto Especial</option>
+                    </select>
+                </div>
             </div>
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👩 Mulheres Adultas</label>
-                <input type="number" min="0" name="mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-blue-700 block mb-0.5">👦 Jovens Rapazes</label>
-                <input type="number" min="0" name="jovens_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-blue-200 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-pink-700 block mb-0.5">👧 Jovens Moças</label>
-                <input type="number" min="0" name="jovens_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-pink-200 rounded-xl text-center">
-            </div>
-        </div>
-    </div>
 
-    <!-- Bloco 2: Crianças & Visitantes -->
-    <div class="p-3 bg-slate-50 border rounded-2xl space-y-2">
-        <span class="text-[11px] font-black uppercase tracking-wider text-slate-700 block">🧒 Crianças & 🤝 Visitantes</span>
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">🧒 Crianças (Meninos)</label>
-                <input type="number" min="0" name="criancas_meninos" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-slate-600 block mb-0.5">👧 Crianças (Meninas)</label>
-                <input type="number" min="0" name="criancas_meninas" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Homens)</label>
-                <input type="number" min="0" name="visitantes_homens" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
-            </div>
-            <div>
-                <label class="text-[11px] font-semibold text-amber-700 block mb-0.5">🤝 Visitantes (Mulheres)</label>
-                <input type="number" min="0" name="visitantes_mulheres" value="0" class="campo-soma w-full h-10 px-2 text-sm font-bold border-2 border-amber-200 rounded-xl text-center">
-            </div>
-        </div>
-    </div>
-
-    <!-- Bloco 3: Decisões & Total Geral -->
-    <div class="grid grid-cols-2 gap-2 p-3 bg-emerald-50/70 border border-emerald-200 rounded-2xl">
-        <div>
-            <label class="text-[11px] font-black text-emerald-900 block mb-0.5">✝️ Apelos / Decisões</label>
-            <input type="number" min="0" name="novos_convertidos" value="0" class="w-full h-10 px-2 text-sm font-black text-emerald-800 border-2 border-emerald-300 rounded-xl text-center bg-white">
-        </div>
-        <div>
-            <label class="text-[11px] font-black text-indigo-900 block mb-0.5">📊 Total de Presentes</label>
-            <input type="text" id="total_geral_display" readonly value="0" class="w-full h-10 px-2 text-sm font-black text-indigo-950 border-2 border-indigo-400 bg-indigo-100/60 rounded-xl text-center cursor-not-allowed">
-        </div>
-    </div>
-
-    <!-- Mensageiro e Tema -->
-    <div class="space-y-2">
-        <input type="text" name="pregador" placeholder="Pregador (Palavra)" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
-        <input type="text" name="tema_mensagem" placeholder="Tema da Mensagem" class="w-full h-10 px-3 text-sm border-2 rounded-xl">
-    </div>
-
-    <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" type="submit">Registar Presenças do Culto</button>
-</form>
-
-
+            <!-- FAIXA & SEXO -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">👥 MEMBROS POR FAIXA & SEXO</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">👨 Homens Adultos</label>
+                        <input type="number" name="homens_adultos" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                     </div>
-                    <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
-                        <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">Histórico de Cultos</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 border-b"><tr><th class="p-2.5">Data/Culto</th><th class="p-2.5">Pregador</th><th class="p-2.5 text-center">Total</th><th class="p-2.5 text-center">Apelos</th></tr></thead>
-                                <tbody class="divide-y">
-                                    {% for cu in todos_cultos %}
-                                    <tr>
-                                        <td class="p-2.5 font-bold">{{ cu['data_culto'] }}<br/><span class="text-slate-400 font-normal">{{ cu['tipo_culto'] }}</span></td>
-                                        <td class="p-2.5">{{ cu['pregador'] or '-' }}</td>
-                                        <td class="p-2.5 text-center font-black text-blue-900">{{ cu['total_presentes'] }}</td>
-                                        <td class="p-2.5 text-center font-black text-emerald-700">{{ cu['novos_convertidos'] }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">👩 Mulheres Adultas</label>
+                        <input type="number" name="mulheres_adultas" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
                     </div>
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">👦 Jovens Rapazes</label>
+                        <input type="number" name="jovens_rapazes" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">👧 Jovens Moças</label>
+                        <input type="number" name="jovens_mocas" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CRIANÇAS & VISITANTES -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+                <span style="font-size: 12px; font-weight: bold; color: #334155; display: block; margin-bottom: 8px;">🧒 CRIANÇAS & 💛 VISITANTES</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">👦 Crianças (Meninos)</label>
+                        <input type="number" name="criancas_meninos" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">👧 Crianças (Meninas)</label>
+                        <input type="number" name="criancas_meninas" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">💛 Visitantes (Homens)</label>
+                        <input type="number" name="visitantes_homens" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: #64748b; font-weight: 500;">💛 Visitantes (Mulheres)</label>
+                        <input type="number" name="visitantes_mulheres" value="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; font-weight: 600;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- APELOS & TOTAL -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 10px; text-align: center;">
+                    <label style="display: block; font-size: 12px; font-weight: bold; color: #166534; margin-bottom: 4px;">✝ Apelos / Decisões</label>
+                    <input type="number" name="apelos" value="0" min="0" style="width: 85%; padding: 6px; font-size: 18px; font-weight: bold; text-align: center; border: 1px solid #bbf7d0; border-radius: 6px; color: #166534; background: white;">
+                </div>
+                <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 8px; padding: 10px; text-align: center;">
+                    <label style="display: block; font-size: 12px; font-weight: bold; color: #1e40af; margin-bottom: 4px;">📊 Total de Presentes</label>
+                    <div style="font-size: 13px; font-weight: bold; color: #1e40af; padding: 8px 0;">Calculado ao Gravar</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Pregador (Palavra)</label>
+                <input type="text" name="pregador" placeholder="Ex: Pastor / Obreiro" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">Tema da Mensagem</label>
+                <input type="text" name="tema_mensagem" placeholder="Ex: A Fidelidade de Deus..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 14px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">
+                Registar Presenças do Culto
+            </button>
+        </form>
+    </div>
+
+    <!-- CARD 2: HISTÓRICO DE CULTOS CONECTADO -->
+    <div style="background: white; border-radius: 12px; padding: 22px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; overflow-x: auto;">
+        <h3 style="margin-top: 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+            <span>📊</span> Histórico de Cultos
+        </h3>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; color: #475569;">
+                    <th style="padding: 10px 8px;">Data/Culto</th>
+                    <th style="padding: 10px 8px;">Pregador</th>
+                    <th style="padding: 10px 8px;">Total</th>
+                    <th style="padding: 10px 8px;">Apelos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if cultos %}
+                    {% for c in cultos %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 8px;">
+                            <strong style="color: #1e293b;">{{ c.data_culto }}</strong><br>
+                            <small style="color: #64748b;">{{ c.tipo_culto }}</small>
+                        </td>
+                        <td style="padding: 12px 8px;">
+                            <strong style="color: #1e293b;">{{ c.pregador }}</strong><br>
+                            <small style="color: #64748b;">{{ c.tema_mensagem }}</small>
+                        </td>
+                        <td style="padding: 12px 8px;">
+                            <span style="background-color: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px;">
+                                {{ c.total_presentes }}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 8px;">
+                            <span style="background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px;">
+                                {{ c.apelos }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 35px; color: #94a3b8;">
+                            Nenhum culto registado ainda. Registe o primeiro ao lado.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- ================= FIM MÓDULO CULTOS ================= -->
                 </div>
             </section>
 
@@ -2015,4 +2058,19 @@ window.addEventListener('error', function(e) {
         e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nome) + '&background=3730a3&color=fff&size=128';
     }
 }, true);
+</script>
+
+<!-- script-suporte-cultos -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var p = new URLSearchParams(window.location.search);
+    if (p.get('aba') === 'cultos') {
+        var bts = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item');
+        bts.forEach(function(b) {
+            var t = (b.innerText || '').toLowerCase();
+            if (t.includes('culto') || t.includes('presença')) b.click();
+        });
+    }
+});
 </script>
