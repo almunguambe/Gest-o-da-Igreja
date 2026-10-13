@@ -66,7 +66,7 @@
             {% endif %}
 
             <!-- Formulário de Autenticação -->
-            <form enctype="multipart/form-data" novalidate action="/login" method="POST" class="space-y-4">
+            <form action="/login" method="POST" class="space-y-4">
                 
                 <div>
                     <label class="block text-xs font-bold uppercase text-slate-700 mb-1.5 ml-1">Utilizador</label>
@@ -76,7 +76,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </span>
-                        <input type="text" name="usuario"  placeholder="ex: admin ou tesoureiro" 
+                        <input type="text" name="usuario" required placeholder="ex: admin ou tesoureiro" 
                                class="w-full pl-10 pr-4 py-3 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs sm:text-sm font-medium transition duration-200 focus:ring-4 focus:ring-blue-600/10">
                     </div>
                 </div>
@@ -89,7 +89,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </span>
-                        <input type="password" name="senha"  placeholder="••••••••" 
+                        <input type="password" name="senha" required placeholder="••••••••" 
                                class="w-full pl-10 pr-4 py-3 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs sm:text-sm font-medium transition duration-200 focus:ring-4 focus:ring-blue-600/10">
                     </div>
                 </div>
@@ -111,43 +111,6 @@
         </div>
 
     </div>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // 1. Destruir botao do certificado nas licoes
-    let textoPagina = document.body.innerText.toLowerCase();
-    if(textoPagina.includes("lição 1") || window.location.href.toLowerCase().includes("licao")) {
-        document.querySelectorAll("a, button").forEach(btn => {
-            if(btn.innerText.toLowerCase().includes("certificado")) {
-                btn.remove(); // Remove completamente do HTML
-            }
-        });
-    }
-    
-    // 2. Garantir que os campos têm as etiquetas corretas para o Python
-    let btnGravar = document.querySelector("button");
-    if(btnGravar && btnGravar.innerText.includes("Gravar")) {
-        btnGravar.type = "submit";
-        
-        document.querySelectorAll("input").forEach(inp => {
-            let p = (inp.placeholder || "").toLowerCase();
-            if(p.includes("semin") && !inp.name) inp.name = "nome_actividade";
-            if(p.includes("odete") && !inp.name) inp.name = "responsavel_directo";
-            if(p.includes("825") && !inp.name) inp.name = "contacto";
-            if(inp.type === "date" && !inp.name) inp.name = "data_prevista";
-        });
-        
-        document.querySelectorAll("select").forEach((sel, idx) => {
-            if(!sel.name) {
-                if(idx === 0) sel.name = "departamento";
-                if(idx === 1) sel.name = "tipo_evento";
-                if(idx === 2) sel.name = "frequencia";
-            }
-        });
-    }
-});
-</script>
 
 </body>
 </html>

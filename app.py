@@ -1,60 +1,3 @@
-def assegurar_tabela_cultos(conn):
-    try:
-        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS cultos (
-                id {id_tipo},
-                data_culto TEXT,
-                tipo_culto TEXT,
-                homens_adultos INTEGER DEFAULT 0,
-                mulheres_adultas INTEGER DEFAULT 0,
-                jovens_rapazes INTEGER DEFAULT 0,
-                jovens_mocas INTEGER DEFAULT 0,
-                criancas_meninos INTEGER DEFAULT 0,
-                criancas_meninas INTEGER DEFAULT 0,
-                visitantes_homens INTEGER DEFAULT 0,
-                visitantes_mulheres INTEGER DEFAULT 0,
-                apelos INTEGER DEFAULT 0,
-                total_presentes INTEGER DEFAULT 0,
-                pregador TEXT,
-                tema_mensagem TEXT,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        if hasattr(conn, 'commit'):
-            conn.commit()
-    except Exception as e_c:
-        try:
-            if hasattr(conn, 'rollback'): conn.rollback()
-        except: pass
-
-def assegurar_tabela_planificacoes(conn):
-    try:
-        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-        id_col = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS planificacoes (
-                id {id_col},
-                departamento TEXT,
-                tipo_evento TEXT,
-                nome_actividade TEXT,
-                data_prevista TEXT,
-                frequencia TEXT,
-                responsavel_directo TEXT,
-                contacto TEXT,
-                status TEXT DEFAULT 'Pendente'
-            );
-        """)
-        if hasattr(conn, 'commit'):
-            conn.commit()
-    except Exception:
-        try:
-            if hasattr(conn, 'rollback'): conn.rollback()
-        except Exception: pass
-
 import qrcode
 from modulo_escola_biblica import CURRICULO_CLASSES, gerar_pdf_conclusao_discipulado
 import os
@@ -66,7 +9,7 @@ except ImportError:
 
 import os
 try:
-    from psycopg2.extras import DictCursor
+    from psycopg2.extras import RealDictCursor
 except ImportError:
     psycopg2 = None
 
@@ -91,92 +34,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 
-def _val(row):
-    if row is None:
-        return 0
-    if isinstance(row, dict):
-        return list(row.values())[0]
-    return row[0]
-
-import json
-_original_dumps = json.dumps
-def _custom_dumps(*args, **kwargs):
-    if 'default' not in kwargs:
-        kwargs['default'] = str
-    return _original_dumps(*args, **kwargs)
-json.dumps = _custom_dumps
-
-
-def criar_tabela_planificacoes_se_faltar(conn):
-    try:
-        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-        is_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
-        if is_pg:
-            cur.execute('''
-                CREATE TABLE IF NOT EXISTS planificacoes (
-                    id SERIAL PRIMARY KEY,
-                    departamento VARCHAR(150),
-                    tipo_evento VARCHAR(150),
-                    nome_actividade VARCHAR(255),
-                    data_prevista VARCHAR(50),
-                    frequencia VARCHAR(100),
-                    responsavel_directo VARCHAR(150),
-                    contacto VARCHAR(100),
-                    status VARCHAR(50) DEFAULT 'Pendente'
-                );
-            ''')
-        else:
-            cur.execute('''
-                CREATE TABLE IF NOT EXISTS planificacoes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    departamento TEXT,
-                    tipo_evento TEXT,
-                    nome_actividade TEXT,
-                    data_prevista TEXT,
-                    frequencia TEXT,
-                    responsavel_directo TEXT,
-                    contacto TEXT,
-                    status TEXT DEFAULT 'Pendente'
-                );
-            ''')
-        if hasattr(conn, 'commit'):
-            conn.commit()
-    except Exception as e:
-        if hasattr(conn, 'rollback'):
-            conn.rollback()
-
 app = Flask(__name__)
-
-def is_admin():
-    from flask import session
-    cargo = str(session.get('cargo', '')).lower()
-    return cargo in ['pastor', 'admin', 'superadmin', 'tesoureiro', 'tesouraria', 'secretário', 'secretaria', 'lider', 'líder']
-
-
-
-def can_tesouraria():
-    from flask import session
-    cargo = str(session.get('cargo', '')).lower()
-    # Dá permissão geral aos cargos administrativos para o painel abrir
-    return cargo in ['pastor', 'admin', 'superadmin', 'tesoureiro', 'tesouraria', 'secretário', 'secretaria', 'lider', 'líder']
-
-
-
-def can_cadastro():
-    from flask import session
-    cargo = str(session.get('cargo', '')).lower()
-    return cargo in ['pastor', 'admin', 'secretário', 'secretaria', 'secretario', 'tesoureiro', 'tesouraria', 'superadmin']
-
-def can_financeiro():
-    from flask import session
-    cargo = str(session.get('cargo', '')).lower()
-    return cargo in ['pastor', 'admin', 'tesoureiro', 'tesouraria', 'superadmin']
-
-def can_admin():
-    from flask import session
-    cargo = str(session.get('cargo', '')).lower()
-    return cargo in ['pastor', 'admin', 'superadmin']
-
 
 import os
 import sqlite3
@@ -187,173 +45,15 @@ except ImportError:
     psycopg2 = None
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    import os
-import sqlite3
-import urllib.parse as up
 
-# Suporte nativo a PostgreSQL via pg8000 (compatível com Python 3.14+)
-has_postgres = False
-try:
-    import pg8000.dbapi as pg_driver
-    has_postgres = True
-except Exception:
-    try:
-        import psycopg2 as pg_driver
-        has_postgres = True
-    except Exception:
-        pg_driver = None
-
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = os.environ.get("DATABASE_URL", "")
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-import os
-
-class HybridRow(dict):
-    """Permite acesso tanto por chave row['coluna'] quanto por indice row[0]"""
-    def __init__(self, cursor, row_values):
-        super().__init__()
-        self._values = list(row_values)
-        for idx, col in enumerate(cursor.description):
-            self[col.name] = row_values[idx]
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            return self._values[item]
-        return super().__getitem__(item)
-
-class HybridCursor:
-    def __init__(self, cur, conn):
-        self._cur = cur
-        self._conn = conn
-
-    def execute(self, sql, params=None):
-        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
-        try:
-            if hasattr(self, '_conn'):
-                self._conn.rollback()
-            elif hasattr(self._cur, 'connection'):
-                self._cur.connection.rollback()
-        except:
-            pass
-
-        import re
-        if isinstance(sql, str):
-            if 'AUTOINCREMENT' in sql.upper():
-                sql = re.sub(r'INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT', 'SERIAL PRIMARY KEY', sql, flags=re.IGNORECASE)
-                sql = re.sub(r'AUTOINCREMENT', '', sql, flags=re.IGNORECASE)
-            if params is not None and '?' in sql:
-                sql = sql.replace('?', '%s')
-        try:
-            if params is not None:
-                return self._cur.execute(sql, params)
-            return self._cur.execute(sql)
-        except Exception as e:
-            # Reseta a transação para o próximo comando nunca herdar o estado abortado
-            try:
-                self._conn.rollback()
-            except Exception:
-                pass
-            if 'CREATE TABLE' in str(sql).upper():
-                print(f"[AVISO CREATE TABLE IGNORADO] {e}")
-                return None
-            raise e
-
-    def fetchone(self):
-        try:
-            row = self._cur.fetchone()
-            return row
-        except Exception:
-            return None
-
-    def fetchall(self):
-        try:
-            return self._cur.fetchall()
-        except Exception:
-            return []
-
-    def __iter__(self):
-        try:
-            for r in self._cur:
-                yield r
-        except Exception:
-            return iter([])
-
-    def __getattr__(self, name):
-        return getattr(self._cur, name)
-
-class HybridConn:
-    def __init__(self, conn):
-        self._conn = conn
-        try:
-            self._conn.autocommit = True
-        except Exception:
-            pass
-
-    def cursor(self):
-        return HybridCursor(self._conn.cursor(), self._conn)
-
-    def execute(self, sql, params=None):
-        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
-        try:
-            if hasattr(self, '_conn'):
-                self._conn.rollback()
-            elif hasattr(self._cur, 'connection'):
-                self._cur.connection.rollback()
-        except:
-            pass
-
-        c = self.cursor()
-        c.execute(sql, params)
-        return c
-
-    def commit(self):
-        try:
-            return self._conn.commit()
-        except Exception:
-            pass
-
-    def rollback(self):
-        try:
-            return self._conn.rollback()
-        except Exception:
-            pass
-
-    def close(self):
-        try:
-            return self._conn.close()
-        except Exception:
-            pass
-
-    def __getattr__(self, name):
-        return getattr(self._conn, name)
-
-def get_db():
-    db_url = os.environ.get("DATABASE_URL", "")
-    if db_url and db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    
-    if db_url:
-        try:
-            import psycopg2
-            raw_conn = psycopg2.connect(db_url)
-            raw_conn.autocommit = True
-            raw_conn.autocommit = True
-            return HybridConn(raw_conn)
-        except Exception as e:
-            print(f"[ERRO POSTGRES get_db] {e}")
-
-
-    import sqlite3
+def get_db_connection():
+    if DATABASE_URL and psycopg2:
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.cursor_factory = psycopg2.extras.RealDictCursor
+        return conn
     conn = sqlite3.connect("gestao_chicuque.db")
     conn.row_factory = sqlite3.Row
     return conn
-
-def get_db_connection():
-    return get_db()
 
 app.secret_key = "iead_chicuque_chave_super_segura_2026"
 import os
@@ -368,15 +68,6 @@ class CompatCursor:
         self._cur = cursor
         self._is_pg = is_pg
     def execute(self, sql, params=None):
-        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
-        try:
-            if hasattr(self, '_conn'):
-                self._conn.rollback()
-            elif hasattr(self._cur, 'connection'):
-                self._cur.connection.rollback()
-        except:
-            pass
-
         if self._is_pg and sql:
             # Converte ? para %s para PostgreSQL
             sql = sql.replace('?', '%s')
@@ -402,15 +93,6 @@ class CompatConn:
     def cursor(self):
         return CompatCursor(self._conn.cursor(), self._is_pg)
     def execute(self, sql, params=None):
-        # [BLINDAGEM] Limpa o estado da transacao anterior para o PostgreSQL nao travar
-        try:
-            if hasattr(self, '_conn'):
-                self._conn.rollback()
-            elif hasattr(self._cur, 'connection'):
-                self._cur.connection.rollback()
-        except:
-            pass
-
         cur = self.cursor()
         cur.execute(sql, params)
         return cur
@@ -427,7 +109,7 @@ def get_db():
         try:
             if pg_url.startswith("postgres://"):
                 pg_url = pg_url.replace("postgres://", "postgresql://", 1)
-            conn = psycopg2.connect(pg_url, cursor_factory=psycopg2.extras.DictCursor)
+            conn = psycopg2.connect(pg_url, cursor_factory=psycopg2.extras.RealDictCursor)
             return CompatConn(conn, is_pg=True)
         except Exception as e:
             print(f"Erro ao conectar ao PostgreSQL, usando fallback SQLite: {e}")
@@ -442,14 +124,8 @@ def executar_migracao_garantida():
         
         # 1. Tabela igrejas
         c.execute("""
-            CREATE TABLE IF NOT EXISTS usuarios (
-                    id SERIAL PRIMARY KEY,
-                    username TEXT NOT NULL UNIQUE,
-                    senha TEXT NOT NULL,
-                    nivel TEXT DEFAULT 'admin'
-                );
-                CREATE TABLE IF NOT EXISTS igrejas (
-                id SERIAL PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS igrejas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nome TEXT NOT NULL UNIQUE,
                 cidade TEXT,
                 distrito TEXT,
@@ -534,48 +210,431 @@ def sync_puxar_nuvem():
 def init_db():
     conn = get_db()
     c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS igrejas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL UNIQUE,
+        cidade TEXT,
+        distrito TEXT,
+        pastor TEXT,
+        telefone TEXT,
+        ativa INTEGER DEFAULT 1,
+        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    c.execute("SELECT id FROM igrejas WHERE id = 1")
+    if not c.fetchone():
+        c.execute("INSERT INTO igrejas (id, nome, cidade, distrito, pastor, telefone, ativa) VALUES (1, 'Congregação de Chicuque', 'Maxixe', 'Maxixe', 'Pastor Local', '+258 84 000 0000', 1)")
+    c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        cargo TEXT NOT NULL
+    )''')
     
-    # Detectar se é PostgreSQL real
-    is_real_pg = 'psycopg' in str(type(conn)).lower() or hasattr(conn, 'cursor_factory')
+    try:
+        c.execute("ALTER TABLE membros ADD COLUMN estado_civil TEXT DEFAULT 'Solteiro(a)'")
+    except: pass
 
-    if is_real_pg:
-        # Se for PostgreSQL (Supabase), as tabelas já foram criadas ou usam sintaxe SERIAL
-        try:
+    
+    # Novas tabelas de configuração eclesiástica
+    try:
+        c.execute('''CREATE TABLE IF NOT EXISTS config_cargos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_cultos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_contas (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_atividades (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS igrejas_distritos (id INTEGER PRIMARY KEY AUTOINCREMENT, provincia TEXT, distrito TEXT, nome TEXT)''')
+    except:
+        pass
+
+    
+    try:
+        c.execute('''CREATE TABLE IF NOT EXISTS config_eventos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+    except: pass
+
+    c.execute('''CREATE TABLE IF NOT EXISTS membros (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        telefone TEXT,
+        genero TEXT,
+        data_nascimento TEXT,
+        faixa_etaria TEXT,
+        naturalidade TEXT,
+        bairro TEXT,
+        filiacao TEXT,
+        tipo_documento TEXT,
+        numero_documento TEXT,
+        ano_conversao INTEGER,
+        data_batismo TEXT,
+        posicao_atual TEXT,
+        progressoes TEXT,
+        departamento TEXT,
+        foto_path TEXT,
+        observacoes TEXT,
+        data_registo TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS financeiro (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tipo TEXT,
+        local_movimento TEXT DEFAULT 'Caixa',
+        departamento TEXT DEFAULT 'Geral',
+        categoria TEXT NOT NULL,
+        valor REAL NOT NULL,
+        data_movimento TEXT NOT NULL,
+        dia INTEGER,
+        mes INTEGER,
+        ano INTEGER,
+        data_registo TEXT NOT NULL,
+        membro_id INTEGER,
+        descricao TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS transferencias (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data_movimento TEXT NOT NULL,
+        origem_local TEXT NOT NULL,
+        origem_depto TEXT NOT NULL,
+        destino_local TEXT NOT NULL,
+        destino_depto TEXT NOT NULL,
+        valor REAL NOT NULL,
+        motivo TEXT NOT NULL,
+        data_registo TEXT NOT NULL
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS casamentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        noivo TEXT NOT NULL,
+        noiva TEXT NOT NULL,
+        data_casamento TEXT NOT NULL,
+        pastor_oficiante TEXT,
+        data_registo TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS mortes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome_falecido TEXT NOT NULL,
+        data_falecimento TEXT NOT NULL,
+        observacoes TEXT,
+        data_registo TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS departamentos_lista (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT UNIQUE NOT NULL
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS categorias_financeiras (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tipo TEXT NOT NULL,
+        nome TEXT NOT NULL
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS zonas_lista (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT UNIQUE NOT NULL
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS cultos_frequencia (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data_culto TEXT NOT NULL,
+        tipo_culto TEXT NOT NULL,
+        homens INTEGER DEFAULT 0,
+        mulheres INTEGER DEFAULT 0,
+        jovens INTEGER DEFAULT 0,
+        criancas INTEGER DEFAULT 0,
+        visitantes INTEGER DEFAULT 0,
+        novos_convertidos INTEGER DEFAULT 0,
+        total_presentes INTEGER DEFAULT 0,
+        pregador TEXT,
+        tema_mensagem TEXT,
+        data_registo TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS novos_convertidos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        telefone TEXT,
+        bairro TEXT,
+        data_decisao TEXT NOT NULL,
+        culto_origem TEXT,
+        quem_convidou TEXT,
+        status_discipulado TEXT DEFAULT 'Decisão Inicial',
+        observacoes TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS patrimonio (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item TEXT NOT NULL,
+        departamento TEXT DEFAULT 'Geral',
+        quantidade INTEGER DEFAULT 1,
+        estado_conservacao TEXT DEFAULT 'Bom',
+        localizacao TEXT,
+        observacoes TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS escalas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data_escala TEXT NOT NULL,
+        tipo_culto TEXT NOT NULL,
+        dirigente TEXT,
+        pregador TEXT,
+        leitura_palavra TEXT,
+        louvor_grupo TEXT,
+        diaconos_servico TEXT,
+        observacoes TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS campanhas_metas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome_campanha TEXT NOT NULL,
+        departamento TEXT DEFAULT 'Construção',
+        valor_meta REAL NOT NULL,
+        status TEXT DEFAULT 'Ativa'
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT NOT NULL,
+        licao TEXT NOT NULL,
+        nota INTEGER NOT NULL,
+        total INTEGER NOT NULL,
+        data_resposta TEXT NOT NULL
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS duvidas_estudantes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT NOT NULL,
+        licao TEXT NOT NULL,
+        duvida TEXT NOT NULL,
+        resposta TEXT,
+        data_envio TEXT NOT NULL
+    )''')
+
+    # Contas fixas e permanentes garantidas
+    contas = [
+        ('admin', 'chicuque123', 'Pastor Presidente'),
+        ('secretaria', '12345', 'Secretário'),
+        ('tesouraria', 'senha12345', 'Tesoureiro'),
+        ('doutrina', 'senha12345', 'Aluno')
+    ]
+    for usr, pwd, crg in contas:
+        c.execute("INSERT OR IGNORE INTO usuarios (usuario, senha, cargo) VALUES (?, ?, ?)", (usr, pwd, crg))
+
+    deptos = ['Activista', 'Juventude', 'Mulher (Senhoras)', 'Boa Esperança (Crianças)', 'Homens / Obreiros', 'Louvor / Música', 'Ação Social', 'Construção']
+    for d in deptos:
+        c.execute("INSERT OR IGNORE INTO departamentos_lista (nome) VALUES (?)", (d,))
+
+    c.execute("SELECT COUNT(*) FROM categorias_financeiras")
+    if c.fetchone()[0] == 0:
+        padroes = [
+            ('Entrada', 'Dízimo'), ('Entrada', 'Oferta'), ('Entrada', 'Doação / Voto'), ('Entrada', 'Campanha de Construção'),
+            ('Saída', 'Manutenção do Templo'), ('Saída', 'Ação Social / Ajudas'), ('Saída', 'Combustível / Transporte'),
+            ('Saída', 'Água e Eletricidade'), ('Saída', 'Material de Culto')
+        ]
+        c.executemany("INSERT INTO categorias_financeiras (tipo, nome) VALUES (?, ?)", padroes)
+
+    zonas = ['Chicuque Sede', 'Maxixe Cidade', 'Nhacoongo', 'Conguiana', 'Bairro 1']
+    for z in zonas:
+        c.execute("INSERT OR IGNORE INTO zonas_lista (nome) VALUES (?)", (z,))
+
+    c.execute("SELECT COUNT(*) FROM campanhas_metas")
+    if c.fetchone()[0] == 0:
+        c.execute("INSERT INTO campanhas_metas (nome_campanha, departamento, valor_meta, status) VALUES (?, ?, ?, ?)",
+                  ('Campanha de Obras e Ampliação do Templo', 'Construção', 100000.0, 'Ativa'))
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
+def is_admin():
+    cargo = session.get('cargo', '')
+    return session.get('usuario') == 'admin' or 'Pastor' in cargo
+
+def can_cadastro():
+    cargo = session.get('cargo', '')
+    return is_admin() or 'Secretário' in cargo or 'Líder' in cargo
+
+def can_tesouraria():
+    cargo = session.get('cargo', '')
+    return is_admin() or 'Tesoureiro' in cargo
+
+
+def extrair_dados_membro(membro):
+    """Extrai os dados de forma infalível usando o esquema real da base de dados."""
+    def obter(chave, idx_padrao=None):
+        if hasattr(membro, 'keys') and chave in membro.keys():
+            return membro[chave]
+        elif isinstance(membro, dict) and chave in membro:
+            return membro[chave]
+        elif idx_padrao is not None and not isinstance(membro, dict):
+            try:
+                return membro[idx_padrao]
+            except:
+                return None
+        return None
+
+    # Mapeamento estrito com base no PRAGMA table_info(membros)
+    m_id = obter('id', 0) or 1
+    nome = obter('nome', 1) or "Membro"
+    telefone = str(obter('telefone', 2) or "").strip()
+    faixa_etaria = obter('faixa_etaria', 5) or "Adulto"
+    bairro = obter('bairro', 7) or "Chicuque Sede"
+    tipo_doc = obter('tipo_documento', 9) or "BI"
+    num_doc = obter('numero_documento', 10) or "---"
+    ano_conv = obter('ano_conversao', 11) or "---"
+    data_bat = obter('data_batismo', 12)
+    posicao = obter('posicao_atual', 13) or "Membro em Comunhão"
+    departamento = obter('departamento', 15) or "Geral"
+    foto_path = obter('foto_path', 16) or ""
+
+    # Formatar telefone moçambicano (+258 8x xxx xxxx)
+    tel_limpo = "".join([c for c in telefone if c.isdigit()])
+    if len(tel_limpo) == 9 and tel_limpo.startswith('8'):
+        tel_fmt = f"(+258) {tel_limpo[:2]} {tel_limpo[2:5]} {tel_limpo[5:]}"
+    elif len(tel_limpo) == 12 and tel_limpo.startswith('258'):
+        tel_fmt = f"(+258) {tel_limpo[3:5]} {tel_limpo[5:8]} {tel_limpo[8:]}"
+    else:
+        tel_fmt = telefone if telefone else "Sem contacto"
+
+    # Formatar data de batismo se válida
+    data_bat_str = str(data_bat).strip() if data_bat else ""
+    if data_bat_str.lower() in ['none', 'null', 'adulto', '']:
+        data_bat_final = None
+    else:
+        partes = data_bat_str.split("-")
+        if len(partes) == 3:
+            data_bat_final = f"{partes[2]}/{partes[1]}/{partes[0]}"
+        else:
+            data_bat_final = data_bat_str
+
+    return {
+        "id": int(m_id) if str(m_id).isdigit() else 1,
+        "nome": str(nome).strip(),
+        "telefone": tel_fmt,
+        "faixa_etaria": faixa_etaria,
+        "bairro": str(bairro).strip(),
+        "tipo_doc": str(tipo_doc).strip(),
+        "num_doc": str(num_doc).strip(),
+        "ano_conv": str(ano_conv).strip(),
+        "data_batismo": data_bat_final,
+        "posicao": str(posicao).strip(),
+        "departamento": str(departamento).strip(),
+        "foto_path": str(foto_path).strip()
+    }
+
+
+def inicializar_tabela_discipulado():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if DATABASE_URL and psycopg2:
             c.execute("""
-                CREATE TABLE IF NOT EXISTS igrejas (
+                CREATE TABLE IF NOT EXISTS progresso_discipulado (
                     id SERIAL PRIMARY KEY,
-                    nome TEXT NOT NULL UNIQUE,
-                    localizacao TEXT,
-                    responsavel TEXT,
-                    contacto TEXT
+                    membro_id INTEGER NOT NULL,
+                    classe_id VARCHAR(10) NOT NULL,
+                    nota NUMERIC(4,2) DEFAULT 0,
+                    status VARCHAR(20) DEFAULT 'Pendente',
+                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
-            conn.commit()
-            print("✓ Banco PostgreSQL sincronizado com sucesso!")
-        except Exception as e:
-            conn.rollback()
-            print(f"[ALERTA INIT_DB PG] {e}")
-        finally:
-            c.close()
-            conn.close()
-        return
-
-    # Caso seja SQLite local (fallback de desenvolvimento)
-    try:
-        c.execute('''CREATE TABLE IF NOT EXISTS igrejas (
-            id SERIAL PRIMARY KEY,
-            nome TEXT NOT NULL UNIQUE,
-            localizacao TEXT,
-            responsavel TEXT,
-            contacto TEXT
-        )''')
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS progresso_discipulado (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    membro_id INTEGER NOT NULL,
+                    classe_id TEXT NOT NULL,
+                    nota REAL DEFAULT 0,
+                    status TEXT DEFAULT 'Pendente',
+                    data_conclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
         conn.commit()
-    except Exception as e:
-        print(f"[ALERTA INIT_DB SQLITE] {e}")
-    finally:
-        c.close()
         conn.close()
+    except Exception as e:
+        print(f"Aviso ao inicializar tabela discipulado: {e}")
 
+try:
+    inicializar_tabela_discipulado()
+except Exception:
+    pass
+
+
+def assegurar_coluna_obito():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if DATABASE_URL and psycopg2:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS obitos (
+                    id SERIAL PRIMARY KEY,
+                    membro_id INTEGER REFERENCES membros(id),
+                    nome VARCHAR(150),
+                    data_morte DATE,
+                    causa TEXT,
+                    observacoes TEXT,
+                    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            c.execute("""
+                DO $$
+                BEGIN
+                    BEGIN
+                        ALTER TABLE obitos ADD COLUMN membro_id INTEGER;
+                    EXCEPTION
+                        WHEN duplicate_column THEN RAISE NOTICE 'membro_id ja existe';
+                    END;
+                END $$;
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS obitos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    membro_id INTEGER,
+                    nome TEXT,
+                    data_morte DATE,
+                    causa TEXT,
+                    observacoes TEXT,
+                    data_registo TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            try:
+                c.execute("ALTER TABLE obitos ADD COLUMN membro_id INTEGER")
+            except Exception:
+                pass
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Aviso tabela obitos: {e}")
+
+try:
+    assegurar_coluna_obito()
+except Exception:
+    pass
+
+
+def assegurar_colunas_geograficas():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        colunas = [
+            ("zona", "VARCHAR(100)"),
+            ("celula", "VARCHAR(100)"),
+            ("bairro", "VARCHAR(100)"),
+            ("distrito", "VARCHAR(100)")
+        ]
+        for col, tipo in colunas:
+            if DATABASE_URL and psycopg2:
+                c.execute(f"""
+                    DO $$ 
+                    BEGIN 
+                        BEGIN
+                            ALTER TABLE membros ADD COLUMN {col} {tipo};
+                        EXCEPTION
+                            WHEN duplicate_column THEN NULL;
+                        END;
+                    END $$;
+                """)
+            else:
+                try:
+                    c.execute(f"ALTER TABLE membros ADD COLUMN {col} TEXT;")
+                except Exception:
+                    pass
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Aviso migracao geografica: {e}")
+
+try:
+    assegurar_colunas_geograficas()
+except Exception:
+    pass
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -634,7 +693,7 @@ def dashboard():
 
     lista_igrejas = conn.execute("SELECT * FROM igrejas WHERE ativa = 1 ORDER BY nome ASC").fetchall() if is_super else []
 
-    total_membros = _val(conn.execute("SELECT COUNT(*) FROM membros WHERE igreja_id = ?", (igreja_id,)).fetchone())
+    total_membros = conn.execute("SELECT COUNT(*) FROM membros WHERE igreja_id = ?", (igreja_id,)).fetchone()[0]
     total_casamentos = conn.execute("SELECT COUNT(*) FROM casamentos WHERE igreja_id = ?", (igreja_id,)).fetchone()[0]
     total_mortes = conn.execute("SELECT COUNT(*) FROM mortes WHERE igreja_id = ?", (igreja_id,)).fetchone()[0]
 
@@ -695,7 +754,7 @@ def dashboard():
     todos_convertidos = conn.execute("SELECT * FROM novos_convertidos WHERE igreja_id = ? ORDER BY id DESC", (igreja_id,)).fetchall()
     todo_patrimonio = conn.execute("SELECT * FROM patrimonio WHERE igreja_id = ? ORDER BY departamento, item ASC", (igreja_id,)).fetchall()
     conn.execute("""CREATE TABLE IF NOT EXISTS escalas (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         data_escala TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         dirigente TEXT,
@@ -710,7 +769,7 @@ def dashboard():
     )""")
         # Garantir estrutura completa da tabela escalas
     conn.execute('''CREATE TABLE IF NOT EXISTS escalas (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         data_escala TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         dirigente TEXT,
@@ -743,37 +802,36 @@ def dashboard():
         lista_zonas = []
 
     categorias_json = json.dumps([{'tipo': c['tipo'], 'nome': c['nome']} for c in lista_categorias])
-    membros_json = json.dumps([dict(m) for m in todos_membros], default=str)
+    membros_json = json.dumps([dict(m) for m in todos_membros])
+
 
     alerta_duplicado = session.pop('alerta_duplicado', None)
     sucesso_cadastro = session.pop('sucesso_cadastro', None)
 
-    # 1. Dúvidas do Discipulado
+    
+        # Carregar dúvidas bíblicas para o painel pastoral
+    # Carregar dúvidas bíblicas para o painel pastoral
     duvidas_lista = []
+    candidatos_discipulado = []
     try:
-        cur_duv = conn.cursor() if hasattr(conn, 'cursor') else conn
-        cur_duv.execute("SELECT * FROM duvidas_discipulado ORDER BY id DESC LIMIT 20")
-        duvidas_lista = cur_duv.fetchall()
+        c.execute("SELECT * FROM duvidas_discipulado ORDER BY id DESC LIMIT 20")
+        duvidas_lista = c.fetchall()
     except Exception:
-        duvidas_lista = []
+        pass
 
-    # 2. Professores do Discipulado (Evita NameError)
-    professores_discipulado = []
     try:
+        # Buscar lista de Professores/Mentores disponiveis
+        professores_discipulado = []
         for m in todos_membros:
-            f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
-            if any(term in f_val for term in ['pastor', 'presb', 'diacon', 'evang', 'obreir', 'lider', 'comunh']):
+            f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '')
+            # Membros com ministerio ou em comunhao aptos para discipular
+            if any(term in f_val.lower() for term in ['pastor', 'presb', 'diacon', 'evang', 'obreir', 'lider', 'comunh']):
                 professores_discipulado.append(m)
         if not professores_discipulado:
             professores_discipulado = todos_membros
-    except Exception:
-        professores_discipulado = todos_membros if 'todos_membros' in locals() else []
 
-    # 3. Candidatos ao Discipulado
-    candidatos_discipulado = []
-    try:
-        cur_cd = conn.cursor() if hasattr(conn, 'cursor') else conn
-        cur_cd.execute("""
+        # Query de progresso trazendo professor_nome
+        query_prog = """
             SELECT m.id, m.nome, m.foto_path, m.telefone,
                    COALESCE(m.professor_nome, 'A designar') as prof_nome,
                    COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
@@ -788,132 +846,53 @@ def dashboard():
                OR LOWER(COALESCE(m.batizado, '')) IN ('nao', 'não', 'pendente', '')
             GROUP BY m.id, m.nome, m.foto_path, m.telefone, m.professor_nome
             ORDER BY m.id DESC
-        """)
-        candidatos_discipulado = cur_cd.fetchall()
+        """
+        try:
+            c.execute(query_prog)
+            candidatos_discipulado = c.fetchall()
+        except Exception:
+            # Fallback caso a coluna ainda esteja a sincronizar
+            query_prog_fb = """
+                SELECT m.id, m.nome, m.foto_path, m.telefone,
+                       'A designar' as prof_nome,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c1' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c1_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c2' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c2_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c3' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c3_ok,
+                       COALESCE(MAX(CASE WHEN p.classe_id = 'c4' AND p.status = 'Aprovado' THEN 1 ELSE 0 END), 0) as c4_ok
+                FROM membros m
+                LEFT JOIN progresso_discipulado p ON m.id = p.membro_id
+                GROUP BY m.id, m.nome, m.foto_path, m.telefone
+                ORDER BY m.id DESC
+            """
+            c.execute(query_prog_fb)
+            candidatos_discipulado = c.fetchall()
     except Exception:
-        candidatos_discipulado = []
+        pass
 
-    # 4. Leitura Direta de Planificacoes no Dashboard
-    planos = []
-    try:
-        cur_dash_pl = conn.cursor() if hasattr(conn, 'cursor') else conn
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-        cur_dash_pl.execute("SELECT id, departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status FROM planificacoes ORDER BY id DESC")
-        linhas_p = cur_dash_pl.fetchall()
-        for l in linhas_p:
-            if hasattr(l, 'get'):
-                item = {
-                    'id': l.get('id'),
-                    'departamento': l.get('departamento') or 'Geral',
-                    'tipo_evento': l.get('tipo_evento') or 'Geral',
-                    'nome_actividade': l.get('nome_actividade') or 'Actividade',
-                    'data_prevista': l.get('data_prevista') or '---',
-                    'frequencia': l.get('frequencia') or 'Pontual',
-                    'responsavel_directo': l.get('responsavel_directo') or '---',
-                    'contacto': l.get('contacto') or '',
-                    'status': l.get('status') or 'Pendente'
-                }
-            else:
-                item = {
-                    'id': l[0],
-                    'departamento': l[1] or 'Geral',
-                    'tipo_evento': l[2] or 'Geral',
-                    'nome_actividade': l[3] or 'Actividade',
-                    'data_prevista': l[4] or '---',
-                    'frequencia': l[5] or 'Pontual',
-                    'responsavel_directo': l[6] or '---',
-                    'contacto': l[7] or '',
-                    'status': l[8] or 'Pendente'
-                }
-            planos.append(item)
-    except Exception as e_p:
-        print("[ERRO DASHBOARD PLANIFICACAO]:", e_p)
-        planos = []
+    conn.close()
 
-    # 5. Candidatos ao Batismo
-    candidatos_batismo = []
-    try:
-        for m in todos_membros:
-            f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
-            b_val = str(m.get('batizado', '') if hasattr(m, 'get') else m['batizado'] if 'batizado' in m.keys() else '').lower()
-            if ('candidat' in f_val) or ('prova' in f_val) or ('convertid' in f_val) or (b_val in ['nao', 'não', 'pendente', '']):
-                candidatos_batismo.append(m)
-        if not candidatos_batismo:
-            candidatos_batismo = todos_membros
-    except Exception:
-        candidatos_batismo = todos_membros if 'todos_membros' in locals() else []
-
+    alerta_duplicado = session.pop('alerta_duplicado', None)
+    sucesso_cadastro = session.pop('sucesso_cadastro', None)
     
-    # Leitura Universal de Cultos para o Dashboard
-    cultos = []
     try:
-        assegurar_tabela_cultos(conn)
-        cur_clt = conn.cursor() if hasattr(conn, 'cursor') else conn
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-        cur_clt.execute("SELECT id, data_culto, tipo_culto, pregador, tema_mensagem, total_presentes, apelos FROM cultos ORDER BY id DESC LIMIT 50")
-        linhas_clt = cur_clt.fetchall()
-        for l in linhas_clt:
-            if hasattr(l, 'get'):
-                cultos.append({
-                    'id': l.get('id'),
-                    'data_culto': l.get('data_culto') or '---',
-                    'tipo_culto': l.get('tipo_culto') or 'Culto',
-                    'pregador': l.get('pregador') or '---',
-                    'tema_mensagem': l.get('tema_mensagem') or '',
-                    'total_presentes': l.get('total_presentes') or 0,
-                    'apelos': l.get('apelos') or 0
-                })
-            else:
-                cultos.append({
-                    'id': l[0],
-                    'data_culto': l[1] or '---',
-                    'tipo_culto': l[2] or 'Culto',
-                    'pregador': l[3] or '---',
-                    'tema_mensagem': l[4] or '',
-                    'total_presentes': l[5] or 0,
-                    'apelos': l[6] or 0
-                })
-    except Exception as e_clt:
-        print("[AVISO LEITURA CULTOS]:", e_clt)
-        cultos = []
-    # Leitura Universal de Cultos para o Dashboard
-    cultos = []
-    try:
-        assegurar_tabela_cultos(conn)
-        cur_c = conn.cursor() if hasattr(conn, 'cursor') else conn
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-        cur_c.execute("SELECT id, data_culto, tipo_culto, pregador, tema_mensagem, total_presentes, apelos FROM cultos ORDER BY id DESC LIMIT 50")
-        linhas_c = cur_c.fetchall()
-        for l in linhas_c:
-            if hasattr(l, 'get'):
-                cultos.append({
-                    'id': l.get('id'),
-                    'data_culto': l.get('data_culto') or '---',
-                    'tipo_culto': l.get('tipo_culto') or 'Culto',
-                    'pregador': l.get('pregador') or '---',
-                    'tema_mensagem': l.get('tema_mensagem') or '',
-                    'total_presentes': l.get('total_presentes') if l.get('total_presentes') is not None else 0,
-                    'apelos': l.get('apelos') if l.get('apelos') is not None else 0
-                })
-            else:
-                cultos.append({
-                    'id': l[0],
-                    'data_culto': l[1] or '---',
-                    'tipo_culto': l[2] or 'Culto',
-                    'pregador': l[3] or '---',
-                    'tema_mensagem': l[4] or '',
-                    'total_presentes': l[5] if l[5] is not None else 0,
-                    'apelos': l[6] if l[6] is not None else 0
-                })
-    except Exception as e_c:
-        print("[ERRO LEITURA CULTOS]:", e_c)
-        cultos = []
+        planos = conn.execute("SELECT * FROM actividades_planeamento ORDER BY id DESC").fetchall()
+    except Exception:
+        planos = []
+    # Filtrar Candidatos ao Batismo diretamente da lista oficial de membros em memoria
+    candidatos_batismo = []
+    for m in todos_membros:
+        # Suporta dicionario (PostgreSQL/RealDictCursor) e sqlite3.Row
+        f_val = str(m.get('funcao', '') if hasattr(m, 'get') else m['funcao'] if 'funcao' in m.keys() else '').lower()
+        b_val = str(m.get('batizado', '') if hasattr(m, 'get') else m['batizado'] if 'batizado' in m.keys() else '').lower()
+        
+        # Considera candidatos ao batismo, membros em prova ou nao batizados
+        if ('candidat' in f_val) or ('prova' in f_val) or ('convertid' in f_val) or (b_val in ['nao', 'não', 'pendente', '']):
+            candidatos_batismo.append(m)
+
+    # Se a lista filtrada estiver vazia, disponibiliza todos os membros para permitir selecao imediata
+    if not candidatos_batismo:
+        candidatos_batismo = todos_membros
+
     return render_template('dashboard.html', professores_discipulado=professores_discipulado, candidatos_batismo=candidatos_batismo, planos=planos,
                            todos_membros=todos_membros,
                            lista_igrejas=lista_igrejas if 'lista_igrejas' in locals() else [],
@@ -1096,179 +1075,6 @@ def novo_membro():
     return redirect('/')
 
 @app.route('/cultos/novo', methods=['POST'])
-def cultos_novo():
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-
-    try:
-        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS cultos (
-                id {id_tipo},
-                data_culto TEXT,
-                tipo_culto TEXT,
-                homens_adultos INTEGER DEFAULT 0,
-                mulheres_adultas INTEGER DEFAULT 0,
-                jovens_rapazes INTEGER DEFAULT 0,
-                jovens_mocas INTEGER DEFAULT 0,
-                criancas_meninos INTEGER DEFAULT 0,
-                criancas_meninas INTEGER DEFAULT 0,
-                visitantes_homens INTEGER DEFAULT 0,
-                visitantes_mulheres INTEGER DEFAULT 0,
-                apelos INTEGER DEFAULT 0,
-                total_presentes INTEGER DEFAULT 0,
-                pregador TEXT,
-                tema_mensagem TEXT,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception:
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-
-    fd = request.form
-    def n(k):
-        v = fd.get(k)
-        if v not in (None, ''):
-            try: return int(v)
-            except: pass
-        return 0
-
-    from datetime import datetime
-    data_culto = (fd.get('data_culto') or '').strip()
-    if not data_culto or data_culto in ('mm/dd/yyyy', '---'):
-        data_culto = datetime.now().strftime('%Y-%m-%d')
-
-    tipo_culto = (fd.get('tipo_culto') or 'Domingo Manhã').strip()
-    ha = n('homens_adultos')
-    ma = n('mulheres_adultas')
-    jr = n('jovens_rapazes')
-    jm = n('jovens_mocas')
-    cm = n('criancas_meninos')
-    cf = n('criancas_meninas')
-    vh = n('visitantes_homens')
-    vm = n('visitantes_mulheres')
-    apelos = n('apelos')
-
-    # SOMA AUTOMÁTICA FEITA PELO PYTHON
-    total = ha + ma + jr + jm + cm + cf + vh + vm
-
-    pregador = (fd.get('pregador') or '---').strip()
-    tema = (fd.get('tema_mensagem') or '').strip()
-
-    is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-    m = "%s" if is_pg else "?"
-
-    sql = f"""INSERT INTO cultos 
-             (data_culto, tipo_culto, homens_adultos, mulheres_adultas, jovens_rapazes, jovens_mocas, 
-              criancas_meninos, criancas_meninas, visitantes_homens, visitantes_mulheres, 
-              apelos, total_presentes, pregador, tema_mensagem)
-             VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m})"""
-    try:
-        cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, cm, cf, vh, vm, apelos, total, pregador, tema))
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception as e:
-        print("[ERRO GRAVAR CULTO]:", e)
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-
-    return redirect('/?aba=cultos')
-
-@app.route('/cultos/registar', methods=['POST'])
-@app.route('/culto/novo', methods=['POST'])
-def cultos_novo_seguro():
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-
-    # 1. Garantir que a tabela existe
-    try:
-        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS cultos (
-                id {id_tipo},
-                data_culto TEXT,
-                tipo_culto TEXT,
-                homens_adultos INTEGER DEFAULT 0,
-                mulheres_adultas INTEGER DEFAULT 0,
-                jovens_rapazes INTEGER DEFAULT 0,
-                jovens_mocas INTEGER DEFAULT 0,
-                criancas_meninos INTEGER DEFAULT 0,
-                criancas_meninas INTEGER DEFAULT 0,
-                visitantes_homens INTEGER DEFAULT 0,
-                visitantes_mulheres INTEGER DEFAULT 0,
-                apelos INTEGER DEFAULT 0,
-                total_presentes INTEGER DEFAULT 0,
-                pregador TEXT,
-                tema_mensagem TEXT,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception:
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-
-    # 2. Extração segura (NUNCA usa [], sempre usa .get())
-    fd = request.form
-
-    def extrair_int(chaves):
-        for k in chaves:
-            v = fd.get(k)
-            if v not in (None, ''):
-                try: return int(v)
-                except: pass
-        return 0
-
-    data_culto = (fd.get('data_culto') or fd.get('data') or '---').strip()
-    tipo_culto = (fd.get('tipo_culto') or fd.get('tipo') or 'Domingo Manhã').strip()
-
-    ha = extrair_int(['homens_adultos', 'homens'])
-    ma = extrair_int(['mulheres_adultas', 'mulheres'])
-    jr = extrair_int(['jovens_rapazes', 'rapazes'])
-    jm = extrair_int(['jovens_mocas', 'mocas'])
-    c_meninos = extrair_int(['criancas_meninos', 'meninos'])
-    c_meninas = extrair_int(['criancas_meninas', 'meninas'])
-    v_homens = extrair_int(['visitantes_homens', 'v_homens'])
-    v_mulheres = extrair_int(['visitantes_mulheres', 'v_mulheres'])
-    apelos = extrair_int(['apelos', 'decisoes'])
-
-    # Soma de segurança calculada no backend
-    soma_calculada = ha + ma + jr + jm + c_meninos + c_meninas + v_homens + v_mulheres
-    total_form = extrair_int(['total_presentes', 'total'])
-    total = total_form if total_form > 0 else soma_calculada
-
-    pregador = (fd.get('pregador') or fd.get('pregador_palavra') or '---').strip()
-    tema = (fd.get('tema_mensagem') or fd.get('tema') or '').strip()
-
-    is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-    m = "%s" if is_pg else "?"
-
-    sql = f"""INSERT INTO cultos 
-             (data_culto, tipo_culto, homens_adultos, mulheres_adultas, jovens_rapazes, jovens_mocas, 
-              criancas_meninos, criancas_meninas, visitantes_homens, visitantes_mulheres, 
-              apelos, total_presentes, pregador, tema_mensagem)
-             VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m})"""
-    try:
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-        cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, c_meninos, c_meninas, v_homens, v_mulheres, apelos, total, pregador, tema))
-        if hasattr(conn, 'commit'):
-            conn.commit()
-    except Exception as e_cult:
-        print("[ERRO AO GRAVAR CULTO]:", e_cult)
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-
-    return redirect('/?aba=cultos')
-
 def novo_culto():
     if not can_cadastro(): return redirect('/')
     h = int(request.form.get('homens') or 0)
@@ -1369,7 +1175,7 @@ def nova_escala():
 
      conn = get_db()
      conn.execute('''CREATE TABLE IF NOT EXISTS escalas (
-         id SERIAL PRIMARY KEY,
+         id INTEGER PRIMARY KEY AUTOINCREMENT,
          data_escala TEXT NOT NULL,
          tipo_culto TEXT NOT NULL,
          dirigente TEXT,
@@ -2144,7 +1950,7 @@ def emitir_certificado_batismo(id):
                     <h3 style="color: #c9302c; margin-bottom: 10px;">Data de Batismo Necessária</h3>
                     <p style="color: #666; font-size: 15px; line-height: 1.5;">O membro selecionado ainda não tem a <b>Data de Batismo</b> registada na ficha.</p>
                     <p style="color: #888; font-size: 13px;">Preencha a data do batismo no formulário antes de gerar o documento solene.</p>
-                    
+                    <a href="/" style="display: inline-block; margin-top: 15px; padding: 10px 24px; background-color: #0d3b66; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Voltar ao Painel</a>
                 </div>
             </div>
             """, 400
@@ -2365,7 +2171,7 @@ def ver_licao_individual(cid, lid):
             );
         """ if DATABASE_URL and psycopg2 else """
             CREATE TABLE IF NOT EXISTS duvidas_discipulado (
-                id SERIAL PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 membro_id INTEGER,
                 membro_nome TEXT,
                 classe_nome TEXT,
@@ -2435,19 +2241,21 @@ def ver_licao_individual(cid, lid):
     </head>
     <body class="py-4">
         <div class="container" style="max-width: 860px;">
-            
+            <!-- Barra Superior -->
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
-                    
+                    <a href="/" class="text-decoration-none text-muted fw-bold">← Início</a>
                     <span class="text-muted mx-2">/</span>
                     <span class="text-primary fw-semibold">{{ classe.nome }}</span>
                 </div>
                                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-white text-dark border px-3 py-2 fw-semibold">Lição {{ lid + 1 }} de {{ total_licoes }}</span>
                     {% if concluiu_todas %}
-                    
+                    <a href="/membro/{{ m_id }}/certificado_conclusao_discipulado" target="_blank" class="btn btn-sm btn-success fw-bold">🎓 Certificado</a>
                     {% endif %}
-                    
+                    <a href="/logout" class="btn btn-sm btn-outline-danger fw-bold px-3 py-1 shadow-sm d-flex align-items-center gap-1" title="Encerrar sessão e voltar ao login">
+                        <span>🚪</span> Sair da Sala
+                    </a>
                 </div>
             </div>
 
@@ -2456,10 +2264,10 @@ def ver_licao_individual(cid, lid):
                 <div style="font-size: 3rem;">🔒</div>
                 <h3 class="fw-bold mt-3 mb-2" style="color: #0d3b66;">Classe Bloqueada</h3>
                 <p class="text-secondary mx-auto" style="max-width: 500px;">Para estudar esta lição, conclua primeiro o questionário da classe anterior com aproveitamento mínimo de 70%.</p>
-                
+                <a href="/discipulado/classe/c1" class="btn btn-primary px-4 py-2 mt-2 fw-bold">Ir para a Classe I</a>
             </div>
             {% else %}
-            
+            <!-- Card Principal da Lição Atual -->
             <div class="card-estudo">
                 <div class="header-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
@@ -2475,22 +2283,22 @@ def ver_licao_individual(cid, lid):
                         {{ licao_atual.conteudo | safe }}
                     </div>
 
-                    
+                    <!-- Navegação Próxima / Anterior -->
                     <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top flex-wrap gap-2">
                         {% if tem_anterior %}
-                        
+                        <a href="{{ url_anterior }}" class="btn-prev">« Lição Anterior</a>
                         {% else %}
                         <div></div>
                         {% endif %}
 
                         {% if tem_proxima %}
-                        
+                        <a href="{{ url_proxima }}" class="btn-next">Próxima Lição »</a>
                         {% else %}
-                        
+                        <a href="/discipulado/classe/{{ cid }}/avaliacao" class="btn btn-success fw-bold px-4 py-3 rounded-3 shadow">Fazer Avaliação da Classe 📝</a>
                         {% endif %}
                     </div>
 
-                    
+                    <!-- Enviar Dúvida Vinculada a esta Lição Específica -->
                     <div class="card-duvida">
                         <h5 class="fw-bold mb-1" style="color: #0d3b66;">💬 Ficou com alguma dúvida nesta Lição?</h5>
                         <p class="text-muted small mb-3">A sua pergunta será direcionada ao professor associada à <b>Lição {{ licao_atual.numero }}: {{ licao_atual.titulo }}</b>.</p>
@@ -2577,7 +2385,9 @@ def ver_avaliacao_classe(cid):
                         <div class="text-light">{{ classe.nome }} • Questionário Oficial</div>
                     </div>
                     <div>
-                        
+                        <a href="/logout" class="btn btn-sm btn-outline-light fw-bold px-3 py-2 shadow-sm d-flex align-items-center gap-1">
+                            <span>🚪</span> Sair da Sala
+                        </a>
                     </div>
                 </div>
                 <div class="card-body p-4 p-md-5">
@@ -2603,7 +2413,7 @@ def ver_avaliacao_classe(cid):
                         {% endfor %}
 
                         <div class="d-flex justify-content-between align-items-center mt-4">
-                            
+                            <a href="/discipulado/classe/{{ cid }}/licao/0" class="btn btn-outline-secondary">« Rever Lições</a>
                             <button type="submit" id="btnSubmeter" class="btn btn-primary fw-bold px-4 py-3 rounded-3 shadow">
                                 <span>Submeter Respostas e Concluir Classe »</span>
                             </button>
@@ -2740,7 +2550,7 @@ def processar_avaliacao_discipulado(cid):
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS progresso_discipulado (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     membro_id INTEGER,
                     classe_id TEXT,
                     nota REAL,
@@ -2772,9 +2582,9 @@ def processar_avaliacao_discipulado(cid):
     titulo = "Parabéns!" if status == "Aprovado" else "Quase lá!"
 
     if status == "Aprovado":
-        botao_acao = f''
+        botao_acao = f'<a href="{proxima_url}" class="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-600/30 transition block">Avançar para a Próxima Classe ➔</a>'
     else:
-        botao_acao = f''
+        botao_acao = f'<a href="{repetir_url}" class="w-full py-3.5 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-sm shadow-lg shadow-amber-600/30 transition block">Rever Lições e Tentar Novamente ↺</a>'
 
     html_resultado = f"""<!DOCTYPE html>
 <html lang="pt">
@@ -2806,7 +2616,9 @@ def processar_avaliacao_discipulado(cid):
 
         <div class="pt-2 flex flex-col gap-2.5">
             {botao_acao}
-            
+            <a href="/discipulado/classe/{cid}" class="w-full py-2.5 px-6 rounded-2xl text-slate-500 hover:text-slate-800 text-xs font-bold transition block">
+                Voltar ao Índice da Classe
+            </a>
         </div>
     </div>
 </body>
@@ -2911,7 +2723,7 @@ def criar_tabelas_faltantes():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS zonas_lista (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome TEXT UNIQUE NOT NULL
                 );
             """)
@@ -2931,7 +2743,7 @@ def criar_tabelas_faltantes():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
-                    id SERIAL PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     usuario TEXT,
                     licao TEXT,
                     nota INTEGER,
@@ -3491,7 +3303,7 @@ def redefinir_senha_urgente_admin():
             <p style="font-size: 18px;">Utilizador: <b>admin</b></p>
             <p style="font-size: 18px;">Nova Palavra-passe: <b style="background: #fef08a; padding: 4px 8px; border-radius: 4px;">admin123</b></p>
             <br><br>
-            
+            <a href="/login" style="background: #0d3b66; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ir para o Login</a>
         </div>
         '''
     except Exception as e:
@@ -3574,453 +3386,3 @@ def confirmar_codigo_recuperacao():
                 msg_erro = f"Erro ao atualizar na base de dados: {e}"
 
     return render_template('confirmar_codigo.html', email=email, codigo_dica=codigo_ativo, msg_erro=msg_erro)
-
-
-# =======================================================
-# MÓDULO DE CENSO E AUTO-RECENSEAMENTO (PÚBLICO & BRIGADAS)
-# =======================================================
-import os
-from werkzeug.utils import secure_filename
-
-# =======================================================
-# MÓDULO DE CENSO E AUTO-RECENSEAMENTO (ALINHADO)
-# =======================================================
-
-# =====================================================================
-# ROTA OFICIAL DO CENSO MULTI-CONGREGAÇÃO (AUTO-RECUPERÁVEL)
-# =====================================================================
-@app.route('/censo', methods=['GET', 'POST'])
-def censo_publico():
-    msg_erro = None
-    igreja_param = request.args.get('igreja', 'IEAD Chicuque')
-    
-    colunas_obrigatorias = [
-        ("igreja", "TEXT"),
-        ("batizado", "TEXT"),
-        ("data_batismo", "TEXT"),
-        ("endereco", "TEXT"),
-        ("bairro", "TEXT"),
-        ("naturalidade", "TEXT"),
-        ("filiacao", "TEXT"),
-        ("tipo_doc", "TEXT"),
-        ("num_doc", "TEXT"),
-        ("segmento", "TEXT"),
-        ("ano_conversao", "TEXT"),
-        ("cargo", "TEXT"),
-        ("departamento", "TEXT"),
-        ("status", "TEXT"),
-        ("foto_path", "TEXT"),
-        ("professor_nome", "TEXT")
-    ]
-    
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    is_pg = bool(DATABASE_URL and psycopg2)
-    
-    for col, tipo in colunas_obrigatorias:
-        try:
-            if is_pg:
-                cur.execute(f"ALTER TABLE membros ADD COLUMN IF NOT EXISTS {col} {tipo};")
-            else:
-                cur.execute(f"ALTER TABLE membros ADD COLUMN {col} {tipo};")
-            conn.commit()
-        except Exception:
-            if is_pg:
-                conn.rollback()
-
-    lista_igrejas = ['IEAD Chicuque']
-    try:
-        cur.execute("SELECT nome FROM igrejas ORDER BY nome ASC")
-        rows = cur.fetchall()
-        if rows:
-            lista_igrejas = [r[0] for r in rows if r[0]]
-            if 'IEAD Chicuque' not in lista_igrejas:
-                lista_igrejas.insert(0, 'IEAD Chicuque')
-    except Exception:
-        pass
-
-    if request.method == 'POST':
-        nome = (request.form.get('nome') or '').strip()
-        telefone = (request.form.get('telefone') or '').strip()
-        igreja_escolhida = request.form.get('igreja') or igreja_param
-        
-        if not nome or not telefone:
-            msg_erro = "Por favor, preencha o Nome Completo e o Contacto telefónico."
-            if hasattr(conn, 'close'):
-                conn.close()
-            return render_template('censo_form.html', msg_erro=msg_erro, igrejas=lista_igrejas, igreja_selecionada=igreja_param)
-            
-        foto_path = None
-        if 'foto' in request.files:
-            file = request.files['foto']
-            if file and file.filename != '':
-                ext = file.filename.rsplit('.', 1)[-1].lower()
-                nome_foto = f"membro_{int(time.time())}.{ext}"
-                caminho_salvar = os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), nome_foto)
-                os.makedirs(os.path.dirname(caminho_salvar), exist_ok=True)
-                file.save(caminho_salvar)
-                foto_path = f"/static/uploads/{nome_foto}"
-
-        campos = {
-            'nome': nome,
-            'telefone': telefone,
-            'igreja': igreja_escolhida,
-            'data_nascimento': request.form.get('data_nascimento'),
-            'genero': request.form.get('genero'),
-            'estado_civil': request.form.get('estado_civil'),
-            'bairro': request.form.get('bairro'),
-            'endereco': request.form.get('endereco') or request.form.get('bairro'),
-            'naturalidade': request.form.get('naturalidade'),
-            'filiacao': request.form.get('filiacao'),
-            'tipo_doc': request.form.get('tipo_doc'),
-            'num_doc': request.form.get('num_doc'),
-            'segmento': request.form.get('segmento'),
-            'ano_conversao': request.form.get('ano_conversao'),
-            'batizado': request.form.get('batizado', 'Não'),
-            'cargo': request.form.get('cargo', 'Membro em Comunhão'),
-            'departamento': request.form.get('departamento', 'Geral'),
-            'status': 'Pendente de Validação',
-            'foto_path': foto_path,
-            'professor_nome': session.get('usuario', 'Auto-recenseamento')
-        }
-
-        try:
-            # Detectar banco real em execução
-            is_postgres_real = hasattr(conn, 'cursor_factory') or 'psycopg' in str(type(conn)).lower() or bool(DATABASE_URL and psycopg2)
-            if is_postgres_real:
-                try:
-                    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
-                    cols_db = [r[0].lower() for r in cur.fetchall()]
-                except Exception:
-                    # Fallback com colunas padrão da tabela membros caso haja erro de permissão no schema
-                    cols_db = ['nome', 'telefone', 'igreja', 'data_nascimento', 'genero', 'estado_civil', 'bairro', 'endereco', 'naturalidade', 'filiacao', 'tipo_doc', 'num_doc', 'segmento', 'ano_conversao', 'batizado', 'cargo', 'departamento', 'status', 'foto_path', 'professor_nome']
-            else:
-                cur.execute("PRAGMA table_info(membros);")
-                cols_db = [r[1].lower() for r in cur.fetchall()]
-                
-            cols_inserir = [k for k in campos.keys() if k.lower() in cols_db]
-            vals_inserir = [campos[k] for k in cols_inserir]
-            
-            # Detectar dinamicamente se o conn é postgres ou sqlite
-            is_real_pg = 'psycopg' in str(type(conn)).lower()
-            param = "%s" if is_real_pg else "?"
-            sql = f"INSERT INTO membros ({', '.join(cols_inserir)}) VALUES ({', '.join([param]*len(cols_inserir))})"
-            cur.execute(sql, tuple(vals_inserir))
-            conn.commit()
-            if hasattr(conn, 'close'):
-                conn.close()
-            return render_template('censo_sucesso.html', nome=nome, status='Pendente de Validação', igreja=igreja_escolhida)
-        except Exception as e:
-            msg_erro = f"Erro ao registar a ficha: {e}"
-
-    if hasattr(conn, 'close'):
-        conn.close()
-    return render_template('censo_form.html', msg_erro=msg_erro, igrejas=lista_igrejas, igreja_selecionada=igreja_param)
-
-
-@app.route('/admin/censo/homologar')
-def painel_homologacao_censo():
-    if not session.get('usuario'):
-        return redirect('/login')
-        
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    is_pg = bool(DATABASE_URL and psycopg2)
-    param = "%s" if is_pg else "?"
-    
-    usuario_nivel = session.get('nivel', '') or session.get('cargo', '')
-    usuario_igreja = session.get('igreja', '')
-    is_sede = usuario_nivel in ['Superadmin', 'Pastor Presidente', 'Administrador'] or not usuario_igreja
-    filtro_igreja = request.args.get('igreja_filtro', '')
-    
-    lista_igrejas = ['IEAD Chicuque']
-    try:
-        cur.execute("SELECT nome FROM igrejas ORDER BY nome ASC")
-        rows = cur.fetchall()
-        if rows:
-            lista_igrejas = [r[0] for r in rows if r[0]]
-            if 'IEAD Chicuque' not in lista_igrejas:
-                lista_igrejas.insert(0, 'IEAD Chicuque')
-    except Exception:
-        pass
-    
-    
-    # Verificar colunas existentes dinamicamente
-    if is_pg:
-        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
-        cols_ativas = [r[0].lower() for r in cur.fetchall()]
-    else:
-        cur.execute("PRAGMA table_info(membros);")
-        cols_ativas = [r[1].lower() for r in cur.fetchall()]
-
-    col_batizado = "batizado" if "batizado" in cols_ativas else "'Não' as batizado"
-    col_igreja = "igreja" if "igreja" in cols_ativas else "'IEAD Chicuque' as igreja"
-    col_status = "status" if "status" in cols_ativas else "'Ativo' as status"
-    col_tel = "telefone" if "telefone" in cols_ativas else "'' as telefone"
-    col_bairro = "bairro" if "bairro" in cols_ativas else "'' as bairro"
-    col_dep = "departamento" if "departamento" in cols_ativas else "'Geral' as departamento"
-    col_foto = "foto_path" if "foto_path" in cols_ativas else "NULL as foto_path"
-
-    colunas_sql = f"id, nome, {col_tel}, {col_bairro}, {col_batizado}, {col_dep}, {col_foto}, {col_igreja}"
-
-    
-    if is_sede:
-        if filtro_igreja and filtro_igreja != 'Todas':
-            # Consulta adaptativa protegida
-            cur.execute("PRAGMA table_info(membros);") if not is_pg else cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
-            cols_atuais = [r[1].lower() if not is_pg else r[0].lower() for r in cur.fetchall()]
-            if 'status' in cols_atuais:
-                sql_exec = f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, igreja FROM membros WHERE status = {param} ORDER BY id DESC"
-                cur.execute(sql_exec, ('Pendente de Validação',))
-            else:
-                cur.execute("SELECT id, nome FROM membros ORDER BY id DESC")
-        else:
-            # Consulta adaptativa protegida
-            cur.execute("PRAGMA table_info(membros);") if not is_pg else cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
-            cols_atuais = [r[1].lower() if not is_pg else r[0].lower() for r in cur.fetchall()]
-            if 'status' in cols_atuais:
-                sql_exec = f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, igreja FROM membros WHERE status = {param} ORDER BY id DESC"
-                cur.execute(sql_exec, ('Pendente de Validação',))
-            else:
-                cur.execute("SELECT id, nome FROM membros ORDER BY id DESC")
-    else:
-            # Consulta adaptativa protegida
-            cur.execute("PRAGMA table_info(membros);") if not is_pg else cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'membros';")
-            cols_atuais = [r[1].lower() if not is_pg else r[0].lower() for r in cur.fetchall()]
-            if 'status' in cols_atuais:
-                sql_exec = f"SELECT id, nome, telefone, bairro, batizado, departamento, foto_path, igreja FROM membros WHERE status = {param} ORDER BY id DESC"
-                cur.execute(sql_exec, ('Pendente de Validação',))
-            else:
-                cur.execute("SELECT id, nome FROM membros ORDER BY id DESC")
-        
-    linhas = cur.fetchall()
-    pendentes = []
-    for r in linhas:
-        pendentes.append((
-            r[0], r[1], r[2], r[3], r[4], r[5], r[6], 'Auto-recenseamento', r[7], 'Recente'
-        ))
-    if hasattr(conn, 'close'):
-        conn.close()
-        
-    return render_template(
-        'censo_homologar.html', 
-        pendentes=pendentes, 
-        is_sede=is_sede, 
-        igrejas=lista_igrejas, 
-        igreja_atual=filtro_igreja or ('Todas' if is_sede else usuario_igreja),
-        usuario_igreja=usuario_igreja
-    )
-
-
-@app.route('/admin/censo/aprovar/<int:membro_id>', methods=['POST'])
-def aprovar_censo(membro_id):
-    if not session.get('usuario'):
-        return redirect('/login')
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-    cur.execute(f"UPDATE membros SET status = {param} WHERE id = {param}", ('Ativo', membro_id))
-    conn.commit()
-    if hasattr(conn, 'close'):
-        conn.close()
-    return redirect('/admin/censo/homologar')
-
-
-@app.route('/admin/censo/descartar/<int:membro_id>', methods=['POST'])
-def descartar_censo(membro_id):
-    if not session.get('usuario'):
-        return redirect('/login')
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    param = "%s" if bool(DATABASE_URL and psycopg2) else "?"
-    cur.execute(f"DELETE FROM membros WHERE id = {param}", (membro_id,))
-    conn.commit()
-    if hasattr(conn, 'close'):
-        conn.close()
-    return redirect('/admin/censo/homologar')
-
-
-
-# =====================================================================
-# ROTA DE TESTE E DIAGNÓSTICO DO SUPABASE
-# =====================================================================
-@app.route('/debug-db')
-def rota_debug_supabase():
-    import os
-    import sys
-    db_env = os.environ.get('DATABASE_URL', '')
-    
-    teste_conexao_direta = None
-    erro_direto = None
-    try:
-        import psycopg2
-        c = psycopg2.connect(db_env)
-        teste_conexao_direta = "Sucesso na conexão direta via psycopg2"
-        c.close()
-    except Exception as e:
-        erro_direto = str(e)
-
-    # Testar o que get_db() devolve
-    tipo_get_db = None
-    erro_get_db = None
-    try:
-        conn = get_db()
-        tipo_get_db = str(type(conn))
-        if hasattr(conn, 'close'):
-            conn.close()
-    except Exception as e:
-        erro_get_db = str(e)
-
-    return {
-        "DATABASE_URL_configurada": bool(db_env),
-        "conexao_direta_psycopg2": teste_conexao_direta,
-        "erro_conexao_direta": erro_direto,
-        "tipo_retornado_por_get_db": tipo_get_db,
-        "erro_get_db": erro_get_db
-    }
-
-@app.route('/debug-inserir-censo')
-def debug_inserir_censo():
-    import os
-    if not (DATABASE_URL and psycopg2):
-        return {"erro": "DATABASE_URL nao configurada ou psycopg2 ausente"}
-    
-    resumo = {}
-    conn = None
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        
-        # 1. Pegar colunas reais da tabela membros no Supabase
-        cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'membros';")
-        cols_pg = cur.fetchall()
-        colunas_reais = {c[0].lower(): c[1] for c in cols_pg}
-        resumo["colunas_no_supabase"] = colunas_reais
-
-        # 2. Dados de teste
-        dados = {
-            'nome': 'Teste Oficial Supabase',
-            'telefone': '+258 84 999 8888',
-            'igreja': 'IEAD Chicuque',
-            'status': 'Pendente de Validação',
-            'batizado': 'Sim',
-            'cargo': 'Membro em Comunhão',
-            'departamento': 'Geral'
-        }
-
-        # 3. Filtrar apenas colunas que realmente existem na tabela
-        cols_para_inserir = [k for k in dados.keys() if k.lower() in colunas_reais]
-        vals_para_inserir = [dados[k] for k in cols_para_inserir]
-
-        if not cols_para_inserir:
-            return {"erro": "Nenhuma das colunas do teste existe na tabela membros!"}
-
-        sql = f"INSERT INTO membros ({', '.join(cols_para_inserir)}) VALUES ({', '.join(['%s']*len(cols_para_inserir))}) RETURNING id;"
-        cur.execute(sql, tuple(vals_para_inserir))
-        novo_id = cur.fetchone()[0]
-        conn.commit()
-
-        resumo["resultado"] = "SUCESSO"
-        resumo["novo_id_criado"] = novo_id
-        resumo["sql_executado"] = sql
-
-    except Exception as e:
-        if conn:
-            try: conn.rollback()
-            except Exception: pass
-        resumo["resultado"] = "ERRO"
-        resumo["mensagem_erro"] = str(e)
-    finally:
-        if conn and hasattr(conn, 'close'):
-            conn.close()
-
-    return resumo
-
-
-@app.route('/debug-check-env')
-def debug_check_env():
-    import os
-    import sys
-    
-    # 1. Testar import do psycopg2
-    erro_import = None
-    tem_psycopg2 = False
-    try:
-        import psycopg2
-        tem_psycopg2 = True
-    except Exception as e:
-        erro_import = str(e)
-
-    # 2. Varrer todas as variáveis de ambiente em busca de URL do banco
-    url_padrao = os.environ.get("DATABASE_URL")
-    url_limpa = url_padrao[:15] + "..." if url_padrao else None
-    
-    todas_chaves_db = [k for k in os.environ.keys() if 'DATA' in k or 'POSTGRES' in k or 'DB' in k or 'SUPA' in k]
-
-    return {
-        "psycopg2_instalado": tem_psycopg2,
-        "erro_import_psycopg2": erro_import,
-        "DATABASE_URL_encontrada": bool(url_padrao),
-        "prefixo_url": url_limpa,
-        "variaveis_relacionadas": todas_chaves_db,
-        "python_version": sys.version
-    }
-
-
-@app.errorhandler(500)
-def handle_500(e):
-    import traceback
-    orig = getattr(e, 'original_exception', e)
-    tb = traceback.format_exc()
-    return f'''
-    <div style="font-family: monospace; padding: 20px; background: #fff3f3; border: 2px solid #e74c3c;">
-        <h2 style="color: #c0392b;">Erro 500 no Servidor</h2>
-        <p><b>Exceção:</b> {orig}</p>
-        <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">{tb}</pre>
-    </div>
-    ''', 500
-
-
-def erro_interno_500(e):
-    import traceback
-    return f"<h3>Erro Interno (500):</h3><pre>{traceback.format_exc()}</pre>", 500
-
-@app.route('/secretaria/planificacao/nova', methods=['GET', 'POST'])
-def planificacao_nova():
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-
-    if request.method == 'POST':
-        fd = request.form
-        dep = (fd.get('departamento') or 'Geral').strip()
-        tipo = (fd.get('tipo_evento') or fd.get('tipo') or 'Geral').strip()
-        nome = (fd.get('nome_actividade') or fd.get('actividade') or fd.get('nome') or 'Actividade').strip()
-        data = (fd.get('data_prevista') or fd.get('data') or '---').strip()
-        freq = (fd.get('frequencia') or 'Pontual / Única').strip()
-        resp = (fd.get('responsavel_directo') or fd.get('responsavel') or '---').strip()
-        cont = (fd.get('contacto') or fd.get('telefone') or '').strip()
-
-        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-        marcador = "%s" if is_pg else "?"
-
-        sql = f"""INSERT INTO planificacoes 
-                 (departamento, tipo_evento, nome_actividade, data_prevista, frequencia, responsavel_directo, contacto, status) 
-                 VALUES ({marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, {marcador}, 'Pendente')"""
-        try:
-            if hasattr(conn, 'rollback'):
-                try: conn.rollback()
-                except: pass
-            cur.execute(sql, (dep, tipo, nome, data, freq, resp, cont))
-            if hasattr(conn, 'commit'):
-                conn.commit()
-        except Exception as e_post:
-            print("[ERRO GRAVAR PLANIFICACAO]:", e_post)
-            if hasattr(conn, 'rollback'):
-                try: conn.rollback()
-                except: pass
-
-        return redirect('/?aba=secretaria')
-
-    # GET: Se acedido diretamente, redireciona para a aba no painel principal
-    return redirect('/?aba=secretaria')
-

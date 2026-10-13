@@ -43,8 +43,8 @@
             <!-- Registar Membro -->
             <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                 <h2 class="text-lg font-bold text-gray-800 mb-3">👤 Registar Novo Membro</h2>
-                <form enctype="multipart/form-data" novalidate action="/membro/adicionar" method="POST" class="space-y-3">
-                    <input type="text" name="nome" placeholder="Nome Completo"  
+                <form action="/membro/adicionar" method="POST" class="space-y-3">
+                    <input type="text" name="nome" placeholder="Nome Completo" required 
                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input type="text" name="telefone" placeholder="Contacto / Telemóvel" 
@@ -61,7 +61,7 @@
             <!-- Lançamento Financeiro -->
             <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                 <h2 class="text-lg font-bold text-gray-800 mb-3">💰 Lançamento (Dízimos / Despesas)</h2>
-                <form enctype="multipart/form-data" novalidate action="/transacao/adicionar" method="POST" class="space-y-3">
+                <form action="/transacao/adicionar" method="POST" class="space-y-3">
                     <div class="grid grid-cols-2 gap-2">
                         <select name="tipo" class="w-full p-2.5 border rounded-lg text-sm bg-white outline-none">
                             <option value="Entrada">Entrada (+)</option>
@@ -77,7 +77,7 @@
                         </select>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input type="number" step="0.01" name="valor" placeholder="Valor (MT)"  
+                        <input type="number" step="0.01" name="valor" placeholder="Valor (MT)" required 
                                class="w-full p-2.5 border rounded-lg text-sm outline-none">
                         <select name="membro_id" class="w-full p-2.5 border rounded-lg text-sm bg-white outline-none">
                             <option value="">-- Membro Opcional --</option>
@@ -132,65 +132,5 @@
         </div>
 
     </main>
-
-        <!-- BOTÃO OFICIAL DO CENSO E LINKS WHATSAPP -->
-        <a href="/admin/censo/homologar" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md transition">
-            <i class="fa-solid fa-clipboard-check text-sm"></i>
-            <span>Homologar Censo & Links</span>
-        </a>
-        <button onclick="copiarLinkCensoGeral()" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition" title="Copiar Link para WhatsApp">
-            <i class="fa-brands fa-whatsapp text-sm"></i>
-            <span>Copiar Link Censo</span>
-        </button>
-
-
-<script>
-function copiarLinkCensoGeral() {
-    const link = window.location.origin + '/censo';
-    navigator.clipboard.writeText(link).then(() => {
-        alert('✓ Link do Censo copiado:\n' + link + '\n\nJá pode colar nos grupos de WhatsApp dos membros!');
-    }).catch(() => {
-        prompt('Copie o link abaixo para enviar aos membros:', link);
-    });
-}
-</script>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // 1. Destruir botao do certificado nas licoes
-    let textoPagina = document.body.innerText.toLowerCase();
-    if(textoPagina.includes("lição 1") || window.location.href.toLowerCase().includes("licao")) {
-        document.querySelectorAll("a, button").forEach(btn => {
-            if(btn.innerText.toLowerCase().includes("certificado")) {
-                btn.remove(); // Remove completamente do HTML
-            }
-        });
-    }
-    
-    // 2. Garantir que os campos têm as etiquetas corretas para o Python
-    let btnGravar = document.querySelector("button");
-    if(btnGravar && btnGravar.innerText.includes("Gravar")) {
-        btnGravar.type = "submit";
-        
-        document.querySelectorAll("input").forEach(inp => {
-            let p = (inp.placeholder || "").toLowerCase();
-            if(p.includes("semin") && !inp.name) inp.name = "nome_actividade";
-            if(p.includes("odete") && !inp.name) inp.name = "responsavel_directo";
-            if(p.includes("825") && !inp.name) inp.name = "contacto";
-            if(inp.type === "date" && !inp.name) inp.name = "data_prevista";
-        });
-        
-        document.querySelectorAll("select").forEach((sel, idx) => {
-            if(!sel.name) {
-                if(idx === 0) sel.name = "departamento";
-                if(idx === 1) sel.name = "tipo_evento";
-                if(idx === 2) sel.name = "frequencia";
-            }
-        });
-    }
-});
-</script>
-
 </body>
 </html>
