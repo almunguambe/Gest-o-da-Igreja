@@ -1,3 +1,4 @@
+import re
 import qrcode
 from modulo_escola_biblica import CURRICULO_CLASSES, gerar_pdf_conclusao_discipulado
 import os
