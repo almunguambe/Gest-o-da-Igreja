@@ -68,6 +68,12 @@ class CompatCursor:
         self._cur = cursor
         self._is_pg = is_pg
     def execute(self, sql, params=None):
+        if isinstance(sql, str):
+
+            sql = re.sub(r'INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT', 'SERIAL PRIMARY KEY', sql, flags=re.IGNORECASE)
+
+            sql = re.sub(r'\bAUTOINCREMENT\b', '', sql, flags=re.IGNORECASE)
+
         if self._is_pg and sql:
             # Converte ? para %s para PostgreSQL
             sql = sql.replace('?', '%s')
@@ -125,7 +131,7 @@ def executar_migracao_garantida():
         # 1. Tabela igrejas
         c.execute("""
             CREATE TABLE IF NOT EXISTS igrejas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 nome TEXT NOT NULL UNIQUE,
                 cidade TEXT,
                 distrito TEXT,
@@ -211,7 +217,7 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS igrejas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome TEXT NOT NULL UNIQUE,
         cidade TEXT,
         distrito TEXT,
@@ -224,7 +230,7 @@ def init_db():
     if not c.fetchone():
         c.execute("INSERT INTO igrejas (id, nome, cidade, distrito, pastor, telefone, ativa) VALUES (1, 'Congregação de Chicuque', 'Maxixe', 'Maxixe', 'Pastor Local', '+258 84 000 0000', 1)")
     c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         usuario TEXT UNIQUE NOT NULL,
         senha TEXT NOT NULL,
         cargo TEXT NOT NULL
@@ -237,21 +243,21 @@ def init_db():
     
     # Novas tabelas de configuração eclesiástica
     try:
-        c.execute('''CREATE TABLE IF NOT EXISTS config_cargos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS config_cultos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS config_contas (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS config_atividades (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS igrejas_distritos (id INTEGER PRIMARY KEY AUTOINCREMENT, provincia TEXT, distrito TEXT, nome TEXT)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_cargos (id SERIAL PRIMARY KEY, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_cultos (id SERIAL PRIMARY KEY, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_contas (id SERIAL PRIMARY KEY, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_atividades (id SERIAL PRIMARY KEY, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS igrejas_distritos (id SERIAL PRIMARY KEY, provincia TEXT, distrito TEXT, nome TEXT)''')
     except:
         pass
 
     
     try:
-        c.execute('''CREATE TABLE IF NOT EXISTS config_eventos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS config_eventos (id SERIAL PRIMARY KEY, nome TEXT UNIQUE)''')
     except: pass
 
     c.execute('''CREATE TABLE IF NOT EXISTS membros (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome TEXT NOT NULL,
         telefone TEXT,
         genero TEXT,
@@ -272,7 +278,7 @@ def init_db():
         data_registo TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS financeiro (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         tipo TEXT,
         local_movimento TEXT DEFAULT 'Caixa',
         departamento TEXT DEFAULT 'Geral',
@@ -287,7 +293,7 @@ def init_db():
         descricao TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS transferencias (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data_movimento TEXT NOT NULL,
         origem_local TEXT NOT NULL,
         origem_depto TEXT NOT NULL,
@@ -298,7 +304,7 @@ def init_db():
         data_registo TEXT NOT NULL
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS casamentos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         noivo TEXT NOT NULL,
         noiva TEXT NOT NULL,
         data_casamento TEXT NOT NULL,
@@ -306,27 +312,27 @@ def init_db():
         data_registo TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS mortes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome_falecido TEXT NOT NULL,
         data_falecimento TEXT NOT NULL,
         observacoes TEXT,
         data_registo TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS departamentos_lista (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome TEXT UNIQUE NOT NULL
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS categorias_financeiras (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         tipo TEXT NOT NULL,
         nome TEXT NOT NULL
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS zonas_lista (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome TEXT UNIQUE NOT NULL
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS cultos_frequencia (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data_culto TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         homens INTEGER DEFAULT 0,
@@ -341,7 +347,7 @@ def init_db():
         data_registo TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS novos_convertidos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome TEXT NOT NULL,
         telefone TEXT,
         bairro TEXT,
@@ -352,7 +358,7 @@ def init_db():
         observacoes TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS patrimonio (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         item TEXT NOT NULL,
         departamento TEXT DEFAULT 'Geral',
         quantidade INTEGER DEFAULT 1,
@@ -361,7 +367,7 @@ def init_db():
         observacoes TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS escalas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data_escala TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         dirigente TEXT,
@@ -372,14 +378,14 @@ def init_db():
         observacoes TEXT
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS campanhas_metas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome_campanha TEXT NOT NULL,
         departamento TEXT DEFAULT 'Construção',
         valor_meta REAL NOT NULL,
         status TEXT DEFAULT 'Ativa'
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         usuario TEXT NOT NULL,
         licao TEXT NOT NULL,
         nota INTEGER NOT NULL,
@@ -387,7 +393,7 @@ def init_db():
         data_resposta TEXT NOT NULL
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS duvidas_estudantes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         usuario TEXT NOT NULL,
         licao TEXT NOT NULL,
         duvida TEXT NOT NULL,
@@ -527,7 +533,7 @@ def inicializar_tabela_discipulado():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS progresso_discipulado (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     membro_id INTEGER NOT NULL,
                     classe_id TEXT NOT NULL,
                     nota REAL DEFAULT 0,
@@ -575,7 +581,7 @@ def assegurar_coluna_obito():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS obitos (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     membro_id INTEGER,
                     nome TEXT,
                     data_morte DATE,
@@ -754,7 +760,7 @@ def dashboard():
     todos_convertidos = conn.execute("SELECT * FROM novos_convertidos WHERE igreja_id = ? ORDER BY id DESC", (igreja_id,)).fetchall()
     todo_patrimonio = conn.execute("SELECT * FROM patrimonio WHERE igreja_id = ? ORDER BY departamento, item ASC", (igreja_id,)).fetchall()
     conn.execute("""CREATE TABLE IF NOT EXISTS escalas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data_escala TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         dirigente TEXT,
@@ -769,7 +775,7 @@ def dashboard():
     )""")
         # Garantir estrutura completa da tabela escalas
     conn.execute('''CREATE TABLE IF NOT EXISTS escalas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data_escala TEXT NOT NULL,
         tipo_culto TEXT NOT NULL,
         dirigente TEXT,
@@ -1175,7 +1181,7 @@ def nova_escala():
 
      conn = get_db()
      conn.execute('''CREATE TABLE IF NOT EXISTS escalas (
-         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         id SERIAL PRIMARY KEY,
          data_escala TEXT NOT NULL,
          tipo_culto TEXT NOT NULL,
          dirigente TEXT,
@@ -2171,7 +2177,7 @@ def ver_licao_individual(cid, lid):
             );
         """ if DATABASE_URL and psycopg2 else """
             CREATE TABLE IF NOT EXISTS duvidas_discipulado (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 membro_id INTEGER,
                 membro_nome TEXT,
                 classe_nome TEXT,
@@ -2550,7 +2556,7 @@ def processar_avaliacao_discipulado(cid):
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS progresso_discipulado (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     membro_id INTEGER,
                     classe_id TEXT,
                     nota REAL,
@@ -2723,7 +2729,7 @@ def criar_tabelas_faltantes():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS zonas_lista (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     nome TEXT UNIQUE NOT NULL
                 );
             """)
@@ -2743,7 +2749,7 @@ def criar_tabelas_faltantes():
         else:
             c.execute("""
                 CREATE TABLE IF NOT EXISTS avaliacoes_estudantes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     usuario TEXT,
                     licao TEXT,
                     nota INTEGER,
