@@ -1153,7 +1153,7 @@ def cultos_novo():
     vm = n('visitantes_mulheres')
     apelos = n('apelos')
 
-    # CÁLCULO FEITO NO SERVIDOR
+    # SOMA AUTOMÁTICA FEITA PELO PYTHON
     total = ha + ma + jr + jm + cm + cf + vh + vm
 
     pregador = (fd.get('pregador') or '---').strip()
@@ -1171,7 +1171,7 @@ def cultos_novo():
         cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, cm, cf, vh, vm, apelos, total, pregador, tema))
         if hasattr(conn, 'commit'): conn.commit()
     except Exception as e:
-        print("[ERRO GRAVACAO CULTO]:", e)
+        print("[ERRO GRAVAR CULTO]:", e)
         if hasattr(conn, 'rollback'):
             try: conn.rollback()
             except: pass
