@@ -2074,3 +2074,97 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 </script>
+
+
+<!-- MOTOR UNIVERSAL DE NAVEGAÇÃO ENTRE ABAS DA SIDEBAR -->
+<script>
+function ativarAbaPorNome(nomeAba) {
+    if (!nomeAba) return;
+    nomeAba = nomeAba.toLowerCase().trim();
+
+    // 1. Procurar todos os blocos de conteúdo/painéis
+    var secoes = document.querySelectorAll('main > div, .aba-conteudo, [id^="aba-"], [id^="tab-"], [id*="content"], section');
+    
+    // Mapeamento de termos para encontrar a janela certa
+    var encontrou = false;
+    secoes.forEach(function(sec) {
+        var id = (sec.id || '').toLowerCase();
+        var txt = (sec.innerText || '').toLowerCase();
+        
+        // Verifica se esta seção corresponde à aba clicada
+        var match = false;
+        if (nomeAba.includes('culto') && (id.includes('culto') || txt.includes('registo rápido de culto'))) match = true;
+        else if (nomeAba.includes('convertido') && (id.includes('convert') || txt.includes('novos convertidos'))) match = true;
+        else if (nomeAba.includes('escala') && (id.includes('escala') || txt.includes('escala de púlpito'))) match = true;
+        else if (nomeAba.includes('casamento') && (id.includes('casamento') || txt.includes('casamento'))) match = true;
+        else if (nomeAba.includes('óbito') || nomeAba.includes('obito')) {
+            if (id.includes('obito') || txt.includes('óbito') || txt.includes('obito')) match = true;
+        }
+        else if (nomeAba.includes('secretaria') && (id.includes('secretaria') || txt.includes('secretaria'))) match = true;
+        else if (nomeAba.includes('membro') && (id.includes('membro') || txt.includes('membros'))) match = true;
+        else if (nomeAba.includes('raio') && (id.includes('raio') || txt.includes('raio-x'))) match = true;
+        else if (nomeAba.includes('painel') || nomeAba.includes('meta')) {
+            if (id.includes('meta') || id.includes('painel') || txt.includes('metas')) match = true;
+        }
+        else if (nomeAba.includes('caixa') && (id.includes('caixa') || txt.includes('caixa'))) match = true;
+
+        if (match) {
+            sec.style.display = 'block';
+            sec.style.visibility = 'visible';
+            encontrou = true;
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Liga clique a todos os botões/links da sidebar
+    var botoesSidebar = document.querySelectorAll('.sidebar a, .sidebar button, .sidebar-item, [onclick*="aba"]');
+    
+    botoesSidebar.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            var txt = (this.innerText || '').toLowerCase().trim();
+            
+            // Destacar o botão ativo visualmente
+            botoesSidebar.forEach(function(b) {
+                b.style.backgroundColor = 'transparent';
+                b.style.color = '#cbd5e1';
+            });
+            this.style.backgroundColor = '#3b82f6';
+            this.style.color = '#ffffff';
+
+            // Identificar a rota correspondente ou abrir via URL/div
+            if (txt.includes('culto')) window.location.href = '/?aba=cultos';
+            else if (txt.includes('secretaria')) window.location.href = '/?aba=secretaria';
+            else if (txt.includes('membro')) window.location.href = '/?aba=membros';
+            else if (txt.includes('convertido')) window.location.href = '/?aba=convertidos';
+            else if (txt.includes('escala')) window.location.href = '/?aba=escala';
+            else if (txt.includes('casamento')) window.location.href = '/?aba=casamentos';
+            else if (txt.includes('óbito') || txt.includes('obito')) window.location.href = '/?aba=obitos';
+            else if (txt.includes('meta') || txt.includes('painel')) window.location.href = '/?aba=metas';
+            else if (txt.includes('caixa')) window.location.href = '/?aba=caixa';
+        });
+    });
+
+    // Abrir a aba que vem indicada no URL (?aba=...)
+    var params = new URLSearchParams(window.location.search);
+    var abaParam = params.get('aba');
+    if (abaParam) {
+        botoesSidebar.forEach(function(b) {
+            var t = (b.innerText || '').toLowerCase();
+            if (t.includes(abaParam)) {
+                b.style.backgroundColor = '#3b82f6';
+                b.style.color = '#ffffff';
+            }
+        });
+    }
+});
+
+// Tratamento de fotos em falta
+window.addEventListener('error', function(e) {
+    if (e.target && e.target.tagName === 'IMG' && (e.target.src.includes('uploads') || e.target.src.includes('membro'))) {
+        e.target.onerror = null;
+        var nome = e.target.alt || 'Membro';
+        e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nome) + '&background=3730a3&color=fff&size=128';
+    }
+}, true);
+</script>
