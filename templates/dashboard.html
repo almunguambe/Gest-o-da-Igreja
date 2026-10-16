@@ -850,7 +850,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">🌱 Registar Novo Convertido</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/convertidos/novo" method="POST">
                             </form>
 <form action="/convertidos/novo" method="POST">
                             <input type="text" name="nome"  placeholder="Nome Completo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
@@ -895,7 +895,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">📋 Criar Escala de Culto</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/escalas/novo" method="POST">
                             <input type="date" name="data_prevista" name="data_prevista" name="data_escala"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="tipo_culto"  placeholder="Tipo de Culto *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1015,7 +1015,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-3 pb-2 border-b">💍 Registo Matrimonial</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/casamentos/novo" method="POST">
                             <input type="text" name="noivo"  placeholder="Noivo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="noiva"  placeholder="Noiva *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="date" name="data_prevista" name="data_prevista" name="data_casamento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
@@ -1039,7 +1039,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-3 pb-2 border-b">🕊️ Registo de Óbito</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/obitos/novo" method="POST">
                             <input type="text" name="nome_falecido"  placeholder="Falecido *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="date" name="data_prevista" name="data_prevista" name="data_falecimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="observacoes" placeholder="Notas..." class="w-full h-11 px-3 text-sm border-2 rounded-xl">
@@ -1166,7 +1166,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">💰 Lançamento no Caixa</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/financas/caixa/novo" method="POST">
                             <input type="date" name="data_prevista" name="data_prevista" name="data_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <div class="grid grid-cols-2 gap-2">
                                 <select name="tipo" id="selectTipoTransacao" onchange="atualizarCategoriasPorTipo()" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold"><option value="Entrada">Entrada (+)</option><option value="Saída">Saída (-)</option></select>
