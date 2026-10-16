@@ -1330,7 +1330,7 @@ def novo_convertido():
     culto_origem = (fd.get('culto_origem') or fd.get('tipo_culto') or 'Geral').strip()
 
     from datetime import datetime
-    if not data_decisao:
+    if not data_decisao or data_decisao in ('mm/dd/yyyy', '---'):
         data_decisao = datetime.now().strftime('%Y-%m-%d')
 
     is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
@@ -1341,11 +1341,10 @@ def novo_convertido():
               VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m})"""
     try:
         cur.execute(sql, (nome, telefone, bairro, data_decisao, quem_convidou, culto_origem, 'Acompanhamento'))
-        if hasattr(conn, 'commit'):
-            conn.commit()
-        print(f"[SUCESSO CONVERTIDO]: Registado: {nome}")
+        if hasattr(conn, 'commit'): conn.commit()
+        print(f"[SUCESSO CONVERTIDO]: Gravado com sucesso -> {nome}")
     except Exception as e:
-        print("[ERRO AO GRAVAR CONVERTIDO]:", e)
+        print("[ERRO CONVERTIDO]:", e)
         if hasattr(conn, 'rollback'):
             try: conn.rollback()
             except: pass
@@ -2059,3 +2058,24 @@ def responder_duvida_pastor(id):
         session['sucesso_cadastro'] = "Resposta pastoral enviada com sucesso para a sala de aula do aluno!"
     
     return redirect('/')
+
+@app.context_processor
+def injetar_dados_tabelas():
+    ctx = {'convertidos': [], 'cultos': []}
+    try:
+        conn = get_db()
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        try:
+            cur.execute("SELECT * FROM novos_convertidos ORDER BY id DESC LIMIT 50")
+            if cur.description:
+                cols = [c[0] for c in cur.description]
+                ctx['convertidos'] = [dict(zip(cols, r)) for r in cur.fetchall()]
+        except Exception: pass
+        try:
+            cur.execute("SELECT * FROM cultos ORDER BY id DESC LIMIT 50")
+            if cur.description:
+                cols_c = [c[0] for c in cur.description]
+                ctx['cultos'] = [dict(zip(cols_c, r)) for r in cur.fetchall()]
+        except Exception: pass
+    except Exception: pass
+    return ctx
