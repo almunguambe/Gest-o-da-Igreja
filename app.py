@@ -1316,17 +1316,64 @@ def novo_culto():
 
 @app.route('/convertidos/novo', methods=['POST'])
 def novo_convertido():
-    if not can_cadastro(): return redirect('/')
     conn = get_db()
-    conn.execute('''INSERT INTO novos_convertidos (nome, telefone, bairro, data_decisao, culto_origem, quem_convidou, status_discipulado, observacoes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
-                 (request.form['nome'].strip(), request.form.get('telefone', '').strip(), request.form.get('bairro', ''),
-                  request.form['data_decisao'], request.form.get('culto_origem', ''), request.form.get('quem_convidou', ''),
-                  request.form.get('status_discipulado', 'Decisão Inicial'), request.form.get('observacoes', '')))
-    conn.commit()
-    conn.close()
-    session['sucesso_cadastro'] = "Novo convertido registado!"
-    return redirect('/')
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+
+    # Garantir tabela com compatibilidade PostgreSQL/SQLite
+    try:
+        is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
+        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS novos_convertidos (
+                id {id_tipo},
+                nome TEXT,
+                telefone TEXT,
+                bairro TEXT,
+                data_decisao TEXT,
+                culto_origem TEXT,
+                quem_convidou TEXT,
+                status_discipulado TEXT DEFAULT 'Acompanhamento',
+                observacoes TEXT,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        if hasattr(conn, 'commit'): conn.commit()
+    except Exception:
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+
+    fd = request.form
+    # Leitura tolerante de qualquer variação de nome de campo
+    nome = (fd.get('nome') or fd.get('nome_completo') or fd.get('nome_convertido') or '').strip()
+    telefone = (fd.get('telefone') or fd.get('contato') or fd.get('contacto') or '').strip()
+    bairro = (fd.get('bairro') or fd.get('residencia') or '').strip()
+    data_decisao = (fd.get('data_decisao') or fd.get('data') or fd.get('data_conversao') or '').strip()
+    quem_convidou = (fd.get('quem_convidou') or fd.get('convidado_por') or fd.get('discipulador') or '').strip()
+    culto_origem = (fd.get('culto_origem') or fd.get('tipo_culto') or '').strip()
+
+    from datetime import datetime
+    if not data_decisao:
+        data_decisao = datetime.now().strftime('%Y-%m-%d')
+
+    is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
+    m = "%s" if is_pg else "?"
+
+    sql = f"""INSERT INTO novos_convertidos 
+              (nome, telefone, bairro, data_decisao, quem_convidou, culto_origem)
+              VALUES ({m}, {m}, {m}, {m}, {m}, {m})"""
+    try:
+        cur.execute(sql, (nome, telefone, bairro, data_decisao, quem_convidou, culto_origem))
+        if hasattr(conn, 'commit'): conn.commit()
+        print(f"[SUCESSO CONVERTIDO]: Gravado com sucesso -> {nome}")
+    except Exception as e:
+        print("[ERRO AO GRAVAR CONVERTIDO]:", e)
+        if hasattr(conn, 'rollback'):
+            try: conn.rollback()
+            except: pass
+
+    return redirect('/?aba=convertidos')
+
 
 @app.route('/convertidos/atualizar_status/<int:id>', methods=['POST'])
 def atualizar_status_convertido(id):
