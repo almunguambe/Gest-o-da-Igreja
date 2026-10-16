@@ -50,7 +50,7 @@
                         <p class="text-[11px] text-indigo-300 font-semibold">{{ session.get('igreja_nome', 'IEAD Sede') }} • Gestão 360°</p>
                     </div>
                 </div>
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white text-xl font-black">&times;</button>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white text-xl font-black" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">&times;</button>
             </div>
 
             <!-- Navegação com Agrupamentos Eclesiásticos -->
@@ -68,7 +68,7 @@
                     </a>
                     {% endif %}
 
-                        <button onclick="trocarAba('membros')" id="nav-membros" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if pode_cadastro %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}">
+                        <button onclick="trocarAba('membros')" id="nav-membros" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if pode_cadastro %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">👤</span> <span>Membros ({{ total_membros }})</span>
                         </button>
 
@@ -76,22 +76,22 @@
                              <span class="text-base">📊</span> <span>Raio-X da Membrezia</span>
                          </a>
                         
-                         <button onclick="trocarAba('secretaria')" id="nav-secretaria" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                         <button onclick="trocarAba('secretaria')" id="nav-secretaria" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                              <span class="text-base">📋</span> <span>Secretaria & Planos</span>
                          </button>
-                         <button onclick="trocarAba('cultos')" id="nav-cultos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                         <button onclick="trocarAba('cultos')" id="nav-cultos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">⛪</span> <span>Cultos & Presenças</span>
                         </button>
-                        <button onclick="trocarAba('convertidos')" id="nav-convertidos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('convertidos')" id="nav-convertidos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">🌱</span> <span>Novos Convertidos</span>
                         </button>
-                        <button onclick="trocarAba('escalas')" id="nav-escalas" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('escalas')" id="nav-escalas" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">📋</span> <span>Escala de Púlpito</span>
                         </button>
-                        <button onclick="trocarAba('casamentos')" id="nav-casamentos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('casamentos')" id="nav-casamentos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">💍</span> <span>Livro de Casamentos</span>
                         </button>
-                        <button onclick="trocarAba('mortes')" id="nav-mortes" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('mortes')" id="nav-mortes" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">🕊️</span> <span>Livro de Óbitos</span>
                         </button>
                     </div>
@@ -103,13 +103,13 @@
                 <div>
                     <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400/80 px-3 block mb-1.5">Finanças & Tesouraria</span>
                     <div class="space-y-1">
-                        <button onclick="trocarAba('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if not pode_cadastro and pode_tesouraria %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}">
+                        <button onclick="trocarAba('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition {% if not pode_cadastro and pode_tesouraria %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md{% else %}text-slate-300 hover:bg-white/10{% endif %}" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">📊</span> <span>Painel Geral & Metas</span>
                         </button>
-                        <button onclick="trocarAba('financeiro')" id="nav-financeiro" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('financeiro')" id="nav-financeiro" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">💰</span> <span>Movimentos de Caixa</span>
                         </button>
-                        <button onclick="trocarAba('transferencias')" id="nav-transferencias" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('transferencias')" id="nav-transferencias" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">🔄</span> <span>Transferir Fundos</span>
                         </button>
                         <a href="/financeiro/balancete_pdf" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-emerald-300 hover:bg-emerald-950/50 transition">
@@ -127,10 +127,10 @@
                             <span class="text-base">📖</span> <span>Manual de Candidatos</span>
                         </a>
                         {% if e_admin or pode_cadastro %}
-                        <button onclick="trocarAba('notas_alunos')" id="nav-notas_alunos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('notas_alunos')" id="nav-notas_alunos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">🎓</span> <span>Notas dos Alunos</span>
                         </button>
-                        <button onclick="trocarAba('duvidas_alunos')" id="nav-duvidas_alunos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('duvidas_alunos')" id="nav-duvidas_alunos" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">💬</span> <span>Dúvidas dos Alunos</span>
                         </button>
                     </div>
@@ -142,13 +142,13 @@
                 <div>
                     <span class="text-[10px] font-black uppercase tracking-wider text-purple-400/80 px-3 block mb-1.5">Administração</span>
                     <div class="space-y-1">
-                        <button onclick="trocarAba('patrimonio')" id="nav-patrimonio" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('patrimonio')" id="nav-patrimonio" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">📦</span> <span>Património & Bens</span>
                         </button>
-                        <button onclick="trocarAba('usuarios')" id="nav-usuarios" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('usuarios')" id="nav-usuarios" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">👥</span> <span>Gestão de Utilizadores</span>
                         </button>
-                        <button onclick="trocarAba('configuracoes')" id="nav-configuracoes" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition">
+                        <button onclick="trocarAba('configuracoes')" id="nav-configuracoes" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/10 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                             <span class="text-base">⚙️</span> <span>Configurações</span>
                         </button>
                         <a href="/sistema/backup" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-amber-400 hover:bg-amber-950/40 transition">
@@ -174,14 +174,14 @@
     </aside>
 
     <!-- Fundo desfocado para mobile ao abrir a sidebar -->
-    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
+    <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 pointer-events-none bg-slate-950/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
     <!-- CONTEÚDO PRINCIPAL EXPANDIDO -->
     <div class="flex-1 flex flex-col min-w-0">
         
         <!-- Topbar Móvel com Botão Hambúrguer -->
         <div class="bg-gradient-to-r from-blue-950 via-slate-950 to-indigo-950 text-white p-3.5 px-4 flex md:hidden justify-between items-center shadow-md sticky top-0 z-30">
-            <button onclick="toggleSidebar()" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl font-bold focus:outline-none">
+            <button onclick="toggleSidebar()" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl font-bold focus:outline-none" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                 ☰
             </button>
             <div class="text-center">
@@ -241,7 +241,7 @@
                             <span class="bg-blue-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-sm">Oficial IEAD</span>
                         </div>
 
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                             <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border-2 border-dashed border-indigo-200 rounded-3xl">
                                 <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition flex items-center gap-1.5">
                                     <span>Tirar Foto / Carregar</span>
@@ -370,7 +370,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm rounded-2xl shadow-lg transition">
+                            <button type="submit" class="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm rounded-2xl shadow-lg transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"
                                 Gravar Ficha de Membro
                             </button>
                         </form>
@@ -387,7 +387,7 @@
                             <a href="/admin/censo/homologar" class="h-10 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5" title="Aprovar e homologar fichas do censo">
                                 <span>📋 Homologar Censo</span>
                             </a>
-                            <button type="button" onclick="copiarLinkCensoGeral()" class="h-10 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5" title="Copiar link para WhatsApp">
+                            <button type="button" onclick="copiarLinkCensoGeral()" class="h-10 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black shadow transition flex items-center gap-1.5" title="Copiar link para WhatsApp" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;">
                                 <span>📱 Link Censo (WhatsApp)</span>
                             </button>
                             <a href="/exportar/membros"
@@ -478,7 +478,7 @@
                     <!-- Formulário de Planificação -->
                     <div class="lg:col-span-4 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-3 pb-2 border-b">📌 Planificar Nova Actividade</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                             <div>
                                 <label class="text-[11px] font-bold text-slate-600 block mb-1">Departamento</label>
                                 <select name="departamento"  class="w-full h-10 px-2 text-xs border-2 rounded-xl bg-white font-bold">
@@ -533,7 +533,7 @@
                                 <label class="text-[11px] font-bold text-slate-600 block mb-1">Contacto / WhatsApp (para Notificação)</label>
                                 <input type="text" name="contacto_responsavel" placeholder="Ex: 841234567" class="w-full h-10 px-3 text-xs border-2 rounded-xl">
                             </div>
-                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
+                            <button type="submit" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important; width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="if(this.form){this.form.submit();}"Gravar Planificação</button>
                         </form>
                     </div>
 
@@ -579,7 +579,7 @@
                                             {% endif %}
                                         </td>
                                         <td class="p-2.5 text-center">
-                                            <button onclick="abrirModalRelatar({{ p['id'] }}, '{{ p['actividade'] }}', '{{ p['tipo_evento'] }}')" class="px-3 py-1 bg-slate-900 hover:bg-indigo-900 text-white font-bold text-[10px] rounded-lg shadow">
+                                            <button onclick="abrirModalRelatar({{ p['id'] }}, '{{ p['actividade'] }}', '{{ p['tipo_evento'] }}')" class="px-3 py-1 bg-slate-900 hover:bg-indigo-900 text-white font-bold text-[10px] rounded-lg shadow" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">
                                                 📝 Relatar
                                             </button>
                                         </td>
@@ -597,14 +597,14 @@
             </section>
 
             <!-- MODAL DINÂMICO PARA RELATAR ACTIVIDADE -->
-            <div id="modal-relatar" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div id="modal-relatar" class="fixed inset-0 pointer-events-none bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
                 <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
                     <div class="flex justify-between items-center border-b pb-3">
                         <h3 class="font-black text-slate-900 text-base" id="modal-titulo-actividade">Relatório de Execução</h3>
-                        <button onclick="fecharModalRelatar()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+                        <button onclick="fecharModalRelatar()" class="text-slate-400 hover:text-slate-700 font-bold text-lg" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" type="submit">✕</button>
                     </div>
 
-                    <form action="/secretaria/planificacao/nova" method="POST">
+                    <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="text-[11px] font-bold text-slate-600 block mb-1">Status Actual</label>
@@ -668,8 +668,8 @@
                         </div>
 
                         <div class="flex justify-end gap-2 pt-2">
-                            <button type="button" onclick="fecharModalRelatar()" class="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
-                            <button type="submit" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-black shadow">Salvar Relatório da Actividade</button>
+                            <button type="button" onclick="fecharModalRelatar()" class="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;">Cancelar</button>
+                            <button type="submit" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-black shadow" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"Salvar Relatório da Actividade</button>
                         </div>
                     </form>
                 </div>
@@ -698,7 +698,7 @@
             <span>⛪</span> Registo Rápido de Culto
         </h3>
 
-        <form action="/cultos/novo" method="POST" style="margin-top: 15px;">
+        <form action="/cultos/novo" method="POST" style="margin-top: 15px;" novalidate>
             <div style="display: flex; gap: 12px; margin-bottom: 14px;">
                 <div style="flex: 1;">
                     <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px;">📅 Data do Culto</label>
@@ -785,7 +785,7 @@
                 <input type="text" name="tema_mensagem" placeholder="Ex: A Fidelidade de Deus..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
             </div>
 
-            <button type="submit" style="width: 100%; padding: 14px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">
+            <button type="submit" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important; width: 100%; padding: 14px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;" onclick="if(this.form){this.form.submit();}"
                 Registar Presenças do Culto
             </button>
         </form>
@@ -850,15 +850,15 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">🌱 Registar Novo Convertido</h3>
-                        <form action="/convertidos/novo" method="POST">
+                        <form action="/convertidos/novo" method="POST" novalidate>
                             </form>
-<form action="/convertidos/novo" method="POST">
+<form action="/convertidos/novo" method="POST" novalidate>
                             <input type="text" name="nome"  placeholder="Nome Completo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="telefone" placeholder="Contacto Telefónico" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="date" name="data_prevista"  name="data_decisao"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-semibold">
                             <input type="text" name="bairro" placeholder="Bairro / Residência" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="quem_convidou" placeholder="Quem Convidou" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" class="w-full h-12 bg-emerald-700 text-white font-black text-sm rounded-2xl shadow">Registar para Discipulado</button>
+                            <button type="submit" class="w-full h-12 bg-emerald-700 text-white font-black text-sm rounded-2xl shadow" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"Registar para Discipulado</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -872,7 +872,7 @@
                                         <td class="p-2.5 font-bold">{{ nc['nome'] }}</td>
                                         <td class="p-2.5">{{ nc['telefone'] or '-' }}</td>
                                         <td class="p-2.5">
-                                            <form action="/secretaria/planificacao/nova" method="POST">
+                                            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                                                 <select name="status_discipulado" onchange="this.form.submit()" class="p-1 border rounded bg-white font-bold text-indigo-900 text-xs">
                                                     <option value="Decisão Inicial" {% if nc['status_discipulado'] == 'Decisão Inicial' %}selected{% endif %}>Decisão Inicial</option>
                                                     <option value="Em Discipulado" {% if nc['status_discipulado'] == 'Em Discipulado' %}selected{% endif %}>Em Discipulado</option>
@@ -895,7 +895,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">📋 Criar Escala de Culto</h3>
-                        <form action="/escalas/novo" method="POST">
+                        <form action="/escalas/novo" method="POST" novalidate>
                             <input type="date" name="data_prevista"  name="data_escala"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="tipo_culto"  placeholder="Tipo de Culto *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -920,7 +920,7 @@
                             </div>
                             <input type="text" name="leitura_palavra" placeholder="Leitor da Palavra" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="louvor_grupo" placeholder="Grupo de Louvor" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
+                            <button type="submit" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important; width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="if(this.form){this.form.submit();}"Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1015,12 +1015,12 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-3 pb-2 border-b">💍 Registo Matrimonial</h3>
-                        <form action="/casamentos/novo" method="POST">
+                        <form action="/casamentos/novo" method="POST" novalidate>
                             <input type="text" name="noivo"  placeholder="Noivo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="noiva"  placeholder="Noiva *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="date" name="data_prevista"  name="data_casamento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="pastor_oficiante" placeholder="Pastor Oficiante" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
+                            <button type="submit" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important; width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="if(this.form){this.form.submit();}"Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1039,11 +1039,11 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-3 pb-2 border-b">🕊️ Registo de Óbito</h3>
-                        <form action="/obitos/novo" method="POST">
+                        <form action="/obitos/novo" method="POST" novalidate>
                             <input type="text" name="nome_falecido"  placeholder="Falecido *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="date" name="data_prevista"  name="data_falecimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <input type="text" name="observacoes" placeholder="Notas..." class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
+                            <button type="submit" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important; width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="if(this.form){this.form.submit();}"Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1126,7 +1126,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">🔄 Transferir Fundos</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                             <input type="date" name="data_prevista"  name="data_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <div class="p-3 bg-rose-50 rounded-xl space-y-1.5 border">
                                 <span class="text-[10px] font-bold text-rose-800 uppercase">Origem</span>
@@ -1140,7 +1140,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                             </div>
                             <input type="number" step="0.01" name="valor"  placeholder="Valor (MT) *" class="w-full h-11 px-3 text-sm font-bold border-2 rounded-xl">
                             <input type="text" name="motivo"  placeholder="Motivo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" class="w-full h-12 bg-cyan-700 text-white font-black text-sm rounded-2xl shadow">Confirmar Transferência</button>
+                            <button type="submit" class="w-full h-12 bg-cyan-700 text-white font-black text-sm rounded-2xl shadow" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"Confirmar Transferência</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1166,7 +1166,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">💰 Lançamento no Caixa</h3>
-                        <form action="/financas/caixa/novo" method="POST">
+                        <form action="/financas/caixa/novo" method="POST" novalidate>
                             <input type="date" name="data_prevista"  name="data_movimento"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold">
                             <div class="grid grid-cols-2 gap-2">
                                 <select name="tipo" id="selectTipoTransacao" onchange="atualizarCategoriasPorTipo()" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold"><option value="Entrada">Entrada (+)</option><option value="Saída">Saída (-)</option></select>
@@ -1187,7 +1187,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                                 </select>
                                 <input type="text" name="referencia_transacao" placeholder="Cód. Transação / Ref. (opcional)" class="w-full h-11 px-3 text-xs border-2 rounded-xl font-mono">
                             </div>
-                            <button type="submit" style="width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Gravar Planificação</button>
+                            <button type="submit" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important; width: 100%; padding: 12px; background-color: #3730a3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="if(this.form){this.form.submit();}"Gravar Planificação</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1297,14 +1297,14 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                             </span>
                         </td>
                         <td class="p-2.5 text-center">
-                            <form action="/secretaria/planificacao/nova" method="POST">
+                            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                                 <input type="hidden" name="membro_id" value="{{ m['id'] }}">
                                 <select name="nova_fase" class="h-7 text-[11px] border rounded-lg px-1 bg-slate-50 font-bold">
                                     <option value="Em Aulas / Classe" {% if m['fase_discipulado'] == 'Em Aulas / Classe' %}selected{% endif %}>Em Aulas</option>
                                     <option value="Pronto para Batismo" {% if m['fase_discipulado'] == 'Pronto para Batismo' %}selected{% endif %}>Apto Batismo</option>
                                     <option value="Batizado">Batizado (Membro Efetivo)</option>
                                 </select>
-                                <button type="submit" class="h-7 px-2.5 bg-blue-900 hover:bg-blue-950 text-white font-bold text-[10px] rounded-lg shadow-sm transition">
+                                <button type="submit" class="h-7 px-2.5 bg-blue-900 hover:bg-blue-950 text-white font-bold text-[10px] rounded-lg shadow-sm transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"
                                     Salvar
                                 </button>
                             </form>
@@ -1489,9 +1489,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                         <p class="text-xs text-emerald-950">{{ d['resposta'] }}</p>
                     </div>
                     {% else %}
-                    <form action="/secretaria/planificacao/nova" method="POST">
+                    <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                         <input type="text" name="resposta" placeholder="Escreva a resposta bíblica para o aluno..." class="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:border-blue-900" >
-                        <button type="submit" class="px-3 py-1.5 bg-blue-900 text-white font-bold text-xs rounded-xl hover:bg-blue-950 transition">
+                        <button type="submit" class="px-3 py-1.5 bg-blue-900 text-white font-bold text-xs rounded-xl hover:bg-blue-950 transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"
                             Responder
                         </button>
                     </form>
@@ -1514,7 +1514,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">📦 Inventariar Bem / Equipamento</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                             <input type="text" name="item"  placeholder="Nome do Bem *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <div class="grid grid-cols-2 gap-2">
                                 <select name="departamento" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white"><option value="Louvor / Som">Louvor / Som</option><option value="Templo / Mobília">Templo / Mobília</option><option value="Secretaria">Secretaria</option><option value="Geral">Geral</option></select>
@@ -1522,7 +1522,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                             </div>
                             <select name="estado_conservacao" class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-bold"><option value="Bom">Bom Estado</option><option value="Em Manutenção">Em Manutenção</option><option value="Danificado">Danificado</option></select>
                             <input type="text" name="localizacao" placeholder="Localização" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
-                            <button type="submit" class="w-full h-12 bg-amber-700 text-white font-black text-sm rounded-2xl shadow">Registar no Inventário</button>
+                            <button type="submit" class="w-full h-12 bg-amber-700 text-white font-black text-sm rounded-2xl shadow" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"Registar no Inventário</button>
                         </form>
                     </div>
                     <div class="lg:col-span-7 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
@@ -1560,7 +1560,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
             <span class="text-xs font-bold px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">IEAD Moçambique</span>
         </div>
 
-        <form action="/secretaria/planificacao/nova" method="POST">
+        <form action="/secretaria/planificacao/nova" method="POST" novalidate>
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">1. Província</label>
                 <select id="provincia_select" name="provincia" onchange="atualizarDistritosPorProvincia()"  class="w-full h-11 px-3 text-xs border rounded-xl bg-white font-bold text-slate-800">
@@ -1582,7 +1582,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <input type="text" name="nome" placeholder="Ex: Chicuque Sede, Maxixe..."  class="w-full h-11 px-3 text-xs border rounded-xl bg-white">
             </div>
             <div class="flex items-end">
-                <button type="submit" class="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
+                <button type="submit" class="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"
                     <span>➕</span> Cadastrar Congregação
                 </button>
             </div>
@@ -1621,9 +1621,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white/95 p-5 rounded-3xl card-glow border border-indigo-100">
             <h3 class="text-sm font-black uppercase text-blue-950 mb-3 pb-2 border-b">Ministérios</h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <input type="text" name="nome" placeholder="Novo..."  class="h-10 px-2 text-xs border rounded-xl w-full">
-                <button type="submit" class="bg-blue-900 text-white px-3 font-bold rounded-xl">+</button>
+                <button type="submit" class="bg-blue-900 text-white px-3 font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+</button>
             </form>
             <ul class="divide-y text-xs max-h-52 overflow-y-auto">
                 {% for d in lista_deptos %}<li class="py-2 flex justify-between"><span>{{ d['nome'] }}</span><a href="/config/departamento/apagar/{{ d['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1631,12 +1631,12 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
         </div>
         <div class="bg-white/95 p-5 rounded-3xl card-glow border border-indigo-100">
             <h3 class="text-sm font-black uppercase text-emerald-950 mb-3 pb-2 border-b">Categorias Caixa</h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <div class="flex gap-2">
                     <select name="tipo" class="h-10 px-2 border rounded-xl bg-white w-1/3"><option value="Entrada">Entrada</option><option value="Saída">Saída</option></select>
                     <input type="text" name="nome" placeholder="Nome..."  class="h-10 px-2 border rounded-xl w-2/3">
                 </div>
-                <button type="submit" class="w-full h-9 bg-emerald-600 text-white font-bold rounded-xl">+ Guardar</button>
+                <button type="submit" class="w-full h-9 bg-emerald-600 text-white font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+ Guardar</button>
             </form>
             <ul class="divide-y text-xs max-h-52 overflow-y-auto">
                 {% for c in lista_categorias %}<li class="py-2 flex justify-between"><span>{{ c['tipo'] }}: {{ c['nome'] }}</span><a href="/config/categoria/apagar/{{ c['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1644,9 +1644,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
         </div>
         <div class="bg-white/95 p-5 rounded-3xl card-glow border border-indigo-100">
             <h3 class="text-sm font-black uppercase text-amber-950 mb-3 pb-2 border-b">Zonas & Bairros</h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <input type="text" name="nome" placeholder="Nova zona..."  class="h-10 px-2 text-xs border rounded-xl w-full">
-                <button type="submit" class="bg-amber-600 text-white px-3 font-bold rounded-xl">+</button>
+                <button type="submit" class="bg-amber-600 text-white px-3 font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+</button>
             </form>
             <ul class="divide-y text-xs max-h-52 overflow-y-auto">
                 {% for z in lista_zonas %}<li class="py-2 flex justify-between"><span>{{ z['nome'] }}</span><a href="/config/zona/apagar/{{ z['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1661,9 +1661,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
             <h3 class="text-sm font-black uppercase text-purple-950 mb-3 pb-2 border-b flex items-center justify-between">
                 <span>✝️ Cargos Ministeriais</span>
             </h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <input type="text" name="nome" placeholder="Ex: Diácono, Presbítero..."  class="h-10 px-2 text-xs border rounded-xl w-full">
-                <button type="submit" class="bg-purple-900 text-white px-3 font-bold rounded-xl">+</button>
+                <button type="submit" class="bg-purple-900 text-white px-3 font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+</button>
             </form>
             <ul class="divide-y text-xs max-h-48 overflow-y-auto">
                 {% for cg in lista_cargos %}<li class="py-2 flex justify-between"><span>{{ cg['nome'] }}</span><a href="/config/cargo/apagar/{{ cg['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1675,9 +1675,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
             <h3 class="text-sm font-black uppercase text-cyan-950 mb-3 pb-2 border-b flex items-center justify-between">
                 <span>⛪ Tipos de Cultos</span>
             </h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <input type="text" name="nome" placeholder="Ex: Escola Dominical..."  class="h-10 px-2 text-xs border rounded-xl w-full">
-                <button type="submit" class="bg-cyan-800 text-white px-3 font-bold rounded-xl">+</button>
+                <button type="submit" class="bg-cyan-800 text-white px-3 font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+</button>
             </form>
             <ul class="divide-y text-xs max-h-48 overflow-y-auto">
                 {% for cl in lista_cultos_cfg %}<li class="py-2 flex justify-between"><span>{{ cl['nome'] }}</span><a href="/config/culto/apagar/{{ cl['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1689,9 +1689,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
             <h3 class="text-sm font-black uppercase text-teal-950 mb-3 pb-2 border-b flex items-center justify-between">
                 <span>💳 Contas & Meios</span>
             </h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <input type="text" name="nome" placeholder="Ex: M-Pesa, Caixa..."  class="h-10 px-2 text-xs border rounded-xl w-full">
-                <button type="submit" class="bg-teal-700 text-white px-3 font-bold rounded-xl">+</button>
+                <button type="submit" class="bg-teal-700 text-white px-3 font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+</button>
             </form>
             <ul class="divide-y text-xs max-h-48 overflow-y-auto">
                 {% for ct in lista_contas %}<li class="py-2 flex justify-between"><span>{{ ct['nome'] }}</span><a href="/config/conta/apagar/{{ ct['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1704,9 +1704,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
             <h3 class="text-sm font-black uppercase text-amber-950 mb-3 pb-2 border-b flex items-center justify-between">
                 <span>🎪 Tipos de Eventos</span>
             </h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <input type="text" name="nome" placeholder="Ex: Vigília, Retiro..."  class="h-10 px-2 text-xs border rounded-xl w-full">
-                <button type="submit" class="bg-amber-600 text-white px-3 font-bold rounded-xl">+</button>
+                <button type="submit" class="bg-amber-600 text-white px-3 font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+</button>
             </form>
             <ul class="divide-y text-xs max-h-48 overflow-y-auto">
                 {% for ev in lista_eventos_cfg %}<li class="py-2 flex justify-between"><span>{{ ev['nome'] }}</span><a href="/config/evento/apagar/{{ ev['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1718,9 +1718,9 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
             <h3 class="text-sm font-black uppercase text-rose-950 mb-3 pb-2 border-b flex items-center justify-between">
                 <span>📅 Atividades & Planos</span>
             </h3>
-            <form action="/secretaria/planificacao/nova" method="POST">
+            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                 <input type="text" name="nome" placeholder="Ex: Cruzada, Batismo..."  class="h-10 px-2 text-xs border rounded-xl w-full">
-                <button type="submit" class="bg-rose-700 text-white px-3 font-bold rounded-xl">+</button>
+                <button type="submit" class="bg-rose-700 text-white px-3 font-bold rounded-xl" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"+</button>
             </form>
             <ul class="divide-y text-xs max-h-48 overflow-y-auto">
                 {% for at in lista_atividades_cfg %}<li class="py-2 flex justify-between"><span>{{ at['nome'] }}</span><a href="/config/atividade/apagar/{{ at['id'] }}" class="text-rose-600 font-bold">✕</a></li>{% endfor %}
@@ -1734,7 +1734,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div class="md:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">👤 Criar Novo Acesso</h3>
-                        <form action="/secretaria/planificacao/nova" method="POST">
+                        <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Candidato ao Batismo (Aluno de Discipulado):</label>
                                 <select id="select_candidato_membro" class="w-full h-11 px-2 text-sm border-2 border-indigo-200 rounded-xl bg-indigo-50/60 font-semibold text-indigo-950 focus:bg-white" onchange="autoPreencherAluno(this)">
@@ -1778,7 +1778,7 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                                     <option value="Pastor">Pastor (Administrador Geral)</option>
                                 </select>
                             </div>
-                            <button type="submit" class="w-full h-12 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm rounded-2xl shadow transition">Criar Utilizador</button>
+                            <button type="submit" class="w-full h-12 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm rounded-2xl shadow transition" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"Criar Utilizador</button>
                         </form>
 
                         <script>
@@ -1883,13 +1883,13 @@ Contamos com a sua oração e preparação. Confirme a recepção. Deus abençoe
                             {% endif %}
 
                             <!-- Formulário para Responder ou Atualizar Resposta -->
-                            <form action="/secretaria/planificacao/nova" method="POST">
+                            <form action="/secretaria/planificacao/nova" method="POST" novalidate>
                                 <label class="block text-[11px] font-bold text-slate-600">
                                     {% if d['resposta'] %}Atualizar Resposta:{% else %}Escrever Resposta Pastoral:{% endif %}
                                 </label>
                                 <div class="flex gap-2">
                                     <textarea name="resposta" rows="2"  placeholder="Digite a explicação bíblica para o aluno..." class="w-full p-2.5 text-xs border rounded-xl outline-none focus:border-blue-600 bg-white font-medium">{{ d['resposta'] or '' }}</textarea>
-                                    <button type="submit" class="px-4 bg-indigo-900 hover:bg-indigo-950 text-white font-black text-xs rounded-xl shadow whitespace-nowrap transition flex items-center justify-center">
+                                    <button type="submit" class="px-4 bg-indigo-900 hover:bg-indigo-950 text-white font-black text-xs rounded-xl shadow whitespace-nowrap transition flex items-center justify-center" style="position: relative !important; z-index: 99999 !important; pointer-events: auto !important; cursor: pointer !important;" onclick="if(this.form){this.form.submit();}"
                                         Enviar
                                     </button>
                                 </div>

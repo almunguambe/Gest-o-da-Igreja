@@ -1097,88 +1097,6 @@ def novo_membro():
     session['sucesso_cadastro'] = f"Membro '{nome}' registado com sucesso!"
     return redirect('/')
 
-@app.route('/cultos/novo', methods=['POST'])
-def cultos_novo():
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-
-    try:
-        is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS cultos (
-                id {id_tipo},
-                data_culto TEXT,
-                tipo_culto TEXT,
-                homens_adultos INTEGER DEFAULT 0,
-                mulheres_adultas INTEGER DEFAULT 0,
-                jovens_rapazes INTEGER DEFAULT 0,
-                jovens_mocas INTEGER DEFAULT 0,
-                criancas_meninos INTEGER DEFAULT 0,
-                criancas_meninas INTEGER DEFAULT 0,
-                visitantes_homens INTEGER DEFAULT 0,
-                visitantes_mulheres INTEGER DEFAULT 0,
-                apelos INTEGER DEFAULT 0,
-                total_presentes INTEGER DEFAULT 0,
-                pregador TEXT,
-                tema_mensagem TEXT,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception:
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-
-    fd = request.form
-    def n(k):
-        v = fd.get(k)
-        if v not in (None, ''):
-            try: return int(v)
-            except: pass
-        return 0
-
-    from datetime import datetime
-    data_culto = (fd.get('data_culto') or '').strip()
-    if not data_culto or data_culto in ('mm/dd/yyyy', '---'):
-        data_culto = datetime.now().strftime('%Y-%m-%d')
-
-    tipo_culto = (fd.get('tipo_culto') or 'Domingo Manhã').strip()
-    ha = n('homens_adultos')
-    ma = n('mulheres_adultas')
-    jr = n('jovens_rapazes')
-    jm = n('jovens_mocas')
-    cm = n('criancas_meninos')
-    cf = n('criancas_meninas')
-    vh = n('visitantes_homens')
-    vm = n('visitantes_mulheres')
-    apelos = n('apelos')
-
-    # SOMA AUTOMÁTICA FEITA PELO PYTHON
-    total = ha + ma + jr + jm + cm + cf + vh + vm
-
-    pregador = (fd.get('pregador') or '---').strip()
-    tema = (fd.get('tema_mensagem') or '').strip()
-
-    is_pg = ('psycopg' in str(type(conn)).lower()) or hasattr(conn, 'cursor_factory') or bool(os.environ.get('DATABASE_URL'))
-    m = "%s" if is_pg else "?"
-
-    sql = f"""INSERT INTO cultos 
-             (data_culto, tipo_culto, homens_adultos, mulheres_adultas, jovens_rapazes, jovens_mocas, 
-              criancas_meninos, criancas_meninas, visitantes_homens, visitantes_mulheres, 
-              apelos, total_presentes, pregador, tema_mensagem)
-             VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m})"""
-    try:
-        cur.execute(sql, (data_culto, tipo_culto, ha, ma, jr, jm, cm, cf, vh, vm, apelos, total, pregador, tema))
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception as e:
-        print("[ERRO GRAVAR CULTO]:", e)
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
-
-    return redirect('/?aba=cultos')
 
 @app.route('/cultos/registar', methods=['POST'])
 @app.route('/culto/novo', methods=['POST'])
@@ -2025,7 +1943,7 @@ def responder_duvida_pastor(id):
     return redirect('/')
 
 # =====================================================================
-# ROTAS OPERACIONAIS INTEGRADAS (PLANIFICAÇÃO, CONVERTIDOS, INJEÇÃO)
+# ROTAS OPERACIONAIS DEFINITIVAS COM INJEÇÃO EM TODAS AS TELAS LATERAIS
 # =====================================================================
 
 @app.route('/secretaria/planificacao', methods=['GET', 'POST'])
@@ -2093,14 +2011,13 @@ def planificacao_geral():
         try:
             cur.execute(sql, (actividade, actividade, actividade, departamento, tipo_evento, data_prevista, data_prevista, frequencia, responsavel, contacto, 'Planeado'))
             if hasattr(conn, 'commit'): conn.commit()
-            print(f"[SUCESSO PLANIFICAÇÃO]: Gravado -> {actividade} ({departamento})")
+            print(f"[SUCESSO PLANIFICAÇÃO]: {actividade} salvo no banco!")
         except Exception as e:
-            print("[ERRO AO GRAVAR PLANIFICAÇÃO]:", e)
+            print("[ERRO PLANIFICAÇÃO]:", e)
             if hasattr(conn, 'rollback'): conn.rollback()
 
         return redirect('/?aba=secretaria')
     return redirect('/?aba=secretaria')
-
 
 @app.route('/convertidos/novo', methods=['POST'])
 def novo_convertido():
@@ -2147,13 +2064,12 @@ def novo_convertido():
     try:
         cur.execute(sql, (nome, telefone, bairro, data_decisao, quem_convidou, culto_origem, 'Acompanhamento'))
         if hasattr(conn, 'commit'): conn.commit()
-        print(f"[SUCESSO CONVERTIDO]: Registado -> {nome}")
+        print(f"[SUCESSO CONVERTIDO]: {nome} gravado com sucesso!")
     except Exception as e:
         print("[ERRO AO GRAVAR CONVERTIDO]:", e)
         if hasattr(conn, 'rollback'): conn.rollback()
 
     return redirect('/?aba=convertidos')
-
 
 @app.context_processor
 def injetar_dados_tabelas():
@@ -2170,7 +2086,7 @@ def injetar_dados_tabelas():
         conn = get_db()
         cur = conn.cursor() if hasattr(conn, 'cursor') else conn
 
-        # 1. Planificações com chaves universais para preencher a tabela lateral
+        # 1. Alimentar todas as tabelas laterais de Planificação
         try:
             cur.execute("SELECT * FROM planificacao ORDER BY id DESC LIMIT 50")
             if cur.description:
@@ -2204,7 +2120,7 @@ def injetar_dados_tabelas():
                 ctx['planos'] = lista_p
         except Exception: pass
 
-        # 2. Novos Convertidos
+        # 2. Alimentar tabela de Acompanhamento Espiritual (Novos Convertidos)
         try:
             cur.execute("SELECT * FROM novos_convertidos ORDER BY id DESC LIMIT 50")
             if cur.description:
@@ -2214,7 +2130,7 @@ def injetar_dados_tabelas():
                 ctx['novos_convertidos'] = res_nc
         except Exception: pass
 
-        # 3. Cultos
+        # 3. Alimentar Histórico de Cultos
         try:
             cur.execute("SELECT * FROM cultos ORDER BY id DESC LIMIT 50")
             if cur.description:
