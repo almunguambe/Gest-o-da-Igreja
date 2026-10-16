@@ -2076,37 +2076,24 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 </script>
-
-
-<!-- ================= SCRIPT DE SOMA EM TEMPO REAL ================= -->
+</script>
+</script>
 <script>
+// Funcao global de troca de abas e soma protegida
 function somarPresencasTempoReal() {
-    var campos = [
-        'homens_adultos', 'mulheres_adultas',
-        'jovens_rapazes', 'jovens_mocas',
-        'criancas_meninos', 'criancas_meninas',
-        'visitantes_homens', 'visitantes_mulheres'
-    ];
-    var total = 0;
-    campos.forEach(function(nome) {
-        var inp = document.querySelector('input[name="' + nome + '"]');
-        if (inp) {
-            total += (parseInt(inp.value, 10) || 0);
-        }
-    });
-    var disp = document.getElementById('total_presentes_display');
-    if (disp) {
-        disp.value = total;
-    }
+    try {
+        var campos = ['homens_adultos', 'mulheres_adultas', 'jovens_rapazes', 'jovens_mocas', 'criancas_meninos', 'criancas_meninas', 'visitantes_homens', 'visitantes_mulheres'];
+        var total = 0;
+        campos.forEach(function(n) {
+            var el = document.querySelector('input[name="' + n + '"]');
+            if (el) total += (parseInt(el.value, 10) || 0);
+        });
+        var out = document.getElementById('total_presentes_display');
+        if (out) out.value = total;
+    } catch(e) {}
 }
 
 document.addEventListener('input', function(e) {
-    if (e.target && e.target.type === 'number' && e.target.name !== 'apelos' && e.target.name !== 'total_presentes') {
-        somarPresencasTempoReal();
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    somarPresencasTempoReal();
+    if (e.target && e.target.type === 'number') somarPresencasTempoReal();
 });
 </script>
