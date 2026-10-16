@@ -2024,10 +2024,109 @@ def responder_duvida_pastor(id):
     
     return redirect('/')
 
+# =====================================================================
+# ROTAS OPERACIONAIS INTEGRADAS (PLANIFICAÇÃO, CONVERTIDOS, INJEÇÃO)
+# =====================================================================
+
+@app.route('/secretaria/planificacao', methods=['GET', 'POST'])
+@app.route('/secretaria/planificacao/nova', methods=['GET', 'POST'])
+def planificacao_geral():
+    if request.method == 'POST':
+        conn = get_db()
+        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+        is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
+        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+
+        try:
+            cur.execute(f"""
+                CREATE TABLE IF NOT EXISTS planificacao (
+                    id {id_tipo},
+                    actividade TEXT,
+                    nome_actividade TEXT,
+                    titulo TEXT,
+                    departamento TEXT,
+                    tipo_evento TEXT,
+                    data_prevista TEXT,
+                    data_inicio TEXT,
+                    frequencia TEXT,
+                    responsavel TEXT,
+                    contacto TEXT,
+                    status TEXT DEFAULT 'Planeado',
+                    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            if hasattr(conn, 'commit'): conn.commit()
+        except Exception:
+            if hasattr(conn, 'rollback'): conn.rollback()
+
+        if is_pg:
+            colunas = [
+                ('actividade', 'TEXT'), ('nome_actividade', 'TEXT'), ('titulo', 'TEXT'),
+                ('departamento', 'TEXT'), ('tipo_evento', 'TEXT'), ('data_prevista', 'TEXT'),
+                ('data_inicio', 'TEXT'), ('frequencia', 'TEXT'), ('responsavel', 'TEXT'),
+                ('contacto', 'TEXT'), ('status', "TEXT DEFAULT 'Planeado'")
+            ]
+            for col, tipo in colunas:
+                try:
+                    cur.execute(f"ALTER TABLE planificacao ADD COLUMN IF NOT EXISTS {col} {tipo};")
+                    if hasattr(conn, 'commit'): conn.commit()
+                except Exception:
+                    if hasattr(conn, 'rollback'): conn.rollback()
+
+        fd = request.form
+        actividade = (fd.get('actividade') or fd.get('nome_actividade') or fd.get('titulo') or 'Actividade').strip()
+        departamento = (fd.get('departamento') or 'Geral').strip()
+        tipo_evento = (fd.get('tipo_evento') or 'Evento').strip()
+        data_prevista = (fd.get('data_prevista') or fd.get('data_inicio') or fd.get('data') or '').strip()
+        frequencia = (fd.get('frequencia') or 'Pontual / Única').strip()
+        responsavel = (fd.get('responsavel') or fd.get('responsavel_directo') or '').strip()
+        contacto = (fd.get('contacto') or fd.get('whatsapp') or fd.get('telefone') or '').strip()
+
+        from datetime import datetime
+        if not data_prevista or data_prevista in ('mm/dd/yyyy', '---'):
+            data_prevista = datetime.now().strftime('%Y-%m-%d')
+
+        m = "%s" if is_pg else "?"
+        sql = f"""INSERT INTO planificacao 
+                  (actividade, nome_actividade, titulo, departamento, tipo_evento, data_prevista, data_inicio, frequencia, responsavel, contacto, status)
+                  VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m}, {m})"""
+        try:
+            cur.execute(sql, (actividade, actividade, actividade, departamento, tipo_evento, data_prevista, data_prevista, frequencia, responsavel, contacto, 'Planeado'))
+            if hasattr(conn, 'commit'): conn.commit()
+            print(f"[SUCESSO PLANIFICAÇÃO]: Gravado -> {actividade} ({departamento})")
+        except Exception as e:
+            print("[ERRO AO GRAVAR PLANIFICAÇÃO]:", e)
+            if hasattr(conn, 'rollback'): conn.rollback()
+
+        return redirect('/?aba=secretaria')
+    return redirect('/?aba=secretaria')
+
+
 @app.route('/convertidos/novo', methods=['POST'])
 def novo_convertido():
     conn = get_db()
     cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
+    id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
+
+    try:
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS novos_convertidos (
+                id {id_tipo},
+                nome TEXT,
+                telefone TEXT,
+                bairro TEXT,
+                data_decisao TEXT,
+                culto_origem TEXT,
+                quem_convidou TEXT,
+                status_discipulado TEXT DEFAULT 'Acompanhamento',
+                observacoes TEXT,
+                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        if hasattr(conn, 'commit'): conn.commit()
+    except Exception:
+        if hasattr(conn, 'rollback'): conn.rollback()
 
     fd = request.form
     nome = (fd.get('nome') or fd.get('nome_completo') or fd.get('nome_convertido') or 'Sem Nome').strip()
@@ -2041,9 +2140,7 @@ def novo_convertido():
     if not data_decisao or data_decisao in ('mm/dd/yyyy', '---'):
         data_decisao = datetime.now().strftime('%Y-%m-%d')
 
-    is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
     m = "%s" if is_pg else "?"
-
     sql = f"""INSERT INTO novos_convertidos 
               (nome, telefone, bairro, data_decisao, quem_convidou, culto_origem, status_discipulado)
               VALUES ({m}, {m}, {m}, {m}, {m}, {m}, {m})"""
@@ -2053,168 +2150,77 @@ def novo_convertido():
         print(f"[SUCESSO CONVERTIDO]: Registado -> {nome}")
     except Exception as e:
         print("[ERRO AO GRAVAR CONVERTIDO]:", e)
-        if hasattr(conn, 'rollback'):
-            try: conn.rollback()
-            except: pass
+        if hasattr(conn, 'rollback'): conn.rollback()
 
     return redirect('/?aba=convertidos')
 
+
 @app.context_processor
 def injetar_dados_tabelas():
-    ctx = {'convertidos': [], 'cultos': []}
+    ctx = {
+        'convertidos': [],
+        'novos_convertidos': [],
+        'cultos': [],
+        'planificacoes': [],
+        'cronograma': [],
+        'actividades': [],
+        'planos': []
+    }
     try:
         conn = get_db()
         cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+
+        # 1. Planificações com chaves universais para preencher a tabela lateral
+        try:
+            cur.execute("SELECT * FROM planificacao ORDER BY id DESC LIMIT 50")
+            if cur.description:
+                cols = [c[0].lower() for c in cur.description]
+                linhas = cur.fetchall()
+                lista_p = []
+                for r in linhas:
+                    d = dict(zip(cols, r))
+                    act = d.get('actividade') or d.get('titulo') or d.get('nome_actividade') or 'Geral'
+                    dep = d.get('departamento') or 'Geral'
+                    dt = d.get('data_prevista') or d.get('data_inicio') or ''
+                    resp = d.get('responsavel') or ''
+                    cont = d.get('contacto') or ''
+                    st = d.get('status') or 'Planeado'
+                    item = {
+                        **d,
+                        'actividade': act,
+                        'nome_actividade': act,
+                        'titulo': act,
+                        'departamento': dep,
+                        'data_prevista': dt,
+                        'data_inicio': dt,
+                        'responsavel': resp,
+                        'contacto': cont,
+                        'status': st
+                    }
+                    lista_p.append(item)
+                ctx['planificacoes'] = lista_p
+                ctx['cronograma'] = lista_p
+                ctx['actividades'] = lista_p
+                ctx['planos'] = lista_p
+        except Exception: pass
+
+        # 2. Novos Convertidos
         try:
             cur.execute("SELECT * FROM novos_convertidos ORDER BY id DESC LIMIT 50")
             if cur.description:
-                cols = [c[0] for c in cur.description]
-                ctx['convertidos'] = [dict(zip(cols, r)) for r in cur.fetchall()]
+                cols_nc = [c[0].lower() for c in cur.description]
+                res_nc = [dict(zip(cols_nc, r)) for r in cur.fetchall()]
+                ctx['convertidos'] = res_nc
+                ctx['novos_convertidos'] = res_nc
         except Exception: pass
+
+        # 3. Cultos
         try:
             cur.execute("SELECT * FROM cultos ORDER BY id DESC LIMIT 50")
             if cur.description:
-                cols_c = [c[0] for c in cur.description]
+                cols_c = [c[0].lower() for c in cur.description]
                 ctx['cultos'] = [dict(zip(cols_c, r)) for r in cur.fetchall()]
         except Exception: pass
+
     except Exception: pass
     return ctx
-
-# =====================================================================
-# ROTAS OPERACIONAIS INTEGRADAS (PLANIFICAÇÃO, CASAMENTOS, ÓBITOS, FINANÇAS)
-# =====================================================================
-
-@app.route('/secretaria/planificacao', methods=['GET', 'POST'])
-@app.route('/secretaria/planificacao/nova', methods=['GET', 'POST'])
-def planificacao_geral():
-    if request.method == 'POST':
-        conn = get_db()
-        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-        is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
-        id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-        try:
-            cur.execute(f"""
-                CREATE TABLE IF NOT EXISTS planificacao (
-                    id {id_tipo},
-                    titulo TEXT,
-                    data_inicio TEXT,
-                    data_fim TEXT,
-                    departamento TEXT,
-                    descricao TEXT,
-                    responsavel TEXT,
-                    status TEXT DEFAULT 'Pendente',
-                    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            if hasattr(conn, 'commit'): conn.commit()
-        except Exception:
-            if hasattr(conn, 'rollback'): conn.rollback()
-
-        fd = request.form
-        titulo = (fd.get('titulo') or fd.get('actividade') or fd.get('nome') or 'Actividade').strip()
-        data_ini = (fd.get('data_inicio') or fd.get('data') or '').strip()
-        data_fim = (fd.get('data_fim') or data_ini).strip()
-        depto = (fd.get('departamento') or fd.get('sector') or 'Geral').strip()
-        desc = (fd.get('descricao') or '').strip()
-        resp = (fd.get('responsavel') or '').strip()
-
-        m = "%s" if is_pg else "?"
-        try:
-            cur.execute(f"""INSERT INTO planificacao (titulo, data_inicio, data_fim, departamento, descricao, responsavel)
-                            VALUES ({m}, {m}, {m}, {m}, {m}, {m})""", (titulo, data_ini, data_fim, depto, desc, resp))
-            if hasattr(conn, 'commit'): conn.commit()
-            print(f"[SUCESSO PLANIFICAÇÃO]: Gravado -> {titulo}")
-        except Exception as e:
-            print("[ERRO PLANIFICAÇÃO]:", e)
-            if hasattr(conn, 'rollback'): conn.rollback()
-
-        return redirect('/?aba=secretaria')
-    return redirect('/?aba=secretaria')
-
-@app.route('/casamentos/novo', methods=['POST'])
-def casamentos_novo():
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
-    id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-    try:
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS casamentos (
-                id {id_tipo},
-                noivo TEXT,
-                noiva TEXT,
-                data_casamento TEXT,
-                celebrante TEXT,
-                regime TEXT,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception:
-        if hasattr(conn, 'rollback'): conn.rollback()
-
-    fd = request.form
-    noivo = (fd.get('noivo') or '').strip()
-    noiva = (fd.get('noiva') or '').strip()
-    data_c = (fd.get('data_casamento') or fd.get('data') or '').strip()
-    celeb = (fd.get('celebrante') or fd.get('pastor') or '').strip()
-    regime = (fd.get('regime') or '').strip()
-
-    m = "%s" if is_pg else "?"
-    try:
-        cur.execute(f"""INSERT INTO casamentos (noivo, noiva, data_casamento, celebrante, regime)
-                        VALUES ({m}, {m}, {m}, {m}, {m})""", (noivo, noiva, data_c, celeb, regime))
-        if hasattr(conn, 'commit'): conn.commit()
-        print(f"[SUCESSO CASAMENTO]: Gravado -> {noivo} & {noiva}")
-    except Exception as e:
-        print("[ERRO CASAMENTO]:", e)
-        if hasattr(conn, 'rollback'): conn.rollback()
-
-    return redirect('/?aba=casamentos')
-
-@app.route('/obitos/novo', methods=['POST'])
-@app.route('/mortes/novo', methods=['POST'])
-def obitos_novo():
-    conn = get_db()
-    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-    is_pg = ('psycopg' in str(type(conn)).lower()) or bool(os.environ.get('DATABASE_URL'))
-    id_tipo = "SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"
-    try:
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS obitos (
-                id {id_tipo},
-                falecido TEXT,
-                data_falecimento TEXT,
-                causa TEXT,
-                contacto_familia TEXT,
-                data_funeral TEXT,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        if hasattr(conn, 'commit'): conn.commit()
-    except Exception:
-        if hasattr(conn, 'rollback'): conn.rollback()
-
-    fd = request.form
-    falecido = (fd.get('falecido') or fd.get('nome') or '').strip()
-    data_f = (fd.get('data_falecimento') or fd.get('data') or '').strip()
-    causa = (fd.get('causa') or '').strip()
-    cont = (fd.get('contacto_familia') or fd.get('contacto') or '').strip()
-    data_fun = (fd.get('data_funeral') or '').strip()
-
-    m = "%s" if is_pg else "?"
-    try:
-        cur.execute(f"""INSERT INTO obitos (falecido, data_falecimento, causa, contacto_familia, data_funeral)
-                        VALUES ({m}, {m}, {m}, {m}, {m})""", (falecido, data_f, causa, cont, data_fun))
-        if hasattr(conn, 'commit'): conn.commit()
-        print(f"[SUCESSO ÓBITO]: Gravado -> {falecido}")
-    except Exception as e:
-        print("[ERRO ÓBITO]:", e)
-        if hasattr(conn, 'rollback'): conn.rollback()
-
-    return redirect('/?aba=mortes')
-
-@app.route('/financas/caixa/novo', methods=['POST'])
-@app.route('/financas/transferencia/nova', methods=['POST'])
-def financas_geral():
-    return redirect('/?aba=financas')
