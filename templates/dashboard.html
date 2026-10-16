@@ -771,7 +771,7 @@
                 </div>
                 <div style="background: #eff6ff; border: 2px solid #93c5fd; border-radius: 8px; padding: 10px; text-align: center;">
                     <label style="display: block; font-size: 12px; font-weight: bold; color: #1e40af; margin-bottom: 4px;">📊 Total de Presentes</label>
-                    <div style="font-size: 13px; font-weight: bold; color: #1e40af; padding: 8px 0;">Calculado ao Gravar</div>
+                    <input type="number" id="total_presentes_display" name="total_presentes" value="0" readonly style="width: 85%; padding: 6px; font-size: 20px; font-weight: bold; text-align: center; border: 2px solid #93c5fd; border-radius: 8px; color: #1e40af; background: #eff6ff;">
                 </div>
             </div>
 
@@ -851,6 +851,8 @@
                     <div class="lg:col-span-5 bg-white/95 rounded-3xl card-glow border border-indigo-100 p-5">
                         <h3 class="text-base font-black text-slate-900 mb-4 pb-2 border-b">🌱 Registar Novo Convertido</h3>
                         <form action="/secretaria/planificacao/nova" method="POST">
+                            </form>
+<form action="/convertidos/novo" method="POST">
                             <input type="text" name="nome"  placeholder="Nome Completo *" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="text" name="telefone" placeholder="Contacto Telefónico" class="w-full h-11 px-3 text-sm border-2 rounded-xl">
                             <input type="date" name="data_prevista" name="data_prevista" name="data_decisao"  class="w-full h-11 px-2 text-sm border-2 rounded-xl bg-white font-semibold">
@@ -2072,5 +2074,39 @@ document.addEventListener("DOMContentLoaded", function() {
             if (t.includes('culto') || t.includes('presença')) b.click();
         });
     }
+});
+</script>
+
+
+<!-- ================= SCRIPT DE SOMA EM TEMPO REAL ================= -->
+<script>
+function somarPresencasTempoReal() {
+    var campos = [
+        'homens_adultos', 'mulheres_adultas',
+        'jovens_rapazes', 'jovens_mocas',
+        'criancas_meninos', 'criancas_meninas',
+        'visitantes_homens', 'visitantes_mulheres'
+    ];
+    var total = 0;
+    campos.forEach(function(nome) {
+        var inp = document.querySelector('input[name="' + nome + '"]');
+        if (inp) {
+            total += (parseInt(inp.value, 10) || 0);
+        }
+    });
+    var disp = document.getElementById('total_presentes_display');
+    if (disp) {
+        disp.value = total;
+    }
+}
+
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.type === 'number' && e.target.name !== 'apelos' && e.target.name !== 'total_presentes') {
+        somarPresencasTempoReal();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    somarPresencasTempoReal();
 });
 </script>
